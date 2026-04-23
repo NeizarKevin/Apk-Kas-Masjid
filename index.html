@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kas Masjid">
+<title>Kas Masjid</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f2f2f7; min-height: 100vh; color: #1c1c1e; }
+  .safe-top { height: env(safe-area-inset-top, 0px); background: #fff; }
+
+  /* Header */
+  .topbar { background: #fff; border-bottom: 0.5px solid #e0e0e0; padding: 14px 20px 12px; position: sticky; top: 0; z-index: 10; }
+  .topbar-inner { display: flex; align-items: center; gap: 10px; max-width: 540px; margin: 0 auto; }
+  .topbar-icon { width: 32px; height: 32px; background: #e9f7ee; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .topbar-icon svg { width: 16px; height: 16px; stroke: #2d7d46; fill: none; stroke-width: 2; }
+  .topbar h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .topbar p { font-size: 12px; color: #8e8e93; margin-top: 1px; }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; margin-left: auto; flex-shrink: 0; }
+  .conn-dot.off { background: #ff9500; }
+
+  .scroll { padding: 16px; max-width: 540px; margin: 0 auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .sum-card { background: #fff; border-radius: 14px; padding: 12px 10px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .sum-label { font-size: 11px; color: #8e8e93; margin-bottom: 5px; font-weight: 500; }
+  .sum-val { font-size: 13px; font-weight: 700; line-height: 1.2; }
+  .sum-val.in { color: #2d7d46; }
+  .sum-val.out { color: #c0392b; }
+  .sum-val.saldo { color: #1c1c1e; }
+
+  /* Cards */
+  .card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card-title { font-size: 12px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; color: #8e8e93; font-weight: 500; padding-left: 2px; }
+  .form-group input { padding: 10px 12px; border: 1px solid #e5e5ea; border-radius: 10px; font-size: 15px; color: #1c1c1e; font-family: inherit; background: #fafafa; transition: border-color 0.15s, background 0.15s; -webkit-appearance: none; }
+  .form-group input:focus { outline: none; border-color: #2d7d46; background: #fff; }
+
+  /* Status */
+  .status { font-size: 13px; text-align: center; padding: 10px; border-radius: 10px; margin-top: 12px; display: none; font-weight: 500; }
+  .status.show { display: block; }
+  .status.success { background: #e9f7ee; color: #2d7d46; }
+  .status.error { background: #fdecea; color: #c0392b; }
+  .status.loading { background: #f2f2f7; color: #8e8e93; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+  .btn-primary { flex: 1; padding: 13px; background: #2d7d46; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; -webkit-appearance: none; }
+  .btn-primary:active { opacity: 0.8; transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.45; }
+  .btn-reset { padding: 13px 18px; background: #f2f2f7; color: #3a3a3c; border: none; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; transition: opacity 0.15s; -webkit-appearance: none; }
+  .btn-reset:active { opacity: 0.7; }
+
+  /* History */
+  .history-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .history-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid #f0f0f0; }
+  .history-head h2 { font-size: 12px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.05em; }
+  .badge { font-size: 12px; background: #f2f2f7; color: #8e8e93; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+  .empty { padding: 32px; text-align: center; color: #c7c7cc; font-size: 14px; }
+  .tx { display: grid; grid-template-columns: 10px 1fr auto; gap: 0 12px; padding: 13px 16px; border-bottom: 0.5px solid #f5f5f5; align-items: center; }
+  .tx:last-child { border-bottom: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; }
+  .dot.in { background: #34c759; }
+  .dot.out { background: #ff3b30; }
+  .tx-info .kode { font-size: 11px; color: #c7c7cc; margin-bottom: 1px; }
+  .tx-info .ket { font-size: 14px; color: #1c1c1e; font-weight: 500; }
+  .tx-info .tgl { font-size: 11px; color: #aeaeb2; margin-top: 2px; }
+  .tx-right { text-align: right; }
+  .tx-right .amount { font-size: 14px; font-weight: 700; }
+  .tx-right .amount.in { color: #2d7d46; }
+  .tx-right .amount.out { color: #c0392b; }
+  .tx-right .type { font-size: 11px; color: #aeaeb2; margin-top: 1px; }
+  .del-btn { font-size: 12px; color: #c7c7cc; background: none; border: none; cursor: pointer; padding: 2px 0; display: block; margin-top: 4px; margin-left: auto; font-family: inherit; }
+  .del-btn:active { color: #ff3b30; }
+</style>
+</head>
+<body>
+<div class="safe-top"></div>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div>
+      <h1>Kas Masjid</h1>
+      <p>Pemasukan &amp; Pengeluaran</p>
+    </div>
+    <div class="conn-dot" id="conn-dot" title="Status koneksi Google Sheets"></div>
+  </div>
+</div>
+
+<div class="scroll">
+  <div class="summary-grid">
+    <div class="sum-card"><div class="sum-label">Pemasukan</div><div class="sum-val in" id="total-in">Rp 0</div></div>
+    <div class="sum-card"><div class="sum-label">Pengeluaran</div><div class="sum-val out" id="total-out">Rp 0</div></div>
+    <div class="sum-card"><div class="sum-label">Saldo</div><div class="sum-val saldo" id="saldo">Rp 0</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Transaksi Baru</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Tanggal</label><input type="date" id="inp-tanggal"/></div>
+      <div class="form-group"><label>Kode</label><input type="text" id="inp-kode" placeholder="KAS-001"/></div>
+      <div class="form-group full"><label>Keterangan</label><input type="text" id="inp-ket" placeholder="Infaq Jumat, dll."/></div>
+      <div class="form-group"><label>Pemasukan (Rp)</label><input type="number" id="inp-masuk" placeholder="0" min="0" inputmode="numeric"/></div>
+      <div class="form-group"><label>Pengeluaran (Rp)</label><input type="number" id="inp-keluar" placeholder="0" min="0" inputmode="numeric"/></div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="btn-row">
+      <button class="btn-reset" onclick="resetForm()">Reset</button>
+      <button class="btn-primary" id="btn-submit" onclick="submitData()">Simpan</button>
+    </div>
+  </div>
+
+  <div class="history-card">
+    <div class="history-head">
+      <h2>Histori</h2>
+      <span class="badge" id="tx-count">0 data</span>
+    </div>
+    <div id="history-list"><div class="empty">Belum ada transaksi.</div></div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// URL Google Apps Script sudah tertanam di sini
+// =============================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6-c2MIo-em3VusVK6UiF09xCiilUyLi_Jpp5oiiqfVmsS1n3GO5ohz-vbdiZ0d0F4Ig/exec';
+
+let transactions = [];
+try { transactions = JSON.parse(localStorage.getItem('kas_masjid') || '[]'); } catch(e) {}
+
+document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
+
+function formatRp(n) {
+  if (n >= 1000000) return 'Rp ' + (n/1000000).toFixed(1).replace('.0','') + 'jt';
+  if (n >= 1000) return 'Rp ' + Math.round(n/1000) + 'rb';
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+
+function formatRpFull(n) {
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+
+function renderSummary() {
+  const totalIn = transactions.reduce((s, t) => s + (t.masuk || 0), 0);
+  const totalOut = transactions.reduce((s, t) => s + (t.keluar || 0), 0);
+  document.getElementById('total-in').textContent = formatRp(totalIn);
+  document.getElementById('total-out').textContent = formatRp(totalOut);
+  const saldo = totalIn - totalOut;
+  const el = document.getElementById('saldo');
+  el.textContent = formatRp(Math.abs(saldo));
+  el.className = 'sum-val ' + (saldo >= 0 ? 'in' : 'out');
+  document.getElementById('tx-count').textContent = transactions.length + ' data';
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!transactions.length) { list.innerHTML = '<div class="empty">Belum ada transaksi.</div>'; return; }
+  list.innerHTML = [...transactions].reverse().map((t, ri) => {
+    const i = transactions.length - 1 - ri;
+    const isIn = t.masuk > 0;
+    const val = isIn ? t.masuk : t.keluar;
+    const d = new Date(t.tanggal + 'T00:00:00');
+    const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `<div class="tx">
+      <div class="dot ${isIn ? 'in' : 'out'}"></div>
+      <div class="tx-info">
+        <div class="kode">${t.kode || 'tanpa kode'}</div>
+        <div class="ket">${t.keterangan}</div>
+        <div class="tgl">${dateStr}</div>
+      </div>
+      <div class="tx-right">
+        <div class="amount ${isIn ? 'in' : 'out'}">${isIn ? '+' : '-'}${formatRpFull(val)}</div>
+        <div class="type">${isIn ? 'Pemasukan' : 'Pengeluaran'}</div>
+        <button class="del-btn" onclick="deleteItem(${i})">hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteItem(idx) {
+  if (!confirm('Hapus transaksi ini?')) return;
+  transactions.splice(idx, 1);
+  localStorage.setItem('kas_masjid', JSON.stringify(transactions));
+  renderHistory(); renderSummary();
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+  if (type !== 'loading') setTimeout(() => el.className = 'status', 4000);
+}
+
+function resetForm() {
+  ['inp-kode','inp-ket','inp-masuk','inp-keluar'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
+}
+
+function sendToSheet(data) {
+  return new Promise((resolve) => {
+    const params = new URLSearchParams({
+      tanggal: data.tanggal,
+      kode: data.kode,
+      keterangan: data.keterangan,
+      masuk: String(data.masuk),
+      keluar: String(data.keluar),
+      timestamp: data.timestamp
+    });
+    const url = SCRIPT_URL + '?' + params.toString();
+    const img = new Image();
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(true); } };
+    img.onload = finish;
+    img.onerror = finish;
+    setTimeout(finish, 6000);
+    img.src = url;
+  });
+}
+
+async function submitData() {
+  const tanggal = document.getElementById('inp-tanggal').value;
+  const kode = document.getElementById('inp-kode').value.trim();
+  const keterangan = document.getElementById('inp-ket').value.trim();
+  const masuk = parseFloat(document.getElementById('inp-masuk').value) || 0;
+  const keluar = parseFloat(document.getElementById('inp-keluar').value) || 0;
+
+  if (!tanggal || !keterangan) { showStatus('Tanggal dan keterangan wajib diisi.', 'error'); return; }
+  if (masuk === 0 && keluar === 0) { showStatus('Isi pemasukan atau pengeluaran.', 'error'); return; }
+  if (masuk > 0 && keluar > 0) { showStatus('Isi salah satu: pemasukan atau pengeluaran.', 'error'); return; }
+
+  const tx = { tanggal, kode, keterangan, masuk, keluar, timestamp: new Date().toISOString() };
+  transactions.push(tx);
+  localStorage.setItem('kas_masjid', JSON.stringify(transactions));
+  renderHistory(); renderSummary();
+
+  showStatus('Mengirim ke Google Sheets...', 'loading');
+  document.getElementById('btn-submit').disabled = true;
+  await sendToSheet(tx);
+  document.getElementById('btn-submit').disabled = false;
+  showStatus('Tersimpan di Google Sheets!', 'success');
+  resetForm();
+}
+
+// Cek koneksi internet
+function updateConnDot() {
+  document.getElementById('conn-dot').className = 'conn-dot' + (navigator.onLine ? '' : ' off');
+}
+window.addEventListener('online', updateConnDot);
+window.addEventListener('offline', updateConnDot);
+updateConnDot();
+
+renderHistory(); renderSummary();
+</script>
+</body>
+</html>
