@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kas Masjid">
+<title>Kas Masjid</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1a7a3f;
+  --green-light: #e8f5ee;
+  --green-mid: #c3e6d1;
+  --red: #d63031;
+  --red-light: #fdf0f0;
+  --bg: #f0f4f0;
+  --card: #ffffff;
+  --text: #0f1f14;
+  --muted: #7a8f80;
+  --border: #dde8df;
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+  overscroll-behavior: none;
+}
+
+.topbar {
+  background: var(--green);
+  padding: 52px 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.topbar::before {
+  content: '';
+  position: absolute;
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  top: -60px; right: -50px;
+}
+.topbar::after {
+  content: '';
+  position: absolute;
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+  bottom: -30px; left: 10px;
+}
+.topbar-inner { position: relative; z-index: 1; }
+.topbar-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.brand-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
+.brand h1 { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.4px; }
+.brand p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 1px; font-weight: 500; }
+.conn-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px; padding: 5px 10px;
+  backdrop-filter: blur(4px);
+}
+.conn-dot { width: 6px; height: 6px; border-radius: 50%; background: #5effa0; }
+.conn-dot.off { background: #ffb347; }
+.conn-label { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 600; }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.sum-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 11px 10px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.sum-label { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.sum-val { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1; }
+.sum-val.out { color: #ffb3ae; }
+.sum-val.negative { color: #ffb3ae; }
+
+.scroll {
+  padding: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+/* Voice card */
+.voice-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+.voice-inner { display: flex; align-items: center; gap: 14px; }
+.voice-btn {
+  width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--green-light); transition: all 0.2s; -webkit-appearance: none;
+  position: relative;
+}
+.voice-btn svg { width: 22px; height: 22px; stroke: var(--green); fill: none; stroke-width: 2; transition: all 0.2s; }
+.voice-btn.listening {
+  background: var(--red-light);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.voice-btn.listening svg { stroke: var(--red); }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214,48,49,0.3); }
+  50% { box-shadow: 0 0 0 12px rgba(214,48,49,0); }
+}
+.voice-info { flex: 1; min-width: 0; }
+.voice-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.voice-hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.voice-result {
+  margin-top: 12px; padding: 10px 14px;
+  background: var(--bg); border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text); font-weight: 500;
+  display: none; line-height: 1.5;
+}
+.voice-result.show { display: block; }
+.voice-result strong { color: var(--green); }
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+.section-label {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 16px;
+}
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.form-group input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 500;
+  background: #fafcfa;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  -webkit-appearance: none;
+  width: 100%;
+}
+.form-group input::placeholder { color: #bfcfc4; font-weight: 400; }
+.form-group input:focus {
+  outline: none;
+  border-color: var(--green);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
+}
+.form-group input[type="number"] { font-variant-numeric: tabular-nums; }
+.form-group select {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 500;
+  background: #fafcfa;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%237a8f80%27 stroke-width=%272.5%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+.form-group select:focus {
+  outline: none;
+  border-color: var(--green);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
+}
+.form-group input.voice-filled { border-color: var(--green); background: var(--green-light); }
+
+.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.toggle-btn {
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: #fafcfa;
+  color: var(--muted);
+  -webkit-appearance: none;
+}
+.toggle-btn.active-in { background: var(--green-light); border-color: var(--green); color: var(--green); }
+.toggle-btn.active-out { background: var(--red-light); border-color: var(--red); color: var(--red); }
+
+.amount-wrap { position: relative; }
+.amount-prefix {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; font-weight: 700; color: var(--muted); pointer-events: none;
+}
+.amount-wrap input { padding-left: 38px; }
+
+.status {
+  font-size: 13px; text-align: center; padding: 11px 14px;
+  border-radius: var(--radius-sm); margin-top: 12px;
+  display: none; font-weight: 600;
+}
+.status.show { display: block; }
+.status.success { background: var(--green-light); color: var(--green); }
+.status.error { background: var(--red-light); color: var(--red); }
+.status.loading { background: #f0f4f0; color: var(--muted); }
+
+.btn-row { display: flex; gap: 10px; margin-top: 16px; }
+.btn-primary {
+  flex: 1; padding: 14px;
+  background: var(--green);
+  color: #fff; border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: transform 0.1s, opacity 0.15s;
+  -webkit-appearance: none;
+  letter-spacing: -0.2px;
+}
+.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.4; }
+.btn-reset {
+  padding: 14px 18px;
+  background: var(--bg);
+  color: var(--muted); border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  -webkit-appearance: none;
+  transition: opacity 0.15s;
+}
+.btn-reset:active { opacity: 0.7; }
+
+.history-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+.history-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f4f0;
+}
+.history-head .section-label { margin: 0; }
+.badge {
+  font-size: 12px; background: var(--bg); color: var(--muted);
+  padding: 4px 10px; border-radius: 20px; font-weight: 700;
+}
+.empty {
+  padding: 40px 20px; text-align: center;
+  color: #bfcfc4; font-size: 14px; font-weight: 500;
+}
+.tx {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f5f8f5;
+  transition: background 0.1s;
+}
+.tx:last-child { border-bottom: none; }
+.tx-icon {
+  width: 38px; height: 38px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 16px;
+}
+.tx-icon.in { background: var(--green-light); }
+.tx-icon.out { background: var(--red-light); }
+.tx-info { flex: 1; min-width: 0; }
+.tx-ket { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+.tx-right { text-align: right; flex-shrink: 0; }
+.tx-amount { font-size: 14px; font-weight: 800; letter-spacing: -0.3px; }
+.tx-amount.in { color: var(--green); }
+.tx-amount.out { color: var(--red); }
+.tx-type { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+.del-btn {
+  font-size: 11px; color: #bfcfc4; background: none; border: none;
+  cursor: pointer; padding: 0; font-family: inherit; font-weight: 600;
+  display: block; margin-top: 3px; margin-left: auto;
+}
+.del-btn:active { color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <h1>Kas Masjid</h1>
+          <p>Pemasukan &amp; Pengeluaran</p>
+        </div>
+      </div>
+      <div class="conn-pill">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span class="conn-label" id="conn-label">Online</span>
+      </div>
+    </div>
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="sum-label">Pemasukan</div>
+        <div class="sum-val" id="total-in">Rp 0</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Pengeluaran</div>
+        <div class="sum-val out" id="total-out">Rp 0</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Saldo</div>
+        <div class="sum-val" id="saldo">Rp 0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scroll">
+
+  <!-- Voice Input Card -->
+  <div class="voice-card">
+    <div class="voice-inner">
+      <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div class="voice-info">
+        <div class="voice-title">Input Suara</div>
+        <div class="voice-hint" id="voice-hint">Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em></div>
+      </div>
+    </div>
+    <div class="voice-result" id="voice-result"></div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="card">
+    <div class="section-label">Transaksi Baru</div>
+    <div class="type-toggle">
+      <button class="toggle-btn active-in" id="btn-type-in" onclick="setType('in')">↑ Pemasukan</button>
+      <button class="toggle-btn" id="btn-type-out" onclick="setType('out')">↓ Pengeluaran</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input type="date" id="inp-tanggal"/>
+      </div>
+      <div class="form-group">
+        <label>Kode</label>
+        <select id="inp-kode">
+          <option value="">-- Pilih --</option>
+          <option value="K1">K1</option>
+          <option value="K2">K2</option>
+          <option value="K3">K3</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Keterangan</label>
+        <input type="text" id="inp-ket" placeholder="mis. Infaq Jumat"/>
+      </div>
+      <div class="form-group full">
+        <label id="amount-label">Jumlah Pemasukan (Rp)</label>
+        <div class="amount-wrap">
+          <span class="amount-prefix">Rp</span>
+          <input type="number" id="inp-amount" placeholder="0" min="0" inputmode="numeric"/>
+        </div>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="btn-row">
+      <button class="btn-reset" onclick="resetForm()">Reset</button>
+      <button class="btn-primary" id="btn-submit" onclick="submitData()">Simpan</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-head">
+      <div class="section-label">Histori</div>
+      <span class="badge" id="tx-count">0 data</span>
+    </div>
+    <div id="history-list"><div class="empty">Belum ada transaksi.</div></div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEz_VEAhjja-S2xt0mq6KEAEj4PP44JB6UFtD7uP1dg54JowROb1tKa6PHLqT60GVi/exec';
+
+let transactions = [];
+try { transactions = JSON.parse(localStorage.getItem('kas_masjid') || '[]'); } catch(e) {}
+let currentType = 'in';
+
+document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
+
+// =====================
+// VOICE INPUT
+// =====================
+let recognition = null;
+let isListening = false;
+
+// Map kata angka bahasa Indonesia ke nilai numerik
+const ANGKA_MAP = {
+  'nol':0,'satu':1,'dua':2,'tiga':3,'empat':4,'lima':5,'enam':6,'tujuh':7,'delapan':8,'sembilan':9,'sepuluh':10,
+  'sebelas':11,'dua belas':12,'tiga belas':13,'empat belas':14,'lima belas':15,'enam belas':16,'tujuh belas':17,'delapan belas':18,'sembilan belas':19,
+  'dua puluh':20,'tiga puluh':30,'empat puluh':40,'lima puluh':50,'enam puluh':60,'tujuh puluh':70,'delapan puluh':80,'sembilan puluh':90,
+  'seratus':100,'dua ratus':200,'tiga ratus':300,'empat ratus':400,'lima ratus':500,'enam ratus':600,'tujuh ratus':700,'delapan ratus':800,'sembilan ratus':900,
+  'seribu':1000,'dua ribu':2000,'tiga ribu':3000,'empat ribu':4000,'lima ribu':5000,'enam ribu':6000,'tujuh ribu':7000,'delapan ribu':8000,'sembilan ribu':9000,'sepuluh ribu':10000,
+  'dua puluh ribu':20000,'tiga puluh ribu':30000,'empat puluh ribu':40000,'lima puluh ribu':50000,'enam puluh ribu':60000,'tujuh puluh ribu':70000,'delapan puluh ribu':80000,'sembilan puluh ribu':90000,
+  'seratus ribu':100000,'dua ratus ribu':200000,'tiga ratus ribu':300000,'empat ratus ribu':400000,'lima ratus ribu':500000,'enam ratus ribu':600000,'tujuh ratus ribu':700000,'delapan ratus ribu':800000,'sembilan ratus ribu':900000,
+  'satu juta':1000000,'dua juta':2000000,'tiga juta':3000000,'lima juta':5000000,'sepuluh juta':10000000
+};
+
+const KATA_MASUK = ['pemasukan','masuk','terima','diterima','infaq','infak','sedekah','donasi','zakat','sumbangan','iuran'];
+const KATA_KELUAR = ['pengeluaran','keluar','bayar','dibayar','beli','pembelian','biaya','bayaran','belanja'];
+
+function parseAngka(text) {
+  text = text.toLowerCase().trim();
+  // Coba langsung parse angka
+  const directNum = parseInt(text.replace(/[^0-9]/g, ''));
+  if (!isNaN(directNum) && directNum > 0) return directNum;
+  // Coba dari map kata
+  for (const [kata, val] of Object.entries(ANGKA_MAP).sort((a,b) => b[0].length - a[0].length)) {
+    if (text.includes(kata)) return val;
+  }
+  return null;
+}
+
+const BULAN_MAP = {
+  'januari':1,'jan':1,'februari':2,'feb':2,'maret':3,'mar':3,'april':4,'apr':4,
+  'mei':5,'juni':6,'jun':6,'juli':7,'jul':7,'agustus':8,'agu':8,'agus':8,
+  'september':9,'sep':9,'oktober':10,'okt':10,'november':11,'nov':11,'desember':12,'des':12
+};
+
+function parseKode(text) {
+  const lower = text.toLowerCase();
+  // "K1", "K2", "K3" langsung (termasuk "ka1", "ka 1")
+  if (/k[\s-]?1/i.test(lower) || lower.includes('ka satu') || lower.includes('ka 1')) return 'K1';
+  if (/k[\s-]?2/i.test(lower) || lower.includes('ka dua') || lower.includes('ka 2')) return 'K2';
+  if (/k[\s-]?3/i.test(lower) || lower.includes('ka tiga') || lower.includes('ka 3')) return 'K3';
+  // "kode satu/dua/tiga"
+  if (lower.includes('kode satu') || lower.includes('kode 1')) return 'K1';
+  if (lower.includes('kode dua') || lower.includes('kode 2')) return 'K2';
+  if (lower.includes('kode tiga') || lower.includes('kode 3')) return 'K3';
+  // deteksi angka setelah "k" di awal kalimat: "k1 infaq..."
+  const mStart = lower.match(/^k\s*([123])/);
+  if (mStart) return 'K' + mStart[1];
+  return null;
+}
+
+function parseTanggal(text) {
+  const lower = text.toLowerCase();
+  const now = new Date();
+  if (lower.includes('hari ini')) return toDateStr(now);
+  if (lower.includes('kemarin')) { const d = new Date(now); d.setDate(d.getDate()-1); return toDateStr(d); }
+  if (lower.includes('besok')) { const d = new Date(now); d.setDate(d.getDate()+1); return toDateStr(d); }
+  const bulanKeys = Object.keys(BULAN_MAP).join('|');
+  const reNama = new RegExp('(?:tanggal\\s*)?(\\d{1,2})\\s+(' + bulanKeys + ')(?:\\s+(\\d{4}))?', 'i');
+  const mNama = lower.match(reNama);
+  if (mNama) {
+    const tgl = parseInt(mNama[1]);
+    const bln = BULAN_MAP[mNama[2].toLowerCase()];
+    const thn = mNama[3] ? parseInt(mNama[3]) : now.getFullYear();
+    return `${thn}-${String(bln).padStart(2,'0')}-${String(tgl).padStart(2,'0')}`;
+  }
+  const reTgl = /tanggal\s+(\d{1,2})/i;
+  const mTgl = lower.match(reTgl);
+  if (mTgl) {
+    const tgl = parseInt(mTgl[1]);
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(tgl).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+function toDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function parseVoiceText(text) {
+  const lower = text.toLowerCase();
+  let tipe = null;
+  let keterangan = text;
+  let jumlah = null;
+  let tanggal = parseTanggal(lower);
+  let kode = parseKode(lower);
+
+  if (KATA_KELUAR.some(k => lower.includes(k))) tipe = 'out';
+  else tipe = 'in';
+
+  // Cek dulu apakah ada angka dengan titik/koma ribuan seperti "500.000" atau "500,000"
+  const reRibuan = /\b(\d{1,3})[.,](\d{3})\b/g;
+  let mRibuan;
+  while ((mRibuan = reRibuan.exec(lower)) !== null) {
+    const candidate = parseInt(mRibuan[1] + mRibuan[2]);
+    if (candidate > 0) { jumlah = candidate; break; }
+  }
+
+  if (!jumlah) {
+    const pola = [
+      /(\d[\d.,]*)\s*(juta|jt)/i,
+      /(\d[\d.,]*)\s*(ribu|rb|k)/i,
+      /(\d[\d.,]*)\s*(ratus)/i,
+      /(\d+)/
+    ];
+    for (const p of pola) {
+      const m = lower.match(p);
+      if (m) {
+        let num = parseInt(m[1].replace(/[.,]/g,''));
+        if (p.source.includes('juta') || p.source.includes('jt')) num *= 1000000;
+        else if (p.source.includes('ribu') || p.source.includes('rb')) num *= 1000;
+        else if (p.source.includes('ratus')) num *= 100;
+        if (num > 0) { jumlah = num; break; }
+      }
+    }
+  }
+  if (!jumlah) jumlah = parseAngka(lower);
+
+  const bulanKeys2 = Object.keys(BULAN_MAP).join('|');
+  keterangan = text
+    .replace(/\bk[123]\b/gi, '')
+    .replace(/kode\s*(satu|dua|tiga|[123])/gi, '')
+    .replace(/hari ini|kemarin|besok/gi, '')
+    .replace(new RegExp('(?:tanggal\\s*)?\\d{1,2}\\s+(?:' + bulanKeys2 + ')(?:\\s+\\d{4})?', 'gi'), '')
+    .replace(/tanggal\s+\d{1,2}/gi, '')
+    .replace(/\d[\d.,]*(juta|jt|ribu|rb|k|ratus)?/gi, '')
+    .replace(new RegExp('(' + [...KATA_MASUK,...KATA_KELUAR].join('|') + ')', 'gi'), '')
+    .replace(/\s+/g, ' ').trim();
+  if (!keterangan) keterangan = tipe === 'in' ? 'Pemasukan' : 'Pengeluaran';
+  keterangan = keterangan.charAt(0).toUpperCase() + keterangan.slice(1);
+
+  return { tipe, keterangan, jumlah, tanggal, kode };
+}
+
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.lang = 'id-ID';
+  r.continuous = false;
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+
+  r.onstart = () => {
+    isListening = true;
+    document.getElementById('voice-btn').classList.add('listening');
+    document.getElementById('voice-hint').textContent = '🎤 Mendengarkan... silakan bicara';
+    document.getElementById('voice-result').className = 'voice-result';
+  };
+
+  r.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const parsed = parseVoiceText(transcript);
+
+    // Isi form
+    setType(parsed.tipe);
+    if (parsed.tanggal) {
+      document.getElementById('inp-tanggal').value = parsed.tanggal;
+      document.getElementById('inp-tanggal').classList.add('voice-filled');
+    }
+    if (parsed.kode) {
+      document.getElementById('inp-kode').value = parsed.kode;
+    }
+    if (parsed.keterangan) {
+      document.getElementById('inp-ket').value = parsed.keterangan;
+      document.getElementById('inp-ket').classList.add('voice-filled');
+    }
+    if (parsed.jumlah) {
+      document.getElementById('inp-amount').value = parsed.jumlah;
+      document.getElementById('inp-amount').classList.add('voice-filled');
+    }
+
+    // Format tanggal untuk display
+    let tglDisplay = '(tanggal tidak berubah)';
+    if (parsed.tanggal) {
+      const d = new Date(parsed.tanggal + 'T00:00:00');
+      tglDisplay = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // Tampilkan hasil
+    const el = document.getElementById('voice-result');
+    el.className = 'voice-result show';
+    el.innerHTML = `
+      🗣️ "<em>${transcript}</em>"<br>
+      <strong>${parsed.tipe === 'in' ? '↑ Pemasukan' : '↓ Pengeluaran'}</strong> · 
+      ${parsed.keterangan} · 
+      ${parsed.jumlah ? 'Rp ' + parsed.jumlah.toLocaleString('id-ID') : '(jumlah tidak terdeteksi)'}<br>
+      ${parsed.kode ? '🏷️ ' + parsed.kode + ' · ' : ''}📅 ${tglDisplay}
+    `;
+
+    setTimeout(() => {
+      ['inp-ket','inp-amount','inp-tanggal'].forEach(id => document.getElementById(id).classList.remove('voice-filled'));
+    }, 2000);
+  };
+
+  r.onerror = (e) => {
+    document.getElementById('voice-hint').innerHTML = 'Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em>';
+    const el = document.getElementById('voice-result');
+    el.className = 'voice-result show';
+    el.innerHTML = e.error === 'no-speech' ? '⚠️ Tidak ada suara terdeteksi.' : '⚠️ Error: ' + e.error;
+  };
+
+  r.onend = () => {
+    isListening = false;
+    document.getElementById('voice-btn').classList.remove('listening');
+    document.getElementById('voice-hint').innerHTML = 'Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em>';
+  };
+
+  return r;
+}
+
+function toggleVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Browser kamu tidak mendukung input suara. Gunakan Chrome atau Safari terbaru.');
+    return;
+  }
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+  recognition = initRecognition();
+  recognition.start();
+}
+
+// =====================
+// FORM & DATA
+// =====================
+function setType(type) {
+  currentType = type;
+  document.getElementById('btn-type-in').className = 'toggle-btn' + (type === 'in' ? ' active-in' : '');
+  document.getElementById('btn-type-out').className = 'toggle-btn' + (type === 'out' ? ' active-out' : '');
+  document.getElementById('amount-label').textContent = type === 'in' ? 'Jumlah Pemasukan (Rp)' : 'Jumlah Pengeluaran (Rp)';
+}
+
+function formatRp(n) {
+  if (n >= 1000000) return 'Rp ' + (n/1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'jt';
+  if (n >= 1000) return 'Rp ' + Math.round(n/1000) + 'rb';
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function formatRpFull(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
+
+function renderSummary() {
+  const totalIn = transactions.reduce((s, t) => s + (t.masuk || 0), 0);
+  const totalOut = transactions.reduce((s, t) => s + (t.keluar || 0), 0);
+  const saldo = totalIn - totalOut;
+  document.getElementById('total-in').textContent = formatRp(totalIn);
+  document.getElementById('total-out').textContent = formatRp(totalOut);
+  const elS = document.getElementById('saldo');
+  elS.textContent = formatRp(Math.abs(saldo));
+  elS.className = 'sum-val' + (saldo < 0 ? ' negative' : '');
+  document.getElementById('tx-count').textContent = transactions.length + ' data';
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!transactions.length) { list.innerHTML = '<div class="empty">Belum ada transaksi.</div>'; return; }
+  const EMOJI_IN = ['🌿','💚','✨','🤲','🕌'];
+  const EMOJI_OUT = ['📦','🔧','💡','🧹','🛒'];
+  list.innerHTML = [...transactions].reverse().map((t, ri) => {
+    const i = transactions.length - 1 - ri;
+    const isIn = t.masuk > 0;
+    const val = isIn ? t.masuk : t.keluar;
+    const d = new Date(t.tanggal + 'T00:00:00');
+    const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    const emoji = isIn ? EMOJI_IN[i % EMOJI_IN.length] : EMOJI_OUT[i % EMOJI_OUT.length];
+    return `<div class="tx">
+      <div class="tx-icon ${isIn ? 'in' : 'out'}">${emoji}</div>
+      <div class="tx-info">
+        <div class="tx-ket">${t.keterangan}</div>
+        <div class="tx-meta">${t.kode ? t.kode + ' · ' : ''}${dateStr}</div>
+      </div>
+      <div class="tx-right">
+        <div class="tx-amount ${isIn ? 'in' : 'out'}">${isIn ? '+' : '-'}${formatRpFull(val)}</div>
+        <div class="tx-type">${isIn ? 'Pemasukan' : 'Pengeluaran'}</div>
+        <button class="del-btn" onclick="deleteItem(${i})">hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteItem(idx) {
+  if (!confirm('Hapus transaksi ini?')) return;
+  transactions.splice(idx, 1);
+  localStorage.setItem('kas_masjid', JSON.stringify(transactions));
+  renderHistory(); renderSummary();
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+  if (type !== 'loading') setTimeout(() => el.className = 'status', 4000);
+}
+
+function resetForm() {
+  document.getElementById('inp-kode').value = '';
+  document.getElementById('inp-ket').value = '';
+  document.getElementById('inp-amount').value = '';
+  document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
+  document.getElementById('voice-result').className = 'voice-result';
+  setType('in');
+}
+
+function sendToSheet(data) {
+  return new Promise((resolve) => {
+    const params = new URLSearchParams({
+      tanggal: data.tanggal, kode: data.kode,
+      keterangan: data.keterangan, masuk: String(data.masuk),
+      keluar: String(data.keluar), timestamp: data.timestamp
+    });
+    const img = new Image();
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(true); } };
+    img.onload = finish; img.onerror = finish;
+    setTimeout(finish, 6000);
+    img.src = SCRIPT_URL + '?' + params.toString();
+  });
+}
+
+async function submitData() {
+  const tanggal = document.getElementById('inp-tanggal').value;
+  const kode = document.getElementById('inp-kode').value.trim();
+  const keterangan = document.getElementById('inp-ket').value.trim();
+  const amount = parseFloat(document.getElementById('inp-amount').value) || 0;
+
+  if (!tanggal || !keterangan) { showStatus('Tanggal dan keterangan wajib diisi.', 'error'); return; }
+  if (amount <= 0) { showStatus('Jumlah harus lebih dari 0.', 'error'); return; }
+
+  const masuk = currentType === 'in' ? amount : 0;
+  const keluar = currentType === 'out' ? amount : 0;
+  const tx = { tanggal, kode, keterangan, masuk, keluar, timestamp: new Date().toISOString() };
+
+  transactions.push(tx);
+  localStorage.setItem('kas_masjid', JSON.stringify(transactions));
+  renderHistory(); renderSummary();
+
+  showStatus('Mengirim ke Google Sheets...', 'loading');
+  document.getElementById('btn-submit').disabled = true;
+  await sendToSheet(tx);
+  document.getElementById('btn-submit').disabled = false;
+  showStatus('✓ Tersimpan di Google Sheets!', 'success');
+  resetForm();
+}
+
+function updateConn() {
+  const on = navigator.onLine;
+  document.getElementById('conn-dot').className = 'conn-dot' + (on ? '' : ' off');
+  document.getElementById('conn-label').textContent = on ? 'Online' : 'Offline';
+}
+window.addEventListener('online', updateConn);
+window.addEventListener('offline', updateConn);
+updateConn();
+
+renderHistory(); renderSummary();
+</script>
+</body>
+</html>
