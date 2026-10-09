@@ -1,0 +1,73 @@
+# Kas Masjid: input transaksi dan pembaruan PDF
+
+Versi Apps Script untuk memasukkan transaksi dari HP, menyimpannya di Google Sheet utama, lalu memperbarui isi PDF publik yang sudah digunakan QR masjid. Tidak memerlukan website laporan baru. PDF tetap memakai file ID dan tautan yang sama.
+
+Kode aplikasi lama di `index.html` dipertahankan. Versi terhubung ke pembukuan berada di `apps-script/Index.html` dan dijalankan lewat deployment Apps Script; membuka HTML ini sendiri hanya menampilkan pratinjau tanpa akses simpan.
+
+## Perilaku
+
+- Pilih kas masjid atau PHBI, pemasukan atau pengeluaran, tanggal, K1/K2/K3, keterangan, dan jumlah.
+- Kas masjid ditambahkan ke tab pemasukan/pengeluaran terpisah. PHBI ditambahkan ke tabel RAW PHBI dan tidak dimasukkan ke PDF kas masjid.
+- Riwayat dan saldo dibaca dari Sheet. Saldo aplikasi memakai hasil hitung fisik terakhir ditambah arus kas setelah sinkronisasi; saldo buku historis PDF dihitung dari transaksi sejak 1 Mei 2026 dengan saldo awal 30 April 2026 sebesar Rp6.147.200.
+- Selisih antara buku dan hitungan fisik ditampilkan. Transaksi baru tetap dapat disimpan, tetapi PDF ditahan sampai selisih diselesaikan di sumber. Aplikasi tidak membuat pemasukan fiktif atau mengubah saldo awal untuk menutup selisih.
+- Penyimpanan memakai ID kiriman dan baca ulang server. Kirim ulang sesudah respons terputus tidak menambah transaksi yang sama dua kali. Keterangan ditulis sebagai teks literal, termasuk jika diawali `=`.
+- Saat otomatisasi aktif, input aplikasi memproses laporan setelah transaksi tersimpan. Perubahan langsung di Sheet diperiksa sekitar setiap 5 menit. Jadwal Google dapat bergeser; pembaruan tidak dijanjikan tepat pada detik tertentu.
+- Laporan yang tidak berubah tidak diekspor ulang. Kode bendahara hanya untuk pembukuan internal dan tidak muncul dalam rincian PDF publik.
+- `Drive.Files.update` mengganti konten PDF yang sama. Tidak membuat file publik, mengubah izin berbagi, atau mengganti QR.
+
+## Pemasangan satu kali
+
+Gunakan akun Google yang dapat mengedit Sheet sumber, workbook laporan, dan PDF publik.
+
+1. Dari Sheet sumber, buka **Ekstensi → Apps Script** dan buat proyek untuk versi ini. Jika sudah ada skrip aktif yang dipakai aplikasi lama, gunakan proyek terpisah agar tidak menimpanya.
+2. Tambahkan tiga file kode: `Model.gs`, `Code.gs`, dan `Report.gs`, serta satu file HTML bernama `Index`. Salin isi file yang sesuai dari folder `apps-script`.
+3. Tampilkan manifest melalui **Project Settings → Show appsscript.json** dan salin `apps-script/appsscript.json`. Manifest mengaktifkan layanan Google Sheets v4 dan Google Drive v3. Jika menggunakan proyek Google Cloud standar, aktifkan kedua API pada proyek tersebut.
+4. Isi **Script Properties** berikut dengan ID file asli yang digunakan pembukuan. Jangan masukkan ID atau token OAuth ke HTML atau repositori publik.
+
+| Property | Nilai |
+| --- | --- |
+| `SOURCE_SPREADSHEET_ID` | ID Google Sheet pembukuan utama |
+| `REPORT_SPREADSHEET_ID` | ID workbook template laporan publik |
+| `PUBLIC_PDF_ID` | ID PDF lama yang dituju QR; jangan gunakan PDF baru |
+
+5. Jalankan `configureApp` dari editor dan selesaikan izin Google. Fungsi ini memeriksa sumber, saldo sinkronisasi, template, dan hak edit PDF, tanpa mengganti PDF. Akun yang menjalankan menjadi pemilik aplikasi.
+6. **Deploy → New deployment → Web app**. Pilih **Execute as: Me** dan **Who has access: Only myself**. Buka URL deployment dengan akun yang sama. Aplikasi versi ini khusus akun pemilik; pilihan K1/K2/K3 menentukan pemegang uang dan bukan izin masuk akun bendahara lain.
+7. Cocokkan saldo buku dan fisik jika status **Ditahan**. Periksa transaksi yang kurang atau salah di Sheet berdasarkan bukti transaksi, lalu muat ulang aplikasi. Jangan menambahkan transaksi penyeimbang tanpa bukti.
+8. Klik **Pratinjau**, lalu buka PDF pratinjau. Periksa semua halaman: A4 portrait, nominal, subtotal, transaksi terakhir, periode, dan tabel tidak terpotong. Pratinjau tersimpan sementara di browser; tidak membuat file Drive dan tidak mengganti PDF publik.
+9. Setelah pratinjau sesuai, jalankan `activateAutomation` sekali dari editor. Fungsi ini memasang pemeriksaan berkala dan trigger edit secara idempotent, serta menjalankan pembaruan pertama dengan validasi yang sama. Periksa PDF publik lewat tautan aplikasi. Tambahkan URL aplikasi ke layar utama HP jika diinginkan.
+
+Otorisasi Google dan deployment adalah langkah terpisah dari pengujian kode. Menambahkan kode ke GitHub tidak mengaktifkan aplikasi atau trigger Google.
+
+## Sumber dan periode baru
+
+Setiap pemeriksaan membaca header seluruh tab. Tabel transaksi masjid yang diterima mempunyai empat header `Tanggal | Kode | Keterangan | Pemasukan` atau `Tanggal | Kode | Keterangan | Pengeluaran`. Tabel gabungan/RAW dengan kedua kolom arus kas tidak dihitung lagi. Tab periode baru dengan struktur ini otomatis ikut laporan; periode bertumpuk ditahan agar data tidak dihitung dua kali.
+
+`configureApp` menyimpan ID tab tujuan input, sehingga penggantian nama tab tidak merusak pencatatan. Jika membuat tab periode baru untuk menerima input aplikasi, ubah `WRITE_INCOME_SHEET_ID` dan `WRITE_EXPENSE_SHEET_ID` ke ID tab baru setelah memastikan headernya. Jika ingin satu tab pemasukan dan satu tab pengeluaran yang terus memanjang, tidak perlu membuat periode baru.
+
+Property opsional `PHBI_SHEET_ID` dan `SYNC_SHEET_ID` diisi dari tab RAW PHBI dan REKAP CHAT saat konfigurasi pertama. Tab sinkronisasi harus memiliki blok terbaru `Tanggal | Dana | K1 | K2 | K3 | Total`, diikuti baris kas masjid dan PHBI. Saldo PHBI bendahara lain yang belum dihitung tetap kosong; aplikasi menjelaskan bahwa saldo tersebut baru mencakup uang yang dikonfirmasi.
+
+Untuk pemisahan dana pada tab dengan header empat kolom, developer metadata `KAS_DANA` dapat ditetapkan ke `MASJID` atau `PHBI`. Tab bernama PHBI/Ramadhan tanpa penanda dana tidak boleh ikut laporan masjid.
+
+## Sinkronisasi dan koreksi
+
+- Histori lama tetap tersimpan. Pembagian uang antarbendahara pada sinkronisasi tidak dianggap pemasukan/pengeluaran masjid.
+- Transaksi sebelum tanggal hitung fisik perlu dicocokkan langsung di Sheet. Form aplikasi menerima tanggal sinkronisasi sampai hari ini.
+- Input aplikasi pada hari sinkronisasi diberi penanda bahwa transaksi terjadi sesudah hitung fisik. Transaksi manual di Sheet pada tanggal yang sama dianggap sudah termasuk hitungan fisik, kecuali penandanya dibuat oleh aplikasi. Catat transaksi sesudah hitung fisik pada hari yang sama melalui aplikasi agar tidak rancu.
+- Jangan menyalin catatan ID kiriman saat menduplikasi baris. Dua transaksi nyata dengan tanggal, keterangan, dan nominal sama tetap dihitung sebagai dua transaksi; hanya ID aplikasi yang sama ditolak.
+- Jika respons simpan terputus, gunakan **Kirim ulang transaksi**. **Periksa kiriman sebelumnya** memastikan kiriman sudah/belum tersimpan di server sebelum form dapat diperbaiki.
+- Koreksi transaksi tersimpan dilakukan di Sheet, bukan dengan menghapus riwayat lokal aplikasi. Pemeriksaan berikutnya mendeteksi perubahan isi laporan.
+- `disableAutomation` menghentikan publikasi otomatis. Pencatatan transaksi tetap tersedia; trigger yang tertinggal akan berhenti sebelum bekerja.
+
+## Validasi sebelum publikasi
+
+Total detail, total ringkasan, saldo setiap bulan, dan saldo akhir direkonsiliasi. Workbook laporan dibaca ulang dari API dan dibandingkan dengan model. PDF harus memiliki header PDF, ukuran A4 portrait, dan minimal tiga halaman untuk tiga bagian. Sumber dibaca ulang sebelum unggah untuk mendeteksi edit selama proses. Sesudah unggah, aplikasi memeriksa file ID, MIME type, ukuran, MD5, dan waktu perubahan.
+
+Kegagalan sebelum unggah mempertahankan PDF publik. Kegagalan verifikasi sesudah unggah ditandai sebagai error, bukan klaim sukses; periksa versi file di Drive. Perubahan manual yang terjadi persis setelah pemeriksaan terakhir dapat tertangkap pada pemeriksaan berikutnya, karena Google Sheets dan Drive tidak menyediakan satu transaksi atomik lintas layanan.
+
+Export memakai gaya template laporan yang ada dan hanya tiga tab laporan publik. Kode tidak mengedit, memindahkan, atau menghapus transaksi sumber yang sudah ada; hanya menambahkan transaksi yang dikirim pengguna dan memperluas rentang filter tanpa mengubah kriterianya.
+
+## Pengujian
+
+Jalankan `npm test` atau `node --test tests/*.test.cjs` dengan Node.js 20 atau lebih baru. Tes menggunakan data sintetis dan mock Google, tanpa menulis ke Sheet/PDF asli. Cakupan meliputi parsing data, pemisahan sumber, saldo bulan, checkpoint, deduplikasi kiriman, retry client, teks literal, validasi PDF, pengaman selisih saldo, perubahan sumber selama ekspor, serta pembaruan file ID yang sama.
+
+Pengujian browser Google Apps Script, otorisasi, ekspor Google yang sebenarnya, dan penampilan PDF seluruh halaman harus dilaksanakan saat pemasangan. Tes mock tidak menggantikan pemeriksaan tersebut.

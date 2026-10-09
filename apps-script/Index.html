@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kas Masjid Al-Barokah</title>
+  <style>
+    :root{--green:#1a7a3f;--light:#e8f5ee;--ink:#11291a;--muted:#64796c;--border:#dce7df;--red:#ac3333}
+    *{box-sizing:border-box}body{margin:0;background:#f0f4f0;font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+    button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opacity:.55}input,select{width:100%;min-width:0;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fafcfa;color:var(--ink)}
+    button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #86bfa0;outline-offset:2px}
+    header{background:var(--green);color:white;padding:26px 20px 22px}header>div,main{max-width:780px;margin:auto}h1{font-size:22px;line-height:1.2;margin:0 0 4px}h2{font-size:16px;margin:0 0 14px}p{margin:0 0 12px}.subtitle{font-size:13px;opacity:.8}
+    main{padding:18px 16px 36px}.card{background:white;border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px #11291a04}
+    .toolbar,.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}label{display:block;font-size:12px;font-weight:650;color:var(--muted);margin-bottom:6px}.hint{font-size:12px;color:var(--muted);margin:10px 0 0}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.metric{padding:14px;border-radius:12px;background:var(--light)}.metric label{margin-bottom:3px}.metric strong{font-size:19px;letter-spacing:-.4px;font-variant-numeric:tabular-nums}.metric.balance{grid-column:1/-1;background:#f4f7f5}.expense strong{color:var(--red)}
+    .buttons{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}.primary,.secondary,.type{padding:12px 16px;border-radius:12px;border:1px solid var(--border);font-weight:650;min-height:46px}.primary{background:var(--green);color:white;border-color:var(--green)}.secondary{background:white;color:var(--green)}a.secondary{display:inline-block;text-decoration:none}.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}.type{background:#fafcfa}.type[aria-pressed="true"]{background:var(--light);border-color:var(--green);color:var(--green)}#submitButton{width:100%;margin-top:16px}
+    .badge{display:inline-block;border-radius:20px;background:var(--light);color:var(--green);padding:3px 10px;font-size:12px;font-weight:700}.badge.warning{background:#fff1d8;color:#865509}.badge.error{background:#fcecec;color:var(--red)}.report-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}.report-head h2{margin-bottom:10px}
+    #reportMessage{font-size:13px;color:var(--muted);white-space:pre-line;margin:0}.reconcile{background:#fff8eb;padding:12px;border-radius:12px;margin-top:12px;font-size:13px}.reconcile div{display:flex;justify-content:space-between;gap:12px}.reconcile strong{font-variant-numeric:tabular-nums}.notice{padding:12px 14px;border-radius:12px;background:var(--light);white-space:pre-line;font-size:13px;margin-bottom:14px}.notice.error{background:#fcecec;color:var(--red)}
+    .history-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.history-head h2{margin:0}.history-count{font-size:12px;color:var(--muted)}.transaction{padding:14px 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px}.transaction:last-child{border:0}.transaction .description{overflow-wrap:anywhere;font-weight:600;font-size:14px}.transaction .meta{font-size:12px;color:var(--muted);margin-top:3px}.transaction .amount{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}.transaction .out{color:var(--red)}.transaction .in{color:var(--green)}.empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 0 10px}
+    [hidden]{display:none!important}#connection{font-size:12px;margin-top:12px;opacity:.9}.busy-note{font-size:12px;color:var(--muted);margin-top:10px}.compact{margin-top:0}
+    @media(max-width:390px){.card{padding:16px}.metric strong{font-size:17px}.transaction{grid-template-columns:1fr}.transaction .amount{text-align:right}.fields{grid-template-columns:1fr}.full{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <header><div><h1>Kas Masjid</h1><div class="subtitle">Masjid Al-Barokah Taskombang · Pencatatan bendahara</div><div id="connection" role="status">Menghubungkan ke pembukuan…</div></div></header>
+  <main>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section class="card" aria-label="Ringkasan pembukuan">
+      <div class="toolbar">
+        <div><label for="fund">Dana</label><select id="fund"><option value="MASJID">Kas masjid</option><option value="PHBI">PHBI</option></select></div>
+        <div><label for="month">Bulan laporan</label><input id="month" type="month"></div>
+      </div>
+      <div class="summary">
+        <div class="metric"><label>Pemasukan bulan ini</label><strong id="totalIncome">—</strong></div>
+        <div class="metric expense"><label>Pengeluaran bulan ini</label><strong id="totalExpense">—</strong></div>
+        <div class="metric balance"><label>Saldo tercatat saat ini</label><strong id="currentBalance">—</strong><p id="balanceNote" class="hint"></p></div>
+      </div>
+    </section>
+    <section class="card" aria-label="Status PDF jamaah">
+      <div class="report-head"><h2>Laporan PDF jamaah</h2><span id="reportState" class="badge">Memuat</span></div>
+      <p id="reportMessage">Memeriksa laporan publik.</p>
+      <div id="reconciliation" class="reconcile" hidden></div>
+      <div class="buttons"><a id="pdfLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka PDF</a><button id="previewPdf" type="button" class="secondary" disabled>Pratinjau</button><button id="refreshPdf" type="button" class="secondary" disabled>Perbarui PDF</button></div>
+      <a id="previewLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka pratinjau PDF</a>
+      <p id="automationNote" class="hint"></p>
+    </section>
+    <section class="card" aria-label="Tambah transaksi">
+      <h2>Catat transaksi</h2>
+      <p id="formFund" class="hint compact">Dana: Kas masjid</p>
+      <form id="transactionForm">
+        <div class="type-grid"><button class="type" id="incomeType" type="button" aria-pressed="true">Pemasukan</button><button class="type" id="expenseType" type="button" aria-pressed="false">Pengeluaran</button></div>
+        <div class="fields">
+          <div><label for="date">Tanggal</label><input id="date" type="date" required></div>
+          <div><label for="code">Penerima / pembayar</label><select id="code" required><option value="K1">K1 · Kevin</option><option value="K2">K2 · Arum / Ming Ming</option><option value="K3">K3 · Wawan</option></select></div>
+          <div class="full"><label for="description">Keterangan</label><input id="description" type="text" maxlength="500" required placeholder="Contoh: Infaq kotak besar"></div>
+          <div class="full"><label for="amount">Jumlah (Rupiah)</label><input id="amount" type="text" inputmode="numeric" pattern="[0-9]+|[0-9]{1,3}(\.[0-9]{3})+" required placeholder="Contoh: 637.600" autocomplete="off"></div>
+        </div>
+        <button id="submitButton" class="primary" type="submit" disabled>Simpan transaksi</button>
+        <p class="hint">Periksa tanggal, dana, bendahara, dan nominal sebelum menyimpan.</p>
+        <p id="pendingNote" class="busy-note" hidden>Kiriman sebelumnya belum terkonfirmasi. Periksa isinya lalu tekan kirim ulang; transaksi tidak akan digandakan.</p>
+        <button id="checkPending" type="button" class="secondary" hidden>Periksa kiriman sebelumnya</button>
+      </form>
+    </section>
+    <section class="card" aria-label="Riwayat bersama dari Sheet">
+      <div class="history-head"><h2>Rincian bulan ini</h2><span id="historyCount" class="history-count"></span></div>
+      <div id="history"><p class="empty">Memuat transaksi…</p></div>
+      <div class="buttons"><button id="refreshData" class="secondary" type="button" disabled>Muat ulang data</button></div>
+      <p class="hint">Rincian dibaca dari Sheet. Koreksi transaksi yang sudah tersimpan dilakukan di Sheet.</p>
+    </section>
+  </main>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const STORAGE_KEY = 'kas-masjid-pending-v1';
+    const rupiah = value => (Number(value) < 0 ? '−' : '') + 'Rp' + Math.abs(Number(value)).toLocaleString('id-ID');
+    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    let type = 'in', dashboard = null, pending = null, busy = false, loadVersion = 0, previewUrl = null;
+    const connected = typeof google !== 'undefined' && google.script && google.script.run;
+
+    function api(method, ...args) {
+      return new Promise((resolve, reject) => {
+        if (!connected) { reject(new Error('Buka aplikasi melalui deployment Apps Script.')); return; }
+        const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(error => reject(new Error(error.message || String(error))));
+        runner[method](...args);
+      });
+    }
+    function displayDate(iso) {
+      const [y,m,d] = iso.split('-'); return d + ' ' + monthNames[Number(m)-1] + ' ' + y;
+    }
+    function notice(message, error = false) {
+      $('notice').textContent = message;
+      $('notice').className = 'notice' + (error ? ' error' : '');
+      $('notice').hidden = !message;
+    }
+    function chooseType(value) {
+      type = value;
+      $('incomeType').setAttribute('aria-pressed', value === 'in');
+      $('expenseType').setAttribute('aria-pressed', value === 'out');
+    }
+    function setBusy(value) {
+      busy = value;
+      ['fund','month','date','code','description','amount','incomeType','expenseType','refreshData','refreshPdf','previewPdf','submitButton','checkPending'].forEach(id => {
+        $(id).disabled = value || !connected || !dashboard;
+      });
+      $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
+    }
+    function renderReport(status) {
+      const names = {PUBLISHED:'Diperbarui',UNCHANGED:'Sudah sesuai',BLOCKED:'Ditahan',ERROR:'Perlu diperiksa',SETUP:'Belum aktif',READY:'Siap diaktifkan'};
+      $('reportState').textContent = names[status.state] || 'Memeriksa';
+      $('reportState').className = 'badge' + (status.state === 'ERROR' ? ' error' : ['BLOCKED','SETUP'].includes(status.state) ? ' warning' : '');
+      $('reportMessage').textContent = status.message;
+      $('reconciliation').replaceChildren();
+      $('reconciliation').hidden = !status.reconciliation || status.reconciliation.ok;
+      if (status.reconciliation && !status.reconciliation.ok) {
+        const r = status.reconciliation;
+        const caption = document.createElement('p'); caption.textContent = 'Pencocokan per ' + displayDate(r.date); $('reconciliation').append(caption);
+        [['Saldo buku',r.book],['Uang fisik',r.actual],['Selisih',r.difference]].forEach(([label,value]) => {
+          const row = document.createElement('div'), text = document.createElement('span'), amount = document.createElement('strong');
+          text.textContent = label; amount.textContent = rupiah(value); row.append(text,amount); $('reconciliation').append(row);
+        });
+      }
+    }
+    function render(data) {
+      dashboard = data;
+      $('month').value = data.month;
+      $('formFund').textContent = 'Dana: ' + (data.fund === 'PHBI' ? 'PHBI' : 'Kas masjid');
+      $('totalIncome').textContent = rupiah(data.income);
+      $('totalExpense').textContent = rupiah(data.expense);
+      $('currentBalance').textContent = rupiah(data.balance);
+      const unknown = Object.values(data.checkpoint.holders).some(value => value === null);
+      $('balanceNote').textContent = 'Dari hasil hitung fisik ' + displayDate(data.checkpoint.date) + ', ditambah arus kas setelah sinkronisasi.' +
+        (unknown ? ' Saldo awal bendahara lain belum dihitung; angka ini hanya mencakup uang yang sudah dikonfirmasi.' : '');
+      if (!pending) { if (!$('date').value) $('date').value = data.today; }
+      $('date').max = data.today; $('date').min = data.checkpoint.date;
+      renderReport(data.report);
+      $('automationNote').textContent = data.automatic ? 'Input aplikasi memproses PDF setelah tersimpan. Perubahan langsung di Sheet diperiksa sekitar setiap 5 menit.' : 'Otomatisasi belum diaktifkan di Apps Script.';
+      $('pdfLink').hidden = !data.pdfUrl;
+      if (data.pdfUrl && /^https:\/\/drive\.google\.com\//.test(data.pdfUrl)) $('pdfLink').href = data.pdfUrl;
+      else { $('pdfLink').hidden = true; $('pdfLink').removeAttribute('href'); }
+      $('historyCount').textContent = data.transactions.length + ' transaksi';
+      $('history').replaceChildren();
+      data.transactions.forEach(tx => {
+        const row = document.createElement('div'), info = document.createElement('div'), description = document.createElement('div'), meta = document.createElement('div'), amount = document.createElement('div');
+        row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
+        meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
+        amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
+        info.append(description,meta); row.append(info,amount); $('history').append(row);
+      });
+      if (!data.transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
+      $('connection').textContent = 'Terhubung · Data dari Google Sheet';
+      setBusy(busy);
+    }
+    async function loadDashboard() {
+      const version = ++loadVersion;
+      try {
+        const data = await api('getDashboard', $('fund').value, $('month').value);
+        if (version !== loadVersion) return;
+        render(data);
+      } catch (error) {
+        if (version !== loadVersion) return;
+        $('connection').textContent = 'Data belum berhasil dimuat'; notice(error.message, true);
+        // The displayed figures are stale; require a successful reload before writing.
+        dashboard = null; setBusy(false); $('refreshData').disabled = !connected;
+      }
+    }
+    function readInput() {
+      const raw = $('amount').value.trim();
+      if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw)) throw new Error('Gunakan Rupiah bulat, misalnya 637.600.');
+      const amount = Number(raw.replace(/\./g,''));
+      if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Nominal harus lebih dari nol.');
+      return {fund:$('fund').value,type,code:$('code').value,date:$('date').value,description:$('description').value.trim(),amount};
+    }
+    function samePayload(a,b) { return ['fund','type','code','date','description','amount'].every(key => a[key] === b[key]); }
+    function persistPending(value) {
+      // Keep only an unacknowledged request; transaction history always comes from the server.
+      if (value) localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      else localStorage.removeItem(STORAGE_KEY);
+      pending = value;
+      $('pendingNote').hidden = !value;
+      $('checkPending').hidden = !value;
+    }
+    function restorePending() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (stored && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(stored.id)) {
+          pending = stored; $('fund').value = stored.fund; chooseType(stored.type); $('code').value = stored.code;
+          $('date').value = stored.date; $('description').value = stored.description; $('amount').value = stored.amount;
+          $('pendingNote').hidden = false;
+          $('checkPending').hidden = false;
+        }
+      } catch (error) { notice('Kiriman sebelumnya tidak dapat dibaca. Periksa riwayat Sheet sebelum mengirim kembali.', true); }
+    }
+    $('transactionForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || !dashboard || !connected) return;
+      try {
+        const payload = readInput();
+        if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
+        if (!pending) persistPending({...payload,id:crypto.randomUUID()});
+        setBusy(true); notice('Menyimpan transaksi dan memeriksa laporan…');
+        const result = await api('saveTransaction',pending);
+        if (!result.saved || result.id !== pending.id) throw new Error('Penyimpanan belum terkonfirmasi. Gunakan kirim ulang.');
+        const fund = pending.fund;
+        persistPending(null); $('description').value = ''; $('amount').value = '';
+        renderReport(result.report);
+        let text = result.duplicate ? 'Transaksi ini sudah tersimpan. Tidak ada pencatatan ganda.' : 'Transaksi berhasil tersimpan di Sheet.';
+        text += '\n' + (fund === 'PHBI' ? 'PHBI dicatat terpisah dari laporan kas masjid. ' : '') + result.report.message;
+        if (result.warning) text += '\n' + result.warning;
+        notice(text, result.report.state === 'ERROR');
+        await loadDashboard();
+      } catch (error) { notice(error.message + (pending ? '\nKiriman disimpan untuk dikirim ulang dengan identitas yang sama.' : ''), true); }
+      finally { setBusy(false); }
+    });
+    $('incomeType').addEventListener('click',() => chooseType('in'));
+    $('checkPending').addEventListener('click', async () => {
+      if (!pending || busy) return;
+      setBusy(true);
+      try {
+        const result = await api('resolvePendingRequest',pending.id);
+        if (result.id !== pending.id) throw new Error('Identitas kiriman belum dapat dipastikan.');
+        persistPending(null);
+        if (result.saved) { $('description').value = ''; $('amount').value = ''; }
+        notice(result.saved ? 'Kiriman sebelumnya sudah tersimpan. Tidak perlu dikirim lagi.' : 'Kiriman belum tersimpan. Isinya sekarang dapat diperbaiki sebelum dikirim.');
+        await loadDashboard();
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('expenseType').addEventListener('click',() => chooseType('out'));
+    ['fund','month'].forEach(id => $(id).addEventListener('change',async () => {
+      if (pending && id === 'fund') { $('fund').value = pending.fund; notice('Selesaikan kiriman yang belum terkonfirmasi sebelum mengganti dana.',true); return; }
+      if (id === 'fund') $('date').value = '';
+      setBusy(true); await loadDashboard(); setBusy(false);
+    }));
+    $('refreshData').addEventListener('click',async () => { setBusy(true); await loadDashboard(); setBusy(false); });
+    $('previewPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Menyiapkan pratinjau…'); $('previewLink').hidden = true;
+      try {
+        const result = await api('previewPublicPdf');
+        if (!result.ready) { renderReport(result.report); notice(result.report.message); return; }
+        const raw = atob(result.bytes), bytes = Uint8Array.from(raw, char => char.charCodeAt(0));
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+        $('previewLink').href = previewUrl; $('previewLink').hidden = false;
+        notice('Pratinjau siap. Periksa seluruh halaman; PDF jamaah belum diganti.');
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('refreshPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Memeriksa dan memperbarui laporan…');
+      try { const result = await api('refreshPublicPdf'); renderReport(result); notice(result.message,result.state === 'ERROR'); await loadDashboard(); }
+      catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    restorePending();
+    if (connected) loadDashboard();
+    else {
+      $('connection').textContent = 'Pratinjau · Belum terhubung ke Google';
+      $('reportMessage').textContent = 'Jalankan melalui deployment Apps Script untuk membaca Sheet dan menyimpan transaksi.';
+      $('history').replaceChildren(); setBusy(false);
+    }
+  </script>
+</body>
+</html>
