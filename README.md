@@ -8,8 +8,8 @@ Kode aplikasi lama di `index.html` dipertahankan. Versi terhubung ke pembukuan b
 
 - Pilih kas masjid atau PHBI, pemasukan atau pengeluaran, tanggal, K1/K2/K3, keterangan, dan jumlah.
 - Kas masjid ditambahkan ke tab pemasukan/pengeluaran terpisah. PHBI ditambahkan ke tabel RAW PHBI dan tidak dimasukkan ke PDF kas masjid.
-- Riwayat dan saldo dibaca dari Sheet. Saldo aplikasi memakai hasil hitung fisik terakhir ditambah arus kas setelah sinkronisasi; saldo buku historis PDF dihitung dari transaksi sejak 1 Mei 2026 dengan saldo awal 30 April 2026 sebesar Rp6.147.200.
-- Selisih antara buku dan hitungan fisik ditampilkan. Transaksi baru tetap dapat disimpan, tetapi PDF ditahan sampai selisih diselesaikan di sumber. Aplikasi tidak membuat pemasukan fiktif atau mengubah saldo awal untuk menutup selisih.
+- Periode baru memakai hasil hitung fisik saat sinkronisasi sebagai saldo awal. Hanya transaksi sesudah hitungan tersebut yang masuk rincian aplikasi dan PDF; semua baris lama tetap disimpan di Sheet sebagai arsip. Saldo awal dibekukan saat konfigurasi, sehingga hitungan fisik berikutnya tidak mengubah awal laporan secara diam-diam.
+- Selisih lama tidak dibukukan sebagai pemasukan. Validasi transaksi, total laporan, dan pencocokan terhadap hitungan fisik berikutnya tetap berjalan; selisih baru menahan PDF sampai dicocokkan. Mode historis sejak Mei masih tersedia melalui `REPORT_MODE=HISTORICAL`, bila memang diminta.
 - Penyimpanan memakai ID kiriman dan baca ulang server. Kirim ulang sesudah respons terputus tidak menambah transaksi yang sama dua kali. Keterangan ditulis sebagai teks literal, termasuk jika diawali `=`.
 - Saat otomatisasi aktif, input aplikasi memproses laporan setelah transaksi tersimpan. Perubahan langsung di Sheet diperiksa sekitar setiap 5 menit. Jadwal Google dapat bergeser; pembaruan tidak dijanjikan tepat pada detik tertentu.
 - Laporan yang tidak berubah tidak diekspor ulang. Kode bendahara hanya untuk pembukuan internal dan tidak muncul dalam rincian PDF publik.
@@ -30,9 +30,11 @@ Gunakan akun Google yang dapat mengedit Sheet sumber, workbook laporan, dan PDF 
 | `REPORT_SPREADSHEET_ID` | ID workbook template laporan publik |
 | `PUBLIC_PDF_ID` | ID PDF lama yang dituju QR; jangan gunakan PDF baru |
 
-5. Jalankan `configureApp` dari editor dan selesaikan izin Google. Fungsi ini memeriksa sumber, saldo sinkronisasi, template, dan hak edit PDF, tanpa mengganti PDF. Akun yang menjalankan menjadi pemilik aplikasi.
+5. Jalankan `configureApp` dari editor dan selesaikan izin Google. Fungsi ini memeriksa sumber, saldo sinkronisasi, template, dan hak edit PDF, tanpa mengganti PDF. Akun yang menjalankan menjadi pemilik aplikasi. Pada pemasangan baru, `REPORT_MODE=NEW_PERIOD` menjadi default dan saldo fisik disimpan di `REPORT_BASELINE` serta `PHBI_REPORT_BASELINE`; jangan mengisi nominal baru ke tabel pemasukan untuk mewakili saldo awal.
+
+Tanggal awal yang disetujui untuk pemasangan ini adalah 8 Oktober 2026 (`NEW_PERIOD_START_DATE=2026-10-08`). Jika Sheet sudah memiliki hitungan fisik yang lebih baru saat pemasangan pertama, masukkan snapshot saldo 8 Oktober ke `REPORT_BASELINE` dan `PHBI_REPORT_BASELINE` dari blok arsip sinkronisasi yang sesuai. Konfigurasi akan berhenti jika hanya hitungan terbaru yang tersedia, agar awal periode tidak bergeser tanpa permintaan.
 6. **Deploy → New deployment → Web app**. Pilih **Execute as: Me** dan **Who has access: Only myself**. Buka URL deployment dengan akun yang sama. Aplikasi versi ini khusus akun pemilik; pilihan K1/K2/K3 menentukan pemegang uang dan bukan izin masuk akun bendahara lain.
-7. Cocokkan saldo buku dan fisik jika status **Ditahan**. Periksa transaksi yang kurang atau salah di Sheet berdasarkan bukti transaksi, lalu muat ulang aplikasi. Jangan menambahkan transaksi penyeimbang tanpa bukti.
+7. Periksa bahwa tanggal dan nominal saldo awal adalah hasil hitung fisik yang disetujui. Selisih periode lama tidak menjadi penghalang pada mode periode baru. Jika pencocokan sesudah awal periode baru berstatus **Ditahan**, periksa transaksi berdasarkan bukti, lalu muat ulang aplikasi.
 8. Klik **Pratinjau**, lalu buka PDF pratinjau. Periksa semua halaman: A4 portrait, nominal, subtotal, transaksi terakhir, periode, dan tabel tidak terpotong. Pratinjau tersimpan sementara di browser; tidak membuat file Drive dan tidak mengganti PDF publik.
 9. Setelah pratinjau sesuai, jalankan `activateAutomation` sekali dari editor. Fungsi ini memasang pemeriksaan berkala dan trigger edit secara idempotent, serta menjalankan pembaruan pertama dengan validasi yang sama. Periksa PDF publik lewat tautan aplikasi. Tambahkan URL aplikasi ke layar utama HP jika diinginkan.
 
@@ -51,6 +53,8 @@ Untuk pemisahan dana pada tab dengan header empat kolom, developer metadata `KAS
 ## Sinkronisasi dan koreksi
 
 - Histori lama tetap tersimpan. Pembagian uang antarbendahara pada sinkronisasi tidak dianggap pemasukan/pengeluaran masjid.
+- Infaq kotak yang dibuka sebelum hitung fisik sudah termasuk saldo awal dan tidak dihitung lagi sebagai pemasukan periode baru. Jika belum ada transaksi baru, bagian rincian menampilkan pesan kosong, subtotal nol, dan total nol; saldo kas tetap sebesar uang fisik, bukan nol.
+- `REPORT_BASELINE` dan `PHBI_REPORT_BASELINE` adalah konfigurasi privat di Apps Script. Jangan menghapus atau mengubahnya setiap kali sinkronisasi. Perubahan itu berarti memulai periode lain dan harus diminta secara khusus.
 - Transaksi sebelum tanggal hitung fisik perlu dicocokkan langsung di Sheet. Form aplikasi menerima tanggal sinkronisasi sampai hari ini.
 - Input aplikasi pada hari sinkronisasi diberi penanda bahwa transaksi terjadi sesudah hitung fisik. Transaksi manual di Sheet pada tanggal yang sama dianggap sudah termasuk hitungan fisik, kecuali penandanya dibuat oleh aplikasi. Catat transaksi sesudah hitung fisik pada hari yang sama melalui aplikasi agar tidak rancu.
 - Jangan menyalin catatan ID kiriman saat menduplikasi baris. Dua transaksi nyata dengan tanggal, keterangan, dan nominal sama tetap dihitung sebagai dua transaksi; hanya ID aplikasi yang sama ditolak.

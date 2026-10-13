@@ -5,7 +5,7 @@ const {loadGas,tx,json,fakePdf} = require('./helpers.cjs');
 const request = {id:'11111111-1111-4111-a111-111111111111',fund:'MASJID',type:'in',code:'K1',date:'2026-10-09',description:'Infaq uji',amount:100};
 
 function setup() {
-  const {gas:g,properties} = loadGas({OWNER_EMAIL:'owner@example.test',SOURCE_SPREADSHEET_ID:'source_private',REPORT_SPREADSHEET_ID:'report_private',PUBLIC_PDF_ID:'same_public_pdf',AUTO_PUBLISH_ENABLED:'true'});
+  const {gas:g,properties} = loadGas({OWNER_EMAIL:'owner@example.test',SOURCE_SPREADSHEET_ID:'source_private',REPORT_SPREADSHEET_ID:'report_private',PUBLIC_PDF_ID:'same_public_pdf',AUTO_PUBLISH_ENABLED:'true',REPORT_MODE:'HISTORICAL'});
   const cfg = g.cashConfig_();
   const rows = [tx('2026-05-01',3000),tx('2026-05-02',1000,'out')];
   const checkpoint = {date:'2026-10-08',amount:6149200,holders:{K1:6149000,K2:200,K3:0}};

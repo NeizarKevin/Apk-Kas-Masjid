@@ -157,9 +157,33 @@ function cashSum_(sum, tx) {
 function cashCheckpointKey_(checkpoint) {
   return JSON.stringify([checkpoint.date, checkpoint.amount, checkpoint.holders]);
 }
+function cashValidateBaseline_(baseline, allowUnknownHolders) {
+  if (!baseline || typeof baseline !== 'object' || !baseline.holders) throw new Error('Saldo awal periode baru belum lengkap.');
+  var holders = {}, total = 0;
+  CASH_CODES_.forEach(function (code) {
+    var amount = baseline.holders[code];
+    if (amount === null && allowUnknownHolders) holders[code] = null;
+    else { holders[code] = cashMoney_(amount, true); total += holders[code]; }
+  });
+  var amount = cashMoney_(baseline.amount, true);
+  if (total !== amount) throw new Error('Saldo awal tidak sama dengan pembagian uang bendahara.');
+  return {date: cashIso_(baseline.date), amount: amount, holders: holders};
+}
+function cashNewPeriodReport_(transactions, baseline) {
+  baseline = cashValidateBaseline_(baseline, false);
+  // The counted cash already includes all receipts and expenses before synchronization.
+  var current = transactions.filter(function (tx) { return cashIsAfterReportBaseline_(tx, baseline); });
+  var report = cashBuildReport_(current, baseline.amount, baseline.date);
+  report.mode = 'NEW_PERIOD'; report.openingDate = baseline.date;
+  return report;
+}
 function cashIsAfterCheckpoint_(tx, checkpoint) {
   return tx.date > checkpoint.date || (tx.date === checkpoint.date && tx.meta &&
     tx.meta.checkpointKey === cashCheckpointKey_(checkpoint) && tx.meta.afterSync === true);
+}
+function cashIsAfterReportBaseline_(tx, baseline) {
+  return cashIsAfterCheckpoint_(tx, baseline) || (tx.date === baseline.date && tx.meta &&
+    tx.meta.afterSync === true && tx.meta.reportBaselineKey === cashCheckpointKey_(baseline));
 }
 function cashReconcileCheckpoint_(report, transactions, checkpoint) {
   var before = transactions.filter(function (tx) {
@@ -190,7 +214,7 @@ function cashSameInput_(a, b) {
   return ['id', 'fund', 'type', 'code', 'date', 'description', 'amount'].every(function (key) { return a[key] === b[key]; });
 }
 function cashReportSignature_(report) {
-  return JSON.stringify([report.startDate, report.opening,
+  return JSON.stringify([report.mode || 'HISTORICAL', report.startDate, report.opening,
     report.incoming.map(cashVisible_), report.outgoing.map(cashVisible_)]);
 }
 function cashVisible_(tx) { return [tx.date, tx.description, tx.amount]; }
@@ -199,8 +223,10 @@ function cashDetailRows_(report, type) {
   var all = type === 'in' ? report.incoming : report.outgoing;
   report.months.forEach(function (month) {
     var list = all.filter(function (tx) { return tx.date.slice(0, 7) === month.key; });
-    if (!list.length) return;
+    if (!list.length && report.mode !== 'NEW_PERIOD') return;
     rows.push({kind: 'month', values: [month.label, '', '']});
+    if (!list.length) rows.push({kind: 'empty', values: ['',
+      type === 'in' ? 'Belum ada penerimaan kas pada periode ini.' : 'Belum ada pengeluaran kas pada periode ini.', '']});
     list.forEach(function (tx) { rows.push({kind: 'transaction', values: [cashDateLabel_(tx.date), tx.description, tx.amount]}); });
     rows.push({kind: 'subtotal', values: ['', 'Subtotal ' + month.label, month[kind]]});
     rows.push({kind: 'blank', values: ['', '', '']});

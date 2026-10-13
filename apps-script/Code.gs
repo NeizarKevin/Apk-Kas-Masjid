@@ -6,8 +6,16 @@ function cashConfig_() {
   });
   if (data.SOURCE_SPREADSHEET_ID === data.REPORT_SPREADSHEET_ID)
     throw new Error('Workbook laporan harus berbeda dari sumber transaksi.');
+  var mode = data.REPORT_MODE || 'NEW_PERIOD', baseline = null, phbiBaseline = null;
+  if (['NEW_PERIOD', 'HISTORICAL'].indexOf(mode) < 0) throw new Error('REPORT_MODE tidak valid.');
+  try {
+    if (data.REPORT_BASELINE) baseline = cashValidateBaseline_(JSON.parse(data.REPORT_BASELINE), false);
+    if (data.PHBI_REPORT_BASELINE) phbiBaseline = cashValidateBaseline_(JSON.parse(data.PHBI_REPORT_BASELINE), true);
+  } catch (error) { throw new Error('Konfigurasi saldo awal periode baru rusak: ' + error.message); }
   return {sourceId: data.SOURCE_SPREADSHEET_ID, reportId: data.REPORT_SPREADSHEET_ID,
     pdfId: data.PUBLIC_PDF_ID, opening: 6147200, startDate: '2026-05-01',
+    mode: mode, baseline: baseline, phbiBaseline: phbiBaseline,
+    expectedStartDate: cashIso_(data.NEW_PERIOD_START_DATE || '2026-10-08'),
     phbiId: data.PHBI_SHEET_ID ? Number(data.PHBI_SHEET_ID) : null,
     syncId: data.SYNC_SHEET_ID ? Number(data.SYNC_SHEET_ID) : null,
     writeInId: data.WRITE_INCOME_SHEET_ID ? Number(data.WRITE_INCOME_SHEET_ID) : null,
@@ -92,10 +100,19 @@ function cashSource_(cfg) {
   var sync = grids.filter(function (g) { return g.id === cfg.syncId; })[0];
   var checkpoints = cashCheckpoints_(sync.rows, metadata.properties.timeZone);
   var phbiTxs = cashPhbiRows_(phbi, metadata.properties.timeZone);
-  var report = cashBuildReport_(ledger.transactions, cfg.opening, cfg.startDate);
+  if (cfg.mode === 'NEW_PERIOD' && ((!cfg.baseline && checkpoints.MASJID.date !== cfg.expectedStartDate) ||
+      (!cfg.phbiBaseline && checkpoints.PHBI.date !== cfg.expectedStartDate)))
+    throw new Error('Saldo awal yang disetujui belum dipasang. Isi snapshot REPORT_BASELINE dan PHBI_REPORT_BASELINE; jangan memulai ulang dari hitungan berikutnya.');
+  var baseline = cfg.baseline || checkpoints.MASJID;
+  var report = cfg.mode === 'NEW_PERIOD' ? cashNewPeriodReport_(ledger.transactions, baseline) :
+    cashBuildReport_(ledger.transactions, cfg.opening, cfg.startDate);
+  if (cfg.mode === 'NEW_PERIOD' && checkpoints.MASJID.date < baseline.date)
+    throw new Error('Tanggal sinkronisasi sumber lebih awal dari saldo awal laporan.');
+  var reportTransactions = report.incoming.concat(report.outgoing);
   return {cfg: cfg, metadata: metadata, grids: grids, ledger: ledger, phbi: phbi,
     checkpoints: checkpoints, phbiTransactions: phbiTxs, report: report,
-    reconciliation: cashReconcileCheckpoint_(report, ledger.transactions, checkpoints.MASJID)};
+    reportBaseline: baseline, phbiBaseline: cfg.phbiBaseline || checkpoints.PHBI,
+    reconciliation: cashReconcileCheckpoint_(report, reportTransactions, checkpoints.MASJID)};
 }
 function cashCheckpoints_(rows, timeZone) {
   var start = -1;
@@ -176,7 +193,8 @@ function cashAppend_(state, tx) {
   var sample = (((formatResponse.sheets || [])[0] || {}).data || [])[0] || {};
   var styles = ((sample.rowData || [])[0] || {}).values || [];
   var meta = Object.assign({}, tx, {createdAt: new Date().toISOString(), afterSync: true,
-    checkpointKey: cashCheckpointKey_(checkpoint)});
+    checkpointKey: cashCheckpointKey_(checkpoint), reportBaselineKey: cashCheckpointKey_(
+      tx.fund === 'PHBI' ? (state.phbiBaseline || checkpoint) : (state.reportBaseline || checkpoint))});
   var values = tx.fund === 'PHBI'
     ? [cashSerial_(tx.date), tx.code, tx.description, tx.type === 'in' ? tx.amount : '',
       tx.type === 'out' ? tx.amount : '', 'Aplikasi kas / ' + tx.id]
@@ -221,7 +239,10 @@ function getDashboard(fund, month) {
   month = /^\d{4}-\d{2}$/.test(month || '') ? month : cashToday_().slice(0, 7);
   var state = cashSource_(cashConfig_()), checkpoint = state.checkpoints[fund];
   var all = fund === 'MASJID' ? state.ledger.transactions : state.phbiTransactions;
-  var selected = all.filter(function (tx) { return tx.date.slice(0, 7) === month; });
+  var visible = state.cfg.mode === 'NEW_PERIOD' ? all.filter(function (tx) {
+    return cashIsAfterReportBaseline_(tx, fund === 'MASJID' ? state.reportBaseline : state.phbiBaseline);
+  }) : all;
+  var selected = visible.filter(function (tx) { return tx.date.slice(0, 7) === month; });
   var after = all.filter(function (tx) { return cashIsAfterCheckpoint_(tx, checkpoint); });
   var balance = checkpoint.amount + after.reduce(function (s, tx) { return s + (tx.type === 'in' ? tx.amount : -tx.amount); }, 0);
   var rawStatus = PropertiesService.getScriptProperties().getProperty('REPORT_STATUS');
@@ -229,6 +250,8 @@ function getDashboard(fund, month) {
   if (!state.reconciliation.ok) status = {state: 'BLOCKED',
     message: 'Saldo buku dan hitungan fisik belum cocok. PDF publik tetap versi terakhir.',
     reconciliation: state.reconciliation};
+  else if (status.state === 'BLOCKED') status = {state: 'READY',
+    message: 'Saldo awal dan pembukuan periode ini sudah cocok. Laporan siap diperbarui.'};
   var file = Drive.Files.get(state.cfg.pdfId, {fields: 'id,mimeType,webViewLink,modifiedTime', supportsAllDrives: true});
   if (file.id !== state.cfg.pdfId || file.mimeType !== 'application/pdf') throw new Error('Target publik harus file PDF yang sudah ada.');
   return {today: cashToday_(), month: month, fund: fund, checkpoint: checkpoint,
@@ -238,6 +261,7 @@ function getDashboard(fund, month) {
     transactions: selected.slice().sort(cashSort_).reverse().map(function (tx) {
       return {date: tx.date, code: tx.code, description: tx.description, type: tx.type, amount: tx.amount};
     }), report: status, pdfUrl: file.webViewLink || null, pdfUpdatedAt: file.modifiedTime,
+    reportStartDate: state.report.startDate, reportOpening: state.report.opening,
     automatic: PropertiesService.getScriptProperties().getProperty('AUTO_PUBLISH_ENABLED') === 'true'};
 }
 function saveTransaction(input) {
@@ -321,6 +345,11 @@ function configureApp() {
   p.setProperties({OWNER_EMAIL: active, PHBI_SHEET_ID: String(state.cfg.phbiId), SYNC_SHEET_ID: String(state.cfg.syncId),
     WRITE_INCOME_SHEET_ID: String(cashDestination_(state, 'in').id),
     WRITE_EXPENSE_SHEET_ID: String(cashDestination_(state, 'out').id)});
+  if (state.cfg.mode === 'NEW_PERIOD') {
+    p.setProperty('REPORT_MODE', 'NEW_PERIOD');
+    if (!state.cfg.baseline) p.setProperty('REPORT_BASELINE', JSON.stringify(state.reportBaseline));
+    if (!state.cfg.phbiBaseline) p.setProperty('PHBI_REPORT_BASELINE', JSON.stringify(state.phbiBaseline));
+  }
   if (!p.getProperty('AUTO_PUBLISH_ENABLED')) p.setProperty('AUTO_PUBLISH_ENABLED', 'false');
   return cashStatus_({state: state.reconciliation.ok ? 'READY' : 'BLOCKED',
     message: state.reconciliation.ok ? 'Konfigurasi terverifikasi. Aktifkan otomatisasi setelah memeriksa pratinjau PDF.' :

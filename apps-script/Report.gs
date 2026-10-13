@@ -71,12 +71,18 @@ function cashWriteWorkbook_(cfg, report) {
   });
   var period = cashDateLabel_(report.startDate) + ' - ' + cashDateLabel_(report.latest);
   summary.getRange('A3').setValue('Periode ' + period);
+  summary.getRange('A8').setValue(report.mode === 'NEW_PERIOD' ?
+    'Saldo kas awal setelah sinkronisasi ' + cashDateLabel_(report.openingDate) : 'Saldo kas awal per 30 April 2026');
   summary.getRange('G8:G12').setValues([[report.opening], [report.income], [-report.expense], [report.net], [report.ending]]);
   summary.getRange('A11').setValue(report.net < 0 ? 'Penurunan bersih kas' : 'Kenaikan bersih kas');
   summary.getRange('A12').setValue('Saldo kas akhir per ' + cashDateLabel_(report.latest));
   summary.getRange(noteIndex + delta + 2, 1).setValue(
-    'Saldo awal mengacu pada saldo kas per 30 April 2026 sebesar ' + cashRupiah_(report.opening) +
-    '. Penerimaan dan pengeluaran dihitung ulang dari pembukuan kas masjid. Dana PHBI dicatat terpisah.');
+    report.mode === 'NEW_PERIOD' ?
+      'Periode baru dimulai dari hasil hitung fisik kas masjid setelah sinkronisasi ' + cashDateLabel_(report.openingDate) +
+      ' sebesar ' + cashRupiah_(report.opening) + '. Infaq yang dibuka sebelum sinkronisasi sudah termasuk saldo awal. ' +
+      'Histori sebelumnya tetap tersimpan dalam pembukuan. Dana PHBI dicatat terpisah.' :
+      'Saldo awal mengacu pada saldo kas per 30 April 2026 sebesar ' + cashRupiah_(report.opening) +
+      '. Penerimaan dan pengeluaran dihitung ulang dari pembukuan kas masjid. Dana PHBI dicatat terpisah.');
   var incomeLayout = cashWriteDetails_(cfg, book.getSheetByName(names[1]), report, 'in', period);
   var expenseLayout = cashWriteDetails_(cfg, book.getSheetByName(names[2]), report, 'out', period);
   SpreadsheetApp.flush();
