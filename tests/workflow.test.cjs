@@ -98,11 +98,39 @@ test('A manual source edit during export aborts PDF replacement',() => {
   assert.throws(() => g.cashPublishLocked_(),/sumber berubah/);
   assert.equal(calls.some(row => row[0]==='update'),false);
 });
-test('Preview returns PDF bytes without creating or replacing a Drive file',() => {
+test('Preview verifies the report and returns a private URL without replacing the public PDF',() => {
   const {g,cfg} = setup(); const {calls} = publisherMocks(g,cfg);
+  g.cashSavePrivatePreview_=(target,blob)=>{
+    assert.equal(target.pdfId,cfg.pdfId); assert.ok(blob.getBytes().length>1000);
+    return {id:'private_preview',webViewLink:'https://drive.google.com/file/d/private_preview/view'};
+  };
   const result = g.previewPublicPdf();
-  assert.equal(result.ready,true); assert.equal(Buffer.from(result.bytes,'base64').toString('utf8').slice(0,5),'%PDF-');
+  assert.equal(result.ready,true); assert.equal(result.id,'private_preview');
+  assert.equal(result.pdfUrl,'https://drive.google.com/file/d/private_preview/view');
   assert.deepEqual(calls.map(row => row[0]),['writeReport','readbackReport','export']);
+});
+test('A verified private preview is created once and reused without public sharing',() => {
+  const {g,properties,cfg}=setup(), bytes=fakePdf(), blob={getBytes:()=>bytes}, calls=[];
+  const privateFile={id:'private_preview',mimeType:'application/pdf',size:bytes.length,
+    md5Checksum:crypto.createHash('md5').update(Buffer.from(bytes)).digest('hex'),
+    webViewLink:'https://drive.google.com/file/d/private_preview/view',
+    permissions:[{type:'user',role:'owner',emailAddress:'owner@example.test'}]};
+  g.Drive={Files:{create(metadata,media){calls.push('create');assert.equal(metadata.permissions,undefined);assert.equal(metadata.parents,undefined);assert.equal(media,blob);return privateFile;},
+    get(id){assert.equal(id,'private_preview');return privateFile;},
+    update(metadata,id,media){calls.push('update');assert.equal(id,'private_preview');assert.equal(media,blob);return privateFile;}}};
+  assert.equal(g.cashSavePrivatePreview_(cfg,blob).id,'private_preview');
+  assert.equal(properties.PRIVATE_PREVIEW_PDF_ID,'private_preview');
+  assert.equal(g.cashSavePrivatePreview_(cfg,blob).id,'private_preview');
+  assert.deepEqual(calls,['create','update']);
+});
+test('Preview refuses a shared file or the public PDF before any replacement',() => {
+  const {g,properties,cfg}=setup(), blob={getBytes:()=>fakePdf()};let writes=0;
+  properties.PRIVATE_PREVIEW_PDF_ID=cfg.pdfId;
+  g.Drive={Files:{get(){return {id:'private_preview',mimeType:'application/pdf',permissions:[{type:'anyone',role:'reader'}]};},update(){writes++;},create(){writes++;}}};
+  assert.throws(()=>g.cashSavePrivatePreview_(cfg,blob),/tidak boleh sama/);
+  properties.PRIVATE_PREVIEW_PDF_ID='private_preview';
+  assert.throws(()=>g.cashSavePrivatePreview_(cfg,blob),/PDF privat/);
+  assert.equal(writes,0);
 });
 test('Future transactions cannot be published',() => {
   const {g,cfg,rows} = setup(); rows.push(tx('2026-10-10',100)); const {calls} = publisherMocks(g,cfg);

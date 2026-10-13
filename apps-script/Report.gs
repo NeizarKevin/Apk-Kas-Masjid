@@ -122,23 +122,25 @@ function cashWriteDetails_(cfg, sheet, report, type, period) {
   sheet.getRange(6, 1, 1, 3).copyFormatToRange(sheet, 1, 3, 5, lastRow);
   sheet.getRange(5, 1, rows.length, 3).setWrap(true);
   sheet.getRange('A2').setValue('Masjid Al-Barokah Taskombang - Periode ' + period);
-  SpreadsheetApp.flush();
   var cells = rows.map(function (row) {
     return {values: row.values.map(function (value) {
       return {userEnteredValue: typeof value === 'number' ? {numberValue: value} : {stringValue: value}};
     })};
   });
-  // Literal strings also protect the report workbook from formula-like descriptions.
-  Sheets.Spreadsheets.batchUpdate({requests: [{updateCells: {
-    range: {sheetId: sheet.getSheetId(), startRowIndex: 4, endRowIndex: lastRow,
-      startColumnIndex: 0, endColumnIndex: 3}, rows: cells, fields: 'userEnteredValue'}}]}, cfg.reportId);
   rows.forEach(function (row, i) {
     if (styles[row.kind]) cashApplyStyle_(sheet.getRange(i + 5, 1, 1, 3), styles[row.kind]);
     if (row.kind === 'month') sheet.getRange(i + 5, 1, 1, 3).merge();
   });
   if (sheet.getMaxRows() > lastRow) sheet.deleteRows(lastRow + 1, sheet.getMaxRows() - lastRow);
   sheet.setFrozenRows(4);
-  sheet.autoResizeRows(5, rows.length);
+  // Finish SpreadsheetApp formatting/merging before the literal API write.
+  // Otherwise merge() can turn an Indonesian month label into a date again.
+  SpreadsheetApp.flush();
+  Sheets.Spreadsheets.batchUpdate({requests: [{updateCells: {
+    range: {sheetId: sheet.getSheetId(), startRowIndex: 4, endRowIndex: lastRow,
+      startColumnIndex: 0, endColumnIndex: 3}, rows: cells, fields: 'userEnteredValue'}},
+    {autoResizeDimensions: {dimensions: {sheetId: sheet.getSheetId(), dimension: 'ROWS',
+      startIndex: 4, endIndex: lastRow}}}]}, cfg.reportId);
   return {id: sheet.getSheetId(), name: sheet.getName(), lastRow: lastRow, rows: rows};
 }
 function cashVerifyWorkbook_(cfg, report, layout) {

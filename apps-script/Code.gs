@@ -324,10 +324,40 @@ function previewPublicPdf() {
     var current = cashSource_(cfg);
     if (!current.reconciliation.ok || cashSha_(cashReportSignature_(current.report)) !== signature)
       throw new Error('Sumber berubah saat pratinjau diproses. Muat ulang.');
-    // Browser-only preview: do not create a Drive file or replace the public PDF.
-    return {ready: true, bytes: Utilities.base64Encode(blob.getBytes()),
-      filename: 'PRATINJAU-LAPORAN-KAS.pdf', latest: state.report.latest};
+    var preview = cashSavePrivatePreview_(cfg, blob);
+    return {ready: true, pdfUrl: preview.webViewLink, id: preview.id, latest: state.report.latest};
   } finally { lock.releaseLock(); }
+}
+function cashSavePrivatePreview_(cfg, blob) {
+  var p = PropertiesService.getScriptProperties(), id = p.getProperty('PRIVATE_PREVIEW_PDF_ID');
+  var fields = 'id,mimeType,size,md5Checksum,webViewLink,permissions(type,role,emailAddress)';
+  function verifyPrivate(file) {
+    if (!file || file.id === cfg.pdfId || file.mimeType !== 'application/pdf' ||
+        !file.permissions || !file.permissions.length || file.permissions.some(function (permission) {
+          return permission.type !== 'user' || permission.role !== 'owner' ||
+            permission.emailAddress !== p.getProperty('OWNER_EMAIL');
+        })) throw new Error('Pratinjau harus berupa PDF privat milik akun aplikasi. Periksa izin file pratinjau.');
+  }
+  var result;
+  if (id) {
+    if (id === cfg.pdfId) throw new Error('File pratinjau tidak boleh sama dengan PDF publik.');
+    verifyPrivate(Drive.Files.get(id, {fields: fields, supportsAllDrives: true}));
+    result = Drive.Files.update({mimeType: 'application/pdf'}, id, blob, {fields: fields, supportsAllDrives: true});
+  } else {
+    result = Drive.Files.create({name: 'PRATINJAU LAPORAN KAS AL-BAROKAH - PRIVAT.pdf',
+      mimeType: 'application/pdf', description: 'Pratinjau untuk pemeriksaan bendahara sebelum laporan publik diperbarui.'},
+      blob, {fields: fields});
+    id = result.id;
+  }
+  var saved = Drive.Files.get(id, {fields: fields, supportsAllDrives: true});
+  verifyPrivate(saved);
+  var md5 = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, blob.getBytes())
+    .map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join('');
+  if (result.id !== id || saved.id !== id || Number(saved.size) !== blob.getBytes().length ||
+      saved.md5Checksum !== md5 || !/^https:\/\/drive\.google\.com\//.test(saved.webViewLink || ''))
+    throw new Error('Pratinjau belum dapat diverifikasi. PDF publik tetap versi sebelumnya.');
+  p.setProperty('PRIVATE_PREVIEW_PDF_ID', id);
+  return saved;
 }
 function configureApp() {
   var active = Session.getActiveUser().getEmail(), effective = Session.getEffectiveUser().getEmail();

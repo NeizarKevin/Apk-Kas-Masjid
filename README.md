@@ -35,7 +35,7 @@ Gunakan akun Google yang dapat mengedit Sheet sumber, workbook laporan, dan PDF 
 Tanggal awal yang disetujui untuk pemasangan ini adalah 8 Oktober 2026 (`NEW_PERIOD_START_DATE=2026-10-08`). Jika Sheet sudah memiliki hitungan fisik yang lebih baru saat pemasangan pertama, masukkan snapshot saldo 8 Oktober ke `REPORT_BASELINE` dan `PHBI_REPORT_BASELINE` dari blok arsip sinkronisasi yang sesuai. Konfigurasi akan berhenti jika hanya hitungan terbaru yang tersedia, agar awal periode tidak bergeser tanpa permintaan.
 6. **Deploy → Manage deployments**, pilih deployment yang ID-nya persis sama dengan `SCRIPT_URL`, lalu **Edit → New version**. Pilih **Execute as: Me** dan **Who has access: Only myself**. Perbarui deployment itu sehingga URL aplikasi lama tetap sama. Buka URL tersebut dengan akun yang sama. Aplikasi versi ini khusus akun pemilik; pilihan K1/K2/K3 menentukan pemegang uang dan bukan izin masuk akun bendahara lain.
 7. Periksa bahwa tanggal dan nominal saldo awal adalah hasil hitung fisik yang disetujui. Selisih periode lama tidak menjadi penghalang pada mode periode baru. Jika pencocokan sesudah awal periode baru berstatus **Ditahan**, periksa transaksi berdasarkan bukti, lalu muat ulang aplikasi.
-8. Klik **Pratinjau**, lalu buka PDF pratinjau. Periksa semua halaman: A4 portrait, nominal, subtotal, transaksi terakhir, periode, dan tabel tidak terpotong. Pratinjau tersimpan sementara di browser; tidak membuat file Drive dan tidak mengganti PDF publik.
+8. Klik **Pratinjau**, lalu buka PDF pratinjau. Periksa semua halaman: A4 portrait, nominal, subtotal, transaksi terakhir, periode, dan tabel tidak terpotong. Pratinjau memakai satu file PDF privat di Drive yang dipakai ulang melalui `PRIVATE_PREVIEW_PDF_ID`. Izin pemilik dan checksum diperiksa; file ini tidak sama dengan PDF publik dan tidak dibagikan ke jamaah.
 9. Setelah pratinjau sesuai, jalankan `activateAutomation` sekali dari editor. Fungsi ini memasang pemeriksaan berkala dan trigger edit secara idempotent, serta menjalankan pembaruan pertama dengan validasi yang sama. Periksa PDF publik lewat tautan aplikasi. Tambahkan URL aplikasi ke layar utama HP jika diinginkan.
 
 Otorisasi Google dan deployment adalah langkah terpisah dari pengujian kode. Menambahkan kode ke GitHub tidak mengaktifkan aplikasi atau trigger Google.
@@ -72,7 +72,7 @@ Export memakai gaya template laporan yang ada dan hanya tiga tab laporan publik.
 
 ## Tampilan ringkas
 
-Pilihan dana dan bulan berada di header. Ringkasan memakai nominal Rupiah lengkap; saldo tidak dihitung dari perangkat lokal. Form pemasukan/pengeluaran, K1/K2/K3, dan input suara memakai antarmuka lama. Kontrol pratinjau dan pembaruan manual berada di **Opsi laporan**. Suara mengisi draf saja; pengguna memeriksa nominal lalu menekan simpan. Dukungan mikrofon bergantung pada browser dan iframe Google; input manual selalu tersedia.
+Pilihan dana dan bulan berada di header. Ringkasan memakai nominal Rupiah lengkap; saldo tidak dihitung dari perangkat lokal. Form pemasukan/pengeluaran, K1/K2/K3, dan input suara memakai antarmuka lama. Kontrol pratinjau privat dan pembaruan manual berada di **Opsi laporan**. Suara mengisi draf saja; pengguna memeriksa nominal lalu menekan simpan. Dukungan mikrofon bergantung pada browser dan iframe Google; input manual selalu tersedia.
 
 ## Pengujian
 

@@ -297,7 +297,7 @@ body {
       </div>
       <div class="conn-pill">
         <div class="conn-dot" id="conn-dot"></div>
-        <span class="conn-label" id="connection">Online</span>
+        <span class="conn-label" id="connection">Memuat</span>
       </div>
     </div>
   <div class="header-filters" aria-label="Pilihan dana dan bulan">
@@ -643,7 +643,7 @@ function toggleVoice() {
     const STORAGE_KEY = 'kas-masjid-pending-v1';
     const rupiah = value => (Number(value) < 0 ? '−' : '') + 'Rp' + Math.abs(Number(value)).toLocaleString('id-ID');
     const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    let type = 'in', dashboard = null, pending = null, busy = false, loadVersion = 0, previewUrl = null;
+    let type = 'in', dashboard = null, pending = null, busy = false, loadVersion = 0;
     const connected = typeof google !== 'undefined' && google.script && google.script.run;
 
     function api(method, ...args) {
@@ -810,11 +810,9 @@ function toggleVoice() {
       try {
         const result = await api('previewPublicPdf');
         if (!result.ready) { renderReport(result.report); notice(result.report.message); return; }
-        const raw = atob(result.bytes), bytes = Uint8Array.from(raw, char => char.charCodeAt(0));
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        previewUrl = URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
-        $('previewLink').href = previewUrl; $('previewLink').hidden = false;
-        notice('Pratinjau siap. Periksa seluruh halaman; PDF jamaah belum diganti.');
+        if (!/^https:\/\/drive\.google\.com\//.test(result.pdfUrl || '')) throw new Error('Tautan pratinjau belum dapat diverifikasi.');
+        $('previewLink').href = result.pdfUrl; $('previewLink').hidden = false;
+        notice('Pratinjau privat siap. Periksa seluruh halaman sebelum memperbarui laporan jamaah.');
       } catch (error) { notice(error.message,true); }
       finally { setBusy(false); }
     });
