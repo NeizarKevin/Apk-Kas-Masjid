@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kas Masjid">
@@ -225,16 +225,6 @@ body {
 }
 .amount-wrap input { padding-left: 38px; }
 
-.status {
-  font-size: 13px; text-align: center; padding: 11px 14px;
-  border-radius: var(--radius-sm); margin-top: 12px;
-  display: none; font-weight: 600;
-}
-.status.show { display: block; }
-.status.success { background: var(--green-light); color: var(--green); }
-.status.error { background: var(--red-light); color: var(--red); }
-.status.loading { background: #f0f4f0; color: var(--muted); }
-
 .btn-row { display: flex; gap: 10px; margin-top: 16px; }
 .btn-primary {
   flex: 1; padding: 14px;
@@ -281,34 +271,14 @@ body {
   padding: 40px 20px; text-align: center;
   color: #bfcfc4; font-size: 14px; font-weight: 500;
 }
-.tx {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 20px;
-  border-bottom: 1px solid #f5f8f5;
-  transition: background 0.1s;
-}
-.tx:last-child { border-bottom: none; }
-.tx-icon {
-  width: 38px; height: 38px; border-radius: 11px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; font-size: 16px;
-}
-.tx-icon.in { background: var(--green-light); }
-.tx-icon.out { background: var(--red-light); }
-.tx-info { flex: 1; min-width: 0; }
-.tx-ket { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tx-meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
-.tx-right { text-align: right; flex-shrink: 0; }
-.tx-amount { font-size: 14px; font-weight: 800; letter-spacing: -0.3px; }
-.tx-amount.in { color: var(--green); }
-.tx-amount.out { color: var(--red); }
-.tx-type { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
-.del-btn {
-  font-size: 11px; color: #bfcfc4; background: none; border: none;
-  cursor: pointer; padding: 0; font-family: inherit; font-weight: 600;
-  display: block; margin-top: 3px; margin-left: auto;
-}
-.del-btn:active { color: var(--red); }
+/* The original green interface and voice form remain the base design. */
+.topbar-inner,.scroll{max-width:780px;margin:auto}.sum-val{font-size:clamp(12px,2.5vw,17px);line-height:1.3;overflow-wrap:anywhere}.sum-card{min-width:0}.form-group{min-width:0}.form-group input{min-width:0}
+.hint{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0}.report-head,.buttons{display:flex;gap:10px;align-items:center;justify-content:space-between}.report-head .section-label{margin:0}.buttons{justify-content:flex-start;flex-wrap:wrap;margin:12px 0}.secondary{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:white;color:var(--green);font:600 12px inherit;text-decoration:none;cursor:pointer;display:inline-block}.secondary:disabled{opacity:.5;cursor:wait}.badge.warning{background:#fff1d8;color:#865509}.badge.error{background:var(--red-light);color:var(--red)}
+.notice{padding:14px;border-radius:var(--radius-sm);background:var(--green-light);color:var(--green);font-size:13px;line-height:1.6;white-space:pre-line;margin-bottom:14px}.notice.error{background:var(--red-light);color:var(--red)}.reconcile{padding:12px;background:#fff8eb;border-radius:var(--radius-sm);font-size:13px;margin-top:12px}.reconcile div{display:flex;justify-content:space-between;gap:12px}.transaction{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)}.description{font-size:14px;font-weight:700;overflow-wrap:anywhere}.meta{font-size:11px;line-height:1.6;color:var(--muted)}.amount{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}.amount.in{color:var(--green)}.amount.out{color:var(--red)}.history-foot{padding:14px 20px}.voice-result{white-space:pre-line}[hidden]{display:none!important}#reportMessage{white-space:pre-line}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--green-mid);outline-offset:3px}button:disabled{cursor:wait}.sum-label{line-height:1.5}
+@media(max-width:400px){.summary-grid{grid-template-columns:1fr 1fr}.sum-card:last-child{grid-column:1/-1}.transaction{grid-template-columns:1fr}.amount{text-align:right}.topbar{padding-top:32px}}
+
+/* Compact layout: the form stays central and less-used report controls fold away. */
+.topbar{padding:24px 16px 16px}.topbar-row{margin-bottom:14px}.scroll{padding:12px}.card,.voice-card{padding:16px;margin-bottom:12px}.section-label{margin-bottom:12px}.header-filters{margin-bottom:12px}.header-filters label{color:#ffffffbd;font-size:11px}.header-filters input,.header-filters select{padding:9px 10px;font-size:12px;background:#fff;min-height:38px}.sum-card{padding:10px}.voice-inner{gap:10px}.voice-btn{width:42px;height:42px}.voice-title{font-size:13px}.voice-hint{font-size:11px}.voice-card{padding:12px 16px}.report-card{padding:12px 16px}.report-card .hint{margin:8px 0}.report-card .buttons{margin:8px 0}.report-card .section-label{font-size:10px}.report-card summary{font-size:11px;color:var(--muted);cursor:pointer}.report-card details{margin-top:8px}.secondary{font-size:12px;font-family:inherit;font-weight:600}.form-group label{font-size:11px}.form-group input,.form-group select{padding-top:10px;padding-bottom:10px;font-size:14px}.btn-row{margin-top:12px}.btn-primary,.btn-reset{padding-top:12px;padding-bottom:12px;font-size:14px}.history-head{padding:14px 16px}.transaction{padding:12px 16px}.history-foot{padding:12px 16px;display:flex;gap:12px;align-items:center}.history-foot .hint{margin:0}.brand p{font-size:10px}.notice{margin-bottom:12px}.report-head{flex-wrap:wrap}.sum-val{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -322,32 +292,53 @@ body {
         </div>
         <div>
           <h1>Kas Masjid</h1>
-          <p>Pemasukan &amp; Pengeluaran</p>
+          <p>Masjid Al-Barokah Taskombang</p>
         </div>
       </div>
       <div class="conn-pill">
         <div class="conn-dot" id="conn-dot"></div>
-        <span class="conn-label" id="conn-label">Online</span>
+        <span class="conn-label" id="connection">Online</span>
       </div>
     </div>
+  <div class="header-filters" aria-label="Pilihan dana dan bulan">
+    <div class="form-grid">
+      <div class="form-group"><label for="fund">Dana</label><select id="fund"><option value="MASJID">Kas masjid</option><option value="PHBI">PHBI</option></select></div>
+      <div class="form-group"><label for="month">Bulan rincian</label><input id="month" type="month"></div>
+    </div>
+
+  </div>
     <div class="summary-grid">
       <div class="sum-card">
-        <div class="sum-label">Pemasukan</div>
-        <div class="sum-val" id="total-in">Rp 0</div>
+        <div class="sum-label">Pemasukan bulan ini</div>
+        <div class="sum-val" id="totalIncome">—</div>
       </div>
       <div class="sum-card">
-        <div class="sum-label">Pengeluaran</div>
-        <div class="sum-val out" id="total-out">Rp 0</div>
+        <div class="sum-label">Pengeluaran bulan ini</div>
+        <div class="sum-val out" id="totalExpense">—</div>
       </div>
       <div class="sum-card">
-        <div class="sum-label">Saldo</div>
-        <div class="sum-val" id="saldo">Rp 0</div>
+        <div class="sum-label">Saldo saat ini</div>
+        <div class="sum-val" id="currentBalance">—</div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="scroll">
+  <div id="notice" class="notice" role="status" hidden></div>
+
+  <section class="card report-card" aria-label="Status PDF jamaah">
+    <div class="report-head"><div class="section-label">Laporan PDF jamaah</div><span id="reportState" class="badge">Memuat</span></div>
+    <p id="reportMessage" class="hint">Memeriksa laporan publik.</p>
+    <div id="reconciliation" class="reconcile" hidden></div>
+    <div class="buttons"><a id="openApp" class="secondary" hidden>Buka aplikasi Google</a><a id="pdfLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka PDF</a></div>
+    <details><summary>Opsi laporan</summary>
+      <p id="balanceNote" class="hint"></p><p id="automationNote" class="hint"></p>
+      <div class="buttons"><button id="previewPdf" type="button" class="secondary" disabled>Pratinjau</button><button id="refreshPdf" type="button" class="secondary" disabled>Perbarui PDF</button></div>
+      <a id="previewLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka pratinjau PDF</a>
+    </details>
+  </section>
+
 
   <!-- Voice Input Card -->
   <div class="voice-card">
@@ -366,68 +357,61 @@ body {
   <!-- Form Card -->
   <div class="card">
     <div class="section-label">Transaksi Baru</div>
+    <p id="formFund" class="hint">Dana: Kas masjid</p>
+    <form id="transactionForm">
     <div class="type-toggle">
-      <button class="toggle-btn active-in" id="btn-type-in" onclick="setType('in')">↑ Pemasukan</button>
-      <button class="toggle-btn" id="btn-type-out" onclick="setType('out')">↓ Pengeluaran</button>
+      <button class="toggle-btn active-in" id="incomeType" type="button" aria-pressed="true">↑ Pemasukan</button>
+      <button class="toggle-btn" id="expenseType" type="button" aria-pressed="false">↓ Pengeluaran</button>
     </div>
     <div class="form-grid">
       <div class="form-group">
-        <label>Tanggal</label>
-        <input type="date" id="inp-tanggal"/>
+        <label for="date">Tanggal</label>
+        <input type="date" id="date" required/>
       </div>
       <div class="form-group">
-        <label>Kode</label>
-        <select id="inp-kode">
-          <option value="">-- Pilih --</option>
-          <option value="K1">K1</option>
-          <option value="K2">K2</option>
-          <option value="K3">K3</option>
+        <label for="code">Bendahara</label>
+        <select id="code" required>
+          
+          <option value="K1">K1 · Kevin</option>
+          <option value="K2">K2 · Arum / Ming Ming</option>
+          <option value="K3">K3 · Wawan</option>
         </select>
       </div>
       <div class="form-group full">
-        <label>Keterangan</label>
-        <input type="text" id="inp-ket" placeholder="mis. Infaq Jumat"/>
+        <label for="description">Keterangan</label>
+        <input type="text" id="description" maxlength="500" required placeholder="mis. Infaq Jumat"/>
       </div>
       <div class="form-group full">
-        <label id="amount-label">Jumlah Pemasukan (Rp)</label>
+        <label id="amount-label" for="amount">Jumlah Pemasukan (Rp)</label>
         <div class="amount-wrap">
           <span class="amount-prefix">Rp</span>
-          <input type="number" id="inp-amount" placeholder="0" min="0" inputmode="numeric"/>
+          <input type="text" id="amount" required placeholder="637.600" inputmode="numeric" autocomplete="off"/>
         </div>
       </div>
     </div>
-    <div class="status" id="status"></div>
+    
     <div class="btn-row">
-      <button class="btn-reset" onclick="resetForm()">Reset</button>
-      <button class="btn-primary" id="btn-submit" onclick="submitData()">Simpan</button>
+      <button class="btn-reset" type="button" id="resetForm">Reset</button>
+      <button class="btn-primary" id="submitButton" type="submit" disabled>Simpan transaksi</button>
     </div>
+    <p id="pendingNote" class="hint" hidden>Kiriman sebelumnya belum terkonfirmasi. Periksa isinya lalu kirim ulang dengan identitas yang sama.</p>
+    <button id="checkPending" type="button" class="secondary" hidden>Periksa kiriman sebelumnya</button>
+    </form>
   </div>
 
   <!-- History -->
   <div class="history-card">
     <div class="history-head">
-      <div class="section-label">Histori</div>
-      <span class="badge" id="tx-count">0 data</span>
+      <div class="section-label">Rincian bulan ini</div>
+      <span class="badge" id="historyCount">0 data</span>
     </div>
-    <div id="history-list"><div class="empty">Belum ada transaksi.</div></div>
+    <div id="history"><div class="empty">Memuat transaksi…</div></div>
+    <div class="history-foot"><button id="refreshData" type="button" class="secondary" disabled>Muat ulang</button><span class="hint">Koreksi transaksi di Sheet.</span></div>
   </div>
 </div>
 
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEz_VEAhjja-S2xt0mq6KEAEj4PP44JB6UFtD7uP1dg54JowROb1tKa6PHLqT60GVi/exec';
-
-let transactions = [];
-try { transactions = JSON.parse(localStorage.getItem('kas_masjid') || '[]'); } catch(e) {}
-let currentType = 'in';
-
-document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
-
-// =====================
-// VOICE INPUT
-// =====================
-let recognition = null;
+<script>let recognition = null;
 let isListening = false;
-
 // Map kata angka bahasa Indonesia ke nilai numerik
 const ANGKA_MAP = {
   'nol':0,'satu':1,'dua':2,'tiga':3,'empat':4,'lima':5,'enam':6,'tujuh':7,'delapan':8,'sembilan':9,'sepuluh':10,
@@ -464,15 +448,15 @@ const BULAN_MAP = {
 function parseKode(text) {
   const lower = text.toLowerCase();
   // "K1", "K2", "K3" langsung (termasuk "ka1", "ka 1")
-  if (/k[\s-]?1/i.test(lower) || lower.includes('ka satu') || lower.includes('ka 1')) return 'K1';
-  if (/k[\s-]?2/i.test(lower) || lower.includes('ka dua') || lower.includes('ka 2')) return 'K2';
-  if (/k[\s-]?3/i.test(lower) || lower.includes('ka tiga') || lower.includes('ka 3')) return 'K3';
+  if (/\bk[\s-]?1\b/i.test(lower) || lower.includes('ka satu') || lower.includes('ka 1')) return 'K1';
+  if (/\bk[\s-]?2\b/i.test(lower) || lower.includes('ka dua') || lower.includes('ka 2')) return 'K2';
+  if (/\bk[\s-]?3\b/i.test(lower) || lower.includes('ka tiga') || lower.includes('ka 3')) return 'K3';
   // "kode satu/dua/tiga"
   if (lower.includes('kode satu') || lower.includes('kode 1')) return 'K1';
   if (lower.includes('kode dua') || lower.includes('kode 2')) return 'K2';
   if (lower.includes('kode tiga') || lower.includes('kode 3')) return 'K3';
   // deteksi angka setelah "k" di awal kalimat: "k1 infaq..."
-  const mStart = lower.match(/^k\s*([123])/);
+  const mStart = lower.match(/^k\s*([123])\b/);
   if (mStart) return 'K' + mStart[1];
   return null;
 }
@@ -513,13 +497,15 @@ function parseVoiceText(text) {
   let tanggal = parseTanggal(lower);
   let kode = parseKode(lower);
 
+  const amountText = lower.replace(/\bk[\s-]?[123]\b|ka\s+(?:satu|dua|tiga|[123])|kode\s+(?:satu|dua|tiga|[123])/gi, '').replace(new RegExp('(?:tanggal\\s*)?\\d{1,2}\\s+(?:' + Object.keys(BULAN_MAP).join('|') + ')(?:\\s+\\d{4})?', 'gi'), '').replace(/tanggal\s+\d{1,2}/gi, '');
+
   if (KATA_KELUAR.some(k => lower.includes(k))) tipe = 'out';
   else tipe = 'in';
 
   // Cek dulu apakah ada angka dengan titik/koma ribuan seperti "500.000" atau "500,000"
   const reRibuan = /\b(\d{1,3})[.,](\d{3})\b/g;
   let mRibuan;
-  while ((mRibuan = reRibuan.exec(lower)) !== null) {
+  while ((mRibuan = reRibuan.exec(amountText)) !== null) {
     const candidate = parseInt(mRibuan[1] + mRibuan[2]);
     if (candidate > 0) { jumlah = candidate; break; }
   }
@@ -532,7 +518,7 @@ function parseVoiceText(text) {
       /(\d+)/
     ];
     for (const p of pola) {
-      const m = lower.match(p);
+      const m = amountText.match(p);
       if (m) {
         let num = parseInt(m[1].replace(/[.,]/g,''));
         if (p.source.includes('juta') || p.source.includes('jt')) num *= 1000000;
@@ -542,7 +528,7 @@ function parseVoiceText(text) {
       }
     }
   }
-  if (!jumlah) jumlah = parseAngka(lower);
+  if (!jumlah) jumlah = parseAngka(amountText);
 
   const bulanKeys2 = Object.keys(BULAN_MAP).join('|');
   keterangan = text
@@ -581,21 +567,21 @@ function initRecognition() {
     const parsed = parseVoiceText(transcript);
 
     // Isi form
-    setType(parsed.tipe);
+    chooseType(parsed.tipe);
     if (parsed.tanggal) {
-      document.getElementById('inp-tanggal').value = parsed.tanggal;
-      document.getElementById('inp-tanggal').classList.add('voice-filled');
+      document.getElementById('date').value = parsed.tanggal;
+      document.getElementById('date').classList.add('voice-filled');
     }
     if (parsed.kode) {
-      document.getElementById('inp-kode').value = parsed.kode;
+      document.getElementById('code').value = parsed.kode;
     }
     if (parsed.keterangan) {
-      document.getElementById('inp-ket').value = parsed.keterangan;
-      document.getElementById('inp-ket').classList.add('voice-filled');
+      document.getElementById('description').value = parsed.keterangan;
+      document.getElementById('description').classList.add('voice-filled');
     }
     if (parsed.jumlah) {
-      document.getElementById('inp-amount').value = parsed.jumlah;
-      document.getElementById('inp-amount').classList.add('voice-filled');
+      document.getElementById('amount').value = parsed.jumlah;
+      document.getElementById('amount').classList.add('voice-filled');
     }
 
     // Format tanggal untuk display
@@ -608,16 +594,11 @@ function initRecognition() {
     // Tampilkan hasil
     const el = document.getElementById('voice-result');
     el.className = 'voice-result show';
-    el.innerHTML = `
-      🗣️ "<em>${transcript}</em>"<br>
-      <strong>${parsed.tipe === 'in' ? '↑ Pemasukan' : '↓ Pengeluaran'}</strong> · 
-      ${parsed.keterangan} · 
-      ${parsed.jumlah ? 'Rp ' + parsed.jumlah.toLocaleString('id-ID') : '(jumlah tidak terdeteksi)'}<br>
-      ${parsed.kode ? '🏷️ ' + parsed.kode + ' · ' : ''}📅 ${tglDisplay}
-    `;
+    el.textContent = '“' + transcript + '”\n' + (parsed.tipe === 'in' ? 'Pemasukan' : 'Pengeluaran') + ' · ' + parsed.keterangan + ' · ' + (parsed.jumlah ? rupiah(parsed.jumlah) : 'Jumlah belum terdeteksi') + '\n' + (parsed.kode ? parsed.kode + ' · ' : '') + tglDisplay;
+
 
     setTimeout(() => {
-      ['inp-ket','inp-amount','inp-tanggal'].forEach(id => document.getElementById(id).classList.remove('voice-filled'));
+      ['description','amount','date'].forEach(id => document.getElementById(id).classList.remove('voice-filled'));
     }, 2000);
   };
 
@@ -625,7 +606,7 @@ function initRecognition() {
     document.getElementById('voice-hint').innerHTML = 'Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em>';
     const el = document.getElementById('voice-result');
     el.className = 'voice-result show';
-    el.innerHTML = e.error === 'no-speech' ? '⚠️ Tidak ada suara terdeteksi.' : '⚠️ Error: ' + e.error;
+    el.textContent = e.error === 'no-speech' ? '⚠️ Tidak ada suara terdeteksi.' : '⚠️ Error: ' + e.error;
   };
 
   r.onend = () => {
@@ -638,6 +619,7 @@ function initRecognition() {
 }
 
 function toggleVoice() {
+  if (busy || !dashboard || pending) { notice('Selesaikan kiriman sebelumnya dan tunggu data terhubung sebelum memakai input suara.', true); return; }
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     alert('Browser kamu tidak mendukung input suara. Gunakan Chrome atau Safari terbaru.');
@@ -652,135 +634,211 @@ function toggleVoice() {
 }
 
 // =====================
-// FORM & DATA
-// =====================
-function setType(type) {
-  currentType = type;
-  document.getElementById('btn-type-in').className = 'toggle-btn' + (type === 'in' ? ' active-in' : '');
-  document.getElementById('btn-type-out').className = 'toggle-btn' + (type === 'out' ? ' active-out' : '');
-  document.getElementById('amount-label').textContent = type === 'in' ? 'Jumlah Pemasukan (Rp)' : 'Jumlah Pengeluaran (Rp)';
-}
 
-function formatRp(n) {
-  if (n >= 1000000) return 'Rp ' + (n/1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'jt';
-  if (n >= 1000) return 'Rp ' + Math.round(n/1000) + 'rb';
-  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
-}
-function formatRpFull(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
 
-function renderSummary() {
-  const totalIn = transactions.reduce((s, t) => s + (t.masuk || 0), 0);
-  const totalOut = transactions.reduce((s, t) => s + (t.keluar || 0), 0);
-  const saldo = totalIn - totalOut;
-  document.getElementById('total-in').textContent = formatRp(totalIn);
-  document.getElementById('total-out').textContent = formatRp(totalOut);
-  const elS = document.getElementById('saldo');
-  elS.textContent = formatRp(Math.abs(saldo));
-  elS.className = 'sum-val' + (saldo < 0 ? ' negative' : '');
-  document.getElementById('tx-count').textContent = transactions.length + ' data';
-}
+    'use strict';
+    const $ = id => document.getElementById(id);
+    // The existing deployment from the original repository stays the app entry point.
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEz_VEAhjja-S2xt0mq6KEAEj4PP44JB6UFtD7uP1dg54JowROb1tKa6PHLqT60GVi/exec';
+    const STORAGE_KEY = 'kas-masjid-pending-v1';
+    const rupiah = value => (Number(value) < 0 ? '−' : '') + 'Rp' + Math.abs(Number(value)).toLocaleString('id-ID');
+    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    let type = 'in', dashboard = null, pending = null, busy = false, loadVersion = 0, previewUrl = null;
+    const connected = typeof google !== 'undefined' && google.script && google.script.run;
 
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  if (!transactions.length) { list.innerHTML = '<div class="empty">Belum ada transaksi.</div>'; return; }
-  const EMOJI_IN = ['🌿','💚','✨','🤲','🕌'];
-  const EMOJI_OUT = ['📦','🔧','💡','🧹','🛒'];
-  list.innerHTML = [...transactions].reverse().map((t, ri) => {
-    const i = transactions.length - 1 - ri;
-    const isIn = t.masuk > 0;
-    const val = isIn ? t.masuk : t.keluar;
-    const d = new Date(t.tanggal + 'T00:00:00');
-    const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-    const emoji = isIn ? EMOJI_IN[i % EMOJI_IN.length] : EMOJI_OUT[i % EMOJI_OUT.length];
-    return `<div class="tx">
-      <div class="tx-icon ${isIn ? 'in' : 'out'}">${emoji}</div>
-      <div class="tx-info">
-        <div class="tx-ket">${t.keterangan}</div>
-        <div class="tx-meta">${t.kode ? t.kode + ' · ' : ''}${dateStr}</div>
-      </div>
-      <div class="tx-right">
-        <div class="tx-amount ${isIn ? 'in' : 'out'}">${isIn ? '+' : '-'}${formatRpFull(val)}</div>
-        <div class="tx-type">${isIn ? 'Pemasukan' : 'Pengeluaran'}</div>
-        <button class="del-btn" onclick="deleteItem(${i})">hapus</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function deleteItem(idx) {
-  if (!confirm('Hapus transaksi ini?')) return;
-  transactions.splice(idx, 1);
-  localStorage.setItem('kas_masjid', JSON.stringify(transactions));
-  renderHistory(); renderSummary();
-}
-
-function showStatus(msg, type) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = 'status show ' + type;
-  if (type !== 'loading') setTimeout(() => el.className = 'status', 4000);
-}
-
-function resetForm() {
-  document.getElementById('inp-kode').value = '';
-  document.getElementById('inp-ket').value = '';
-  document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
-  document.getElementById('voice-result').className = 'voice-result';
-  setType('in');
-}
-
-function sendToSheet(data) {
-  return new Promise((resolve) => {
-    const params = new URLSearchParams({
-      tanggal: data.tanggal, kode: data.kode,
-      keterangan: data.keterangan, masuk: String(data.masuk),
-      keluar: String(data.keluar), timestamp: data.timestamp
+    function api(method, ...args) {
+      return new Promise((resolve, reject) => {
+        if (!connected) { reject(new Error('Buka aplikasi melalui deployment Apps Script.')); return; }
+        const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(error => reject(new Error(error.message || String(error))));
+        runner[method](...args);
+      });
+    }
+    function displayDate(iso) {
+      const [y,m,d] = iso.split('-'); return d + ' ' + monthNames[Number(m)-1] + ' ' + y;
+    }
+    function notice(message, error = false) {
+      $('notice').textContent = message;
+      $('notice').className = 'notice' + (error ? ' error' : '');
+      $('notice').hidden = !message;
+    }
+    function chooseType(value) {
+      type = value;
+      $('incomeType').className = 'toggle-btn' + (value === 'in' ? ' active-in' : '');
+      $('expenseType').className = 'toggle-btn' + (value === 'out' ? ' active-out' : '');
+      $('amount-label').textContent = value === 'in' ? 'Jumlah Pemasukan (Rp)' : 'Jumlah Pengeluaran (Rp)';
+      $('incomeType').setAttribute('aria-pressed', value === 'in');
+      $('expenseType').setAttribute('aria-pressed', value === 'out');
+    }
+    function setBusy(value) {
+      busy = value;
+      ['fund','month','date','code','description','amount','incomeType','expenseType','refreshData','refreshPdf','previewPdf','submitButton','checkPending','resetForm','voice-btn'].forEach(id => {
+        $(id).disabled = value || !connected || !dashboard;
+      });
+      $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
+    }
+    function renderReport(status) {
+      const names = {PUBLISHED:'Diperbarui',UNCHANGED:'Sudah sesuai',BLOCKED:'Ditahan',ERROR:'Perlu diperiksa',SETUP:'Belum aktif',READY:'Siap diaktifkan'};
+      $('reportState').textContent = names[status.state] || 'Memeriksa';
+      $('reportState').className = 'badge' + (status.state === 'ERROR' ? ' error' : ['BLOCKED','SETUP'].includes(status.state) ? ' warning' : '');
+      $('reportMessage').textContent = status.message;
+      $('reconciliation').replaceChildren();
+      $('reconciliation').hidden = !status.reconciliation || status.reconciliation.ok;
+      if (status.reconciliation && !status.reconciliation.ok) {
+        const r = status.reconciliation;
+        const caption = document.createElement('p'); caption.textContent = 'Pencocokan per ' + displayDate(r.date); $('reconciliation').append(caption);
+        [['Saldo buku',r.book],['Uang fisik',r.actual],['Selisih',r.difference]].forEach(([label,value]) => {
+          const row = document.createElement('div'), text = document.createElement('span'), amount = document.createElement('strong');
+          text.textContent = label; amount.textContent = rupiah(value); row.append(text,amount); $('reconciliation').append(row);
+        });
+      }
+    }
+    function render(data) {
+      dashboard = data;
+      $('month').value = data.month;
+      $('formFund').textContent = 'Dana: ' + (data.fund === 'PHBI' ? 'PHBI' : 'Kas masjid');
+      $('totalIncome').textContent = rupiah(data.income);
+      $('totalExpense').textContent = rupiah(data.expense);
+      $('currentBalance').textContent = rupiah(data.balance);
+      const unknown = Object.values(data.checkpoint.holders).some(value => value === null);
+      $('balanceNote').textContent = 'Dari hasil hitung fisik ' + displayDate(data.checkpoint.date) + ', ditambah arus kas setelah sinkronisasi.' +
+        (unknown ? ' Saldo awal bendahara lain belum dihitung; angka ini hanya mencakup uang yang sudah dikonfirmasi.' : '');
+      if (!pending) { if (!$('date').value) $('date').value = data.today; }
+      $('date').max = data.today; $('date').min = data.checkpoint.date;
+      renderReport(data.report);
+      $('automationNote').textContent = data.automatic ? 'Input aplikasi memproses PDF setelah tersimpan. Perubahan langsung di Sheet diperiksa sekitar setiap 5 menit.' : 'Otomatisasi belum diaktifkan di Apps Script.';
+      $('pdfLink').hidden = !data.pdfUrl;
+      if (data.pdfUrl && /^https:\/\/drive\.google\.com\//.test(data.pdfUrl)) $('pdfLink').href = data.pdfUrl;
+      else { $('pdfLink').hidden = true; $('pdfLink').removeAttribute('href'); }
+      $('historyCount').textContent = data.transactions.length + ' transaksi';
+      $('history').replaceChildren();
+      data.transactions.forEach(tx => {
+        const row = document.createElement('div'), info = document.createElement('div'), description = document.createElement('div'), meta = document.createElement('div'), amount = document.createElement('div');
+        row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
+        meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
+        amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
+        info.append(description,meta); row.append(info,amount); $('history').append(row);
+      });
+      if (!data.transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
+      $('connection').textContent = 'Terhubung';
+      $('conn-dot').className = 'conn-dot';
+      setBusy(busy);
+    }
+    async function loadDashboard() {
+      const version = ++loadVersion;
+      try {
+        const data = await api('getDashboard', $('fund').value, $('month').value);
+        if (version !== loadVersion) return;
+        render(data);
+      } catch (error) {
+        if (version !== loadVersion) return;
+        $('connection').textContent = 'Belum terhubung'; $('conn-dot').className = 'conn-dot off'; notice(error.message, true);
+        // The displayed figures are stale; require a successful reload before writing.
+        dashboard = null; setBusy(false); $('refreshData').disabled = !connected;
+      }
+    }
+    function readInput() {
+      const raw = $('amount').value.trim();
+      if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw)) throw new Error('Gunakan Rupiah bulat, misalnya 637.600.');
+      const amount = Number(raw.replace(/\./g,''));
+      if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Nominal harus lebih dari nol.');
+      return {fund:$('fund').value,type,code:$('code').value,date:$('date').value,description:$('description').value.trim(),amount};
+    }
+    function samePayload(a,b) { return ['fund','type','code','date','description','amount'].every(key => a[key] === b[key]); }
+    function persistPending(value) {
+      // Keep only an unacknowledged request; transaction history always comes from the server.
+      if (value) localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      else localStorage.removeItem(STORAGE_KEY);
+      pending = value;
+      $('pendingNote').hidden = !value;
+      $('checkPending').hidden = !value;
+    }
+    function restorePending() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (stored && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(stored.id)) {
+          pending = stored; $('fund').value = stored.fund; chooseType(stored.type); $('code').value = stored.code;
+          $('date').value = stored.date; $('description').value = stored.description; $('amount').value = stored.amount;
+          $('pendingNote').hidden = false;
+          $('checkPending').hidden = false;
+        }
+      } catch (error) { notice('Kiriman sebelumnya tidak dapat dibaca. Periksa riwayat Sheet sebelum mengirim kembali.', true); }
+    }
+    $('transactionForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || !dashboard || !connected) return;
+      try {
+        const payload = readInput();
+        if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
+        if (!pending) persistPending({...payload,id:crypto.randomUUID()});
+        setBusy(true); notice('Menyimpan transaksi dan memeriksa laporan…');
+        const result = await api('saveTransaction',pending);
+        if (!result.saved || result.id !== pending.id) throw new Error('Penyimpanan belum terkonfirmasi. Gunakan kirim ulang.');
+        const fund = pending.fund;
+        persistPending(null); $('description').value = ''; $('amount').value = '';
+        renderReport(result.report);
+        let text = result.duplicate ? 'Transaksi ini sudah tersimpan. Tidak ada pencatatan ganda.' : 'Transaksi berhasil tersimpan di Sheet.';
+        text += '\n' + (fund === 'PHBI' ? 'PHBI dicatat terpisah dari laporan kas masjid. ' : '') + result.report.message;
+        if (result.warning) text += '\n' + result.warning;
+        notice(text, result.report.state === 'ERROR');
+        await loadDashboard();
+      } catch (error) { notice(error.message + (pending ? '\nKiriman disimpan untuk dikirim ulang dengan identitas yang sama.' : ''), true); }
+      finally { setBusy(false); }
     });
-    const img = new Image();
-    let done = false;
-    const finish = () => { if (!done) { done = true; resolve(true); } };
-    img.onload = finish; img.onerror = finish;
-    setTimeout(finish, 6000);
-    img.src = SCRIPT_URL + '?' + params.toString();
-  });
-}
-
-async function submitData() {
-  const tanggal = document.getElementById('inp-tanggal').value;
-  const kode = document.getElementById('inp-kode').value.trim();
-  const keterangan = document.getElementById('inp-ket').value.trim();
-  const amount = parseFloat(document.getElementById('inp-amount').value) || 0;
-
-  if (!tanggal || !keterangan) { showStatus('Tanggal dan keterangan wajib diisi.', 'error'); return; }
-  if (amount <= 0) { showStatus('Jumlah harus lebih dari 0.', 'error'); return; }
-
-  const masuk = currentType === 'in' ? amount : 0;
-  const keluar = currentType === 'out' ? amount : 0;
-  const tx = { tanggal, kode, keterangan, masuk, keluar, timestamp: new Date().toISOString() };
-
-  transactions.push(tx);
-  localStorage.setItem('kas_masjid', JSON.stringify(transactions));
-  renderHistory(); renderSummary();
-
-  showStatus('Mengirim ke Google Sheets...', 'loading');
-  document.getElementById('btn-submit').disabled = true;
-  await sendToSheet(tx);
-  document.getElementById('btn-submit').disabled = false;
-  showStatus('✓ Tersimpan di Google Sheets!', 'success');
-  resetForm();
-}
-
-function updateConn() {
-  const on = navigator.onLine;
-  document.getElementById('conn-dot').className = 'conn-dot' + (on ? '' : ' off');
-  document.getElementById('conn-label').textContent = on ? 'Online' : 'Offline';
-}
-window.addEventListener('online', updateConn);
-window.addEventListener('offline', updateConn);
-updateConn();
-
-renderHistory(); renderSummary();
-</script>
+    $('incomeType').addEventListener('click',() => chooseType('in'));
+    $('checkPending').addEventListener('click', async () => {
+      if (!pending || busy) return;
+      setBusy(true);
+      try {
+        const result = await api('resolvePendingRequest',pending.id);
+        if (result.id !== pending.id) throw new Error('Identitas kiriman belum dapat dipastikan.');
+        persistPending(null);
+        if (result.saved) { $('description').value = ''; $('amount').value = ''; }
+        notice(result.saved ? 'Kiriman sebelumnya sudah tersimpan. Tidak perlu dikirim lagi.' : 'Kiriman belum tersimpan. Isinya sekarang dapat diperbaiki sebelum dikirim.');
+        await loadDashboard();
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('expenseType').addEventListener('click',() => chooseType('out'));
+    ['fund','month'].forEach(id => $(id).addEventListener('change',async () => {
+      if (pending && id === 'fund') { $('fund').value = pending.fund; notice('Selesaikan kiriman yang belum terkonfirmasi sebelum mengganti dana.',true); return; }
+      if (id === 'fund') $('date').value = '';
+      setBusy(true); await loadDashboard(); setBusy(false);
+    }));
+    $('refreshData').addEventListener('click',async () => { setBusy(true); await loadDashboard(); setBusy(false); });
+    $('previewPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Menyiapkan pratinjau…'); $('previewLink').hidden = true;
+      try {
+        const result = await api('previewPublicPdf');
+        if (!result.ready) { renderReport(result.report); notice(result.report.message); return; }
+        const raw = atob(result.bytes), bytes = Uint8Array.from(raw, char => char.charCodeAt(0));
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+        $('previewLink').href = previewUrl; $('previewLink').hidden = false;
+        notice('Pratinjau siap. Periksa seluruh halaman; PDF jamaah belum diganti.');
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('refreshPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Memeriksa dan memperbarui laporan…');
+      try { const result = await api('refreshPublicPdf'); renderReport(result); notice(result.message,result.state === 'ERROR'); await loadDashboard(); }
+      catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('resetForm').addEventListener('click', () => {
+      if (pending) { notice('Periksa kiriman sebelumnya sebelum mereset form.', true); return; }
+      $('code').value = 'K1'; $('description').value = ''; $('amount').value = '';
+      if (dashboard) $('date').value = dashboard.today;
+      $('voice-result').className = 'voice-result'; chooseType('in');
+    });
+    restorePending();
+    if (connected) loadDashboard();
+    else {
+      $('connection').textContent = 'Belum terhubung';
+      $('conn-dot').className = 'conn-dot off';
+      $('openApp').href = SCRIPT_URL; $('openApp').hidden = false;
+      $('reportMessage').textContent = 'Buka aplikasi Google untuk mencatat transaksi dan membaca data pembukuan bersama.';
+      $('history').replaceChildren(); setBusy(false);
+    }
+  </script>
 </body>
 </html>

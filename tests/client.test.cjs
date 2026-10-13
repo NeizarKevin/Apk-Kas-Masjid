@@ -36,8 +36,9 @@ function clientApp({dropResponse=false,preview=false}={}) {
   }});
   const context={document:{getElementById:id => nodes[id],createElement:node},localStorage:{getItem:key => storage.get(key)||null,setItem:(key,value) => storage.set(key,value),removeItem:key => storage.delete(key)},crypto,queueMicrotask,console};
   if (!preview) context.google={script:{run:runner}};
-  vm.runInContext(client,vm.createContext(context));
-  return {nodes,storage,requests,stored};
+  const sandbox=vm.createContext(context);
+  vm.runInContext(client,sandbox);
+  return {nodes,storage,requests,stored,sandbox};
 }
 test('Client waits for an acknowledgment and retries the same UUID after losing a response',async () => {
   const app=clientApp({dropResponse:true}); await tick();
@@ -69,5 +70,20 @@ test('Standalone HTML is a read-only preview and cannot report a successful save
   const app=clientApp({preview:true});
   assert.equal(app.nodes.submitButton.disabled,true); assert.equal(app.requests.length,0);
   assert.match(app.nodes.connection.textContent,/Belum terhubung/);
-  assert.equal(html.includes('SCRIPT_URL'),false); assert.equal(html.includes('new Image('),false);
+  assert.equal(app.nodes.openApp.hidden,false);
+  assert.match(app.nodes.openApp.href,/AKfycbwEz_VEAhjja-S2xt0mq6KEAEj4PP44JB6UFtD7uP1dg54JowROb1tKa6PHLqT60GVi\/exec$/);
+  assert.equal(html.includes('new Image('),false);
+  assert.equal(html.includes('sendToSheet'),false);
+});
+test('Voice input keeps code and date separate from the amount',() => {
+  const app=clientApp({preview:true});
+  let parsed=vm.runInContext("parseVoiceText('K1 infaq jumat lima ratus ribu tanggal 9 oktober 2026')",app.sandbox);
+  assert.equal(parsed.kode,'K1'); assert.equal(parsed.jumlah,500000); assert.equal(parsed.tanggal,'2026-10-09');
+  parsed=vm.runInContext("parseVoiceText('K3 bayar listrik 125.000 tanggal 10 oktober 2026')",app.sandbox);
+  assert.equal(parsed.kode,'K3'); assert.equal(parsed.tipe,'out'); assert.equal(parsed.jumlah,125000);
+});
+test('The repository entry and Apps Script use the same original interface',() => {
+  assert.equal(fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8'),html);
+  assert.match(html,/class="topbar"/); assert.match(html,/Input Suara/);
+  assert.equal(html.includes('deleteItem'),false);
 });

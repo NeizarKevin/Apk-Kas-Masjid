@@ -2,7 +2,7 @@
 
 Versi Apps Script untuk memasukkan transaksi dari HP, menyimpannya di Google Sheet utama, lalu memperbarui isi PDF publik yang sudah digunakan QR masjid. Tidak memerlukan website laporan baru. PDF tetap memakai file ID dan tautan yang sama.
 
-Kode aplikasi lama di `index.html` dipertahankan. Versi terhubung ke pembukuan berada di `apps-script/Index.html` dan dijalankan lewat deployment Apps Script; membuka HTML ini sendiri hanya menampilkan pratinjau tanpa akses simpan.
+Antarmuka hijau dan input suara aplikasi lama tetap menjadi dasar. `index.html` dan `apps-script/Index.html` sekarang identik. Data bersama dibaca melalui deployment Apps Script lama; halaman GitHub menyediakan tombol untuk membuka aplikasi Google. Form hanya aktif setelah data server berhasil dimuat. Riwayat lokal lama tidak dipakai untuk menghitung saldo atau dikirim ulang secara otomatis.
 
 ## Perilaku
 
@@ -19,10 +19,10 @@ Kode aplikasi lama di `index.html` dipertahankan. Versi terhubung ke pembukuan b
 
 Gunakan akun Google yang dapat mengedit Sheet sumber, workbook laporan, dan PDF publik.
 
-1. Dari Sheet sumber, buka **Ekstensi → Apps Script** dan buat proyek untuk versi ini. Jika sudah ada skrip aktif yang dipakai aplikasi lama, gunakan proyek terpisah agar tidak menimpanya.
-2. Tambahkan tiga file kode: `Model.gs`, `Code.gs`, dan `Report.gs`, serta satu file HTML bernama `Index`. Salin isi file yang sesuai dari folder `apps-script`.
+1. Gunakan proyek **Kas Masjid API** yang deployment-nya sudah dipakai `index.html`. Cocokkan deployment ID dengan `SCRIPT_URL` sebelum mengubahnya. Cadangkan kode lama dan catat versi deployment aktif untuk rollback. Jangan membuat proyek atau deployment pengganti.
+2. Ganti handler lama di `Code.gs` dengan tiga file kode `Model.gs`, `Code.gs`, dan `Report.gs`, serta tambahkan file HTML `Index`. Ketiga file `.gs` juga boleh digabung dalam satu `Code.gs`. Jangan menyisakan dua fungsi `doGet`. Versi deployment lama tetap tersimpan sampai deployment yang cocok diperbarui.
 3. Tampilkan manifest melalui **Project Settings → Show appsscript.json** dan salin `apps-script/appsscript.json`. Manifest mengaktifkan layanan Google Sheets v4 dan Google Drive v3. Jika menggunakan proyek Google Cloud standar, aktifkan kedua API pada proyek tersebut.
-4. Isi **Script Properties** berikut dengan ID file asli yang digunakan pembukuan. Jangan masukkan ID atau token OAuth ke HTML atau repositori publik.
+4. Isi **Script Properties** berikut dengan ID file asli yang digunakan pembukuan. Jangan masukkan ID file ke HTML atau repositori publik. URL deployment aplikasi lama adalah pintu masuk, bukan kredensial. Token OAuth tidak boleh disimpan di repo.
 
 | Property | Nilai |
 | --- | --- |
@@ -33,7 +33,7 @@ Gunakan akun Google yang dapat mengedit Sheet sumber, workbook laporan, dan PDF 
 5. Jalankan `configureApp` dari editor dan selesaikan izin Google. Fungsi ini memeriksa sumber, saldo sinkronisasi, template, dan hak edit PDF, tanpa mengganti PDF. Akun yang menjalankan menjadi pemilik aplikasi. Pada pemasangan baru, `REPORT_MODE=NEW_PERIOD` menjadi default dan saldo fisik disimpan di `REPORT_BASELINE` serta `PHBI_REPORT_BASELINE`; jangan mengisi nominal baru ke tabel pemasukan untuk mewakili saldo awal.
 
 Tanggal awal yang disetujui untuk pemasangan ini adalah 8 Oktober 2026 (`NEW_PERIOD_START_DATE=2026-10-08`). Jika Sheet sudah memiliki hitungan fisik yang lebih baru saat pemasangan pertama, masukkan snapshot saldo 8 Oktober ke `REPORT_BASELINE` dan `PHBI_REPORT_BASELINE` dari blok arsip sinkronisasi yang sesuai. Konfigurasi akan berhenti jika hanya hitungan terbaru yang tersedia, agar awal periode tidak bergeser tanpa permintaan.
-6. **Deploy → New deployment → Web app**. Pilih **Execute as: Me** dan **Who has access: Only myself**. Buka URL deployment dengan akun yang sama. Aplikasi versi ini khusus akun pemilik; pilihan K1/K2/K3 menentukan pemegang uang dan bukan izin masuk akun bendahara lain.
+6. **Deploy → Manage deployments**, pilih deployment yang ID-nya persis sama dengan `SCRIPT_URL`, lalu **Edit → New version**. Pilih **Execute as: Me** dan **Who has access: Only myself**. Perbarui deployment itu sehingga URL aplikasi lama tetap sama. Buka URL tersebut dengan akun yang sama. Aplikasi versi ini khusus akun pemilik; pilihan K1/K2/K3 menentukan pemegang uang dan bukan izin masuk akun bendahara lain.
 7. Periksa bahwa tanggal dan nominal saldo awal adalah hasil hitung fisik yang disetujui. Selisih periode lama tidak menjadi penghalang pada mode periode baru. Jika pencocokan sesudah awal periode baru berstatus **Ditahan**, periksa transaksi berdasarkan bukti, lalu muat ulang aplikasi.
 8. Klik **Pratinjau**, lalu buka PDF pratinjau. Periksa semua halaman: A4 portrait, nominal, subtotal, transaksi terakhir, periode, dan tabel tidak terpotong. Pratinjau tersimpan sementara di browser; tidak membuat file Drive dan tidak mengganti PDF publik.
 9. Setelah pratinjau sesuai, jalankan `activateAutomation` sekali dari editor. Fungsi ini memasang pemeriksaan berkala dan trigger edit secara idempotent, serta menjalankan pembaruan pertama dengan validasi yang sama. Periksa PDF publik lewat tautan aplikasi. Tambahkan URL aplikasi ke layar utama HP jika diinginkan.
@@ -69,6 +69,10 @@ Total detail, total ringkasan, saldo setiap bulan, dan saldo akhir direkonsilias
 Kegagalan sebelum unggah mempertahankan PDF publik. Kegagalan verifikasi sesudah unggah ditandai sebagai error, bukan klaim sukses; periksa versi file di Drive. Perubahan manual yang terjadi persis setelah pemeriksaan terakhir dapat tertangkap pada pemeriksaan berikutnya, karena Google Sheets dan Drive tidak menyediakan satu transaksi atomik lintas layanan.
 
 Export memakai gaya template laporan yang ada dan hanya tiga tab laporan publik. Kode tidak mengedit, memindahkan, atau menghapus transaksi sumber yang sudah ada; hanya menambahkan transaksi yang dikirim pengguna dan memperluas rentang filter tanpa mengubah kriterianya.
+
+## Tampilan ringkas
+
+Pilihan dana dan bulan berada di header. Ringkasan memakai nominal Rupiah lengkap; saldo tidak dihitung dari perangkat lokal. Form pemasukan/pengeluaran, K1/K2/K3, dan input suara memakai antarmuka lama. Kontrol pratinjau dan pembaruan manual berada di **Opsi laporan**. Suara mengisi draf saja; pengguna memeriksa nominal lalu menekan simpan. Dukungan mikrofon bergantung pada browser dan iframe Google; input manual selalu tersedia.
 
 ## Pengujian
 
