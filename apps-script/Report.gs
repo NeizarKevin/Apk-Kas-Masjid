@@ -64,11 +64,18 @@ function cashWriteWorkbook_(cfg, report) {
   report.months.forEach(function (month, i) {
     var row = first + i;
     [1, 3, 5, 7].forEach(function (column) { summary.getRange(row, column, 1, 2).merge(); });
-    summary.getRange(row, 1).setValue(month.label);
     summary.getRange(row, 3).setValue(month.income);
     summary.getRange(row, 5).setValue(month.expense);
     summary.getRange(row, 7).setValue(month.ending);
   });
+  SpreadsheetApp.flush();
+  // SpreadsheetApp parses "Oktober 2026" as a date in an Indonesian workbook.
+  // Write labels as typed strings so the readback sees the literal month name.
+  Sheets.Spreadsheets.batchUpdate({requests: report.months.map(function (month, i) {
+    return {updateCells: {range: {sheetId: summary.getSheetId(), startRowIndex: first + i - 1,
+      endRowIndex: first + i, startColumnIndex: 0, endColumnIndex: 1},
+      rows: [{values: [{userEnteredValue: {stringValue: month.label}}]}], fields: 'userEnteredValue'}};
+  })}, cfg.reportId);
   var period = cashDateLabel_(report.startDate) + ' - ' + cashDateLabel_(report.latest);
   summary.getRange('A3').setValue('Periode ' + period);
   summary.getRange('A8').setValue(report.mode === 'NEW_PERIOD' ?
