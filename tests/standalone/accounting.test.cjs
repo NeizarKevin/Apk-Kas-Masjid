@@ -23,6 +23,16 @@ test('Source only reads the active journal and preserves unknown PHBI wallets',a
   assert.equal(source.checkpoints.PHBI.holders.K2,null);assert.equal(source.checkpoints.PHBI.holders.K3,null);
   book.sheets[0].developerMetadata[0].metadataValue='OTHER';assert.throws(()=>buildSource(book,cfg),/metadata/);
 });
+
+test('Sheets calendar date serials stay unchanged with the original workbook time zone',async()=>{
+  const [{loadConfig},{demoBook},{buildSource}]=await modules;
+  const cfg=loadConfig({DEMO_MODE:'true'}),book=demoBook(cfg),expected=buildSource(book,cfg);
+  book.properties.timeZone='America/Los_Angeles';
+  const actual=buildSource(book,cfg);
+  assert.deepEqual(actual.report,expected.report);assert.deepEqual(actual.checkpoints,expected.checkpoints);
+  assert.equal(actual.transactions[0].date,expected.transactions[0].date);
+  book.spreadsheetId='another-file';assert.throws(()=>buildSource(book,cfg),/ID sumber/);
+});
 test('Writes use the next exact A:F range, typed strings, UUID notes, and grow a full grid',async()=>{
   const [{loadConfig},{demoBook},{buildSource,appendPlan}]=await modules;
   const cfg=loadConfig({DEMO_MODE:'true'}),book=demoBook(cfg);

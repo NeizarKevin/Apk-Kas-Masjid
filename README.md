@@ -53,6 +53,7 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - **Edit, Hapus, dan Pulihkan** tersedia pada rincian transaksi. Perubahan harus disertai alasan, memakai pemeriksaan versi baris, dan mempunyai UUID sendiri untuk kirim ulang yang aman. Riwayat tersimpan dalam note baris Sheet yang sama; tidak menambah database pembukuan kedua. Hapus mengosongkan A:F serta menyimpan cadangan privat pada note, tanpa menghapus atau menggeser baris. Tombstone tetap menahan UUID dan posisi baris agar transaksi yang dihapus tidak muncul kembali akibat retry.
 - Transaksi yang sudah termasuk hitung fisik terbaru dikunci dari koreksi aplikasi. Cocokkan langsung di Sheet agar angka hitungan fisik tidak berubah diam-diam. Dana transaksi tidak dipindah melalui edit. Gunakan pencarian dan penyaring jenis transaksi untuk menemukan rincian bulan yang dipilih.
 - Checkpoint baru memeriksa saldo buku terhadap uang fisik. Selisih menahan PDF; backend tidak mengubah baseline atau membuat penyesuaian otomatis.
+- Tanggal kalender dibaca/ditulis sebagai serial Sheets tanpa pergeseran zona waktu. Pengaturan zona waktu workbook lama dipertahankan; batas tanggal hari ini pada aplikasi memakai Asia/Jakarta.
 - Saat aktif, satu proses server memeriksa edit manual sekitar lima menit dan memperbarui PDF setelah simpan. Signature yang sama melewati ekspor ulang. Server dan volume harus selalu hidup; browser boleh ditutup.
 
 ## PDF dan keamanan data

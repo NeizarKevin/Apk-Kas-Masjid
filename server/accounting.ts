@@ -18,7 +18,8 @@ export function snapshot(sheet: GoogleObject, width: number): Snapshot {
     rows:cells.map(row => row.map(scalar)),notes:cells.map(row => row.map(cell => cell.note || ''))};
 }
 export function buildSource(book: GoogleObject, cfg: Config): Source {
-  if (book.spreadsheetId !== cfg.sourceId || book.properties?.timeZone !== 'Asia/Jakarta') throw new Error('ID atau zona waktu sumber tidak sesuai.');
+  if (book.spreadsheetId !== cfg.sourceId) throw new Error('ID sumber tidak sesuai.');
+  // Sheets calendar date serials have no time zone; keep the original workbook setting.
   const marked = book.sheets.filter((sheet: GoogleObject) => sheet.developerMetadata?.some((meta: GoogleObject) => meta.metadataKey === 'KAS_JOURNAL' && meta.metadataValue === 'MASJID'));
   if (marked.length !== 1 || marked[0].properties.sheetId !== cfg.journalId) throw new Error('ID jurnal tidak cocok dengan metadata KAS_JOURNAL=MASJID.');
   const get = (id: number, width: number) => {
