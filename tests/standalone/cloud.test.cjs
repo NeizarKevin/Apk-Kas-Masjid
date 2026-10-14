@@ -64,6 +64,29 @@ test('Scheduled endpoint requires a secret and does no work before cutover; clou
   assert.throws(()=>loadConfig({DEMO_MODE:'true',VERCEL:'1'}),/Hosting membutuhkan/);
 });
 
+test('Remembered sessions use a seven-day encrypted TTL and outlive default sessions without extending past expiry',async t=>{
+  const {cfg,a,b,redis}=await fixture();const [{OwnerAuth},{createApp},{DemoAdapter}]=await Promise.all(['auth','app','demo'].map(x=>import('../../dist/'+x+'.js')));
+  const auth=new OwnerAuth(cfg,a),other=new OwnerAuth(cfg,b),{app}=await createApp(cfg,new DemoAdapter(cfg),auth);
+  const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>new Promise(r=>server.close(r)));
+  cfg.origin='http://127.0.0.1:'+server.address().port;
+  const login=async query=>{const res=await fetch(cfg.origin+'/auth/login'+query,{redirect:'manual'});return res.headers.getSetCookie().at(-1).split(';')[0];};
+  const normal=await login(''),remembered=await login('?remember=1'),id=remembered.split('=')[1],name='session:'+crypto.createHash('sha256').update(id).digest('hex');
+  assert.ok(redis.expires.get(a.key(name))>=604799 && redis.expires.get(a.key(name))<=604800);
+  assert.equal((await redis.get(a.key(name))).includes(id),false);
+  const now=Date.now;
+  try {
+    Date.now=()=>now()+13*60*60*1000;
+    let denied;await other.requireOwner({headers:{cookie:normal}},{status(s){denied=s;return this;},json(){}},()=>assert.fail());assert.equal(denied,401);
+    let allowed=false;await other.requireOwner({headers:{cookie:remembered}},{status(){throw Error('denied');}},()=>allowed=true);assert.equal(allowed,true);
+    const session=await (await fetch(cfg.origin+'/api/session',{headers:{Cookie:remembered}})).json();
+    const logout=await fetch(cfg.origin+'/auth/logout',{method:'POST',headers:{Cookie:remembered,Origin:cfg.origin,'X-CSRF-Token':session.csrf}});assert.equal(logout.status,200);
+    await other.requireOwner({headers:{cookie:remembered}},{status(s){denied=s;return this;},json(){}},()=>assert.fail());assert.equal(denied,401);
+    Date.now=now;
+    const expired=await login('?remember=1');Date.now=()=>now()+7*24*60*60*1000+1000;
+    await other.requireOwner({headers:{cookie:expired}},{status(s){denied=s;return this;},json(){}},()=>assert.fail());assert.equal(denied,401);
+  } finally {Date.now=now;}
+});
+
 test('OAuth waits for the shared lease release before issuing an owner cookie or redirect',async t=>{
   const {cfg,a,redis}=await fixture();Object.assign(cfg,{demo:false,clientId:'test',clientSecret:'test',owner:'owner@example.test'});
   const [{OAuth2Client},{OwnerAuth},{createApp}]=await Promise.all([import('google-auth-library'),import('../../dist/auth.js'),import('../../dist/app.js')]);

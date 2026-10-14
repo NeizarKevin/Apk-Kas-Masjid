@@ -33,12 +33,30 @@ test('A network failure after commit retries the old UUID instead of adding cash
   assert.equal((await service.saveTransaction(tx)).duplicate,true);
   assert.equal((await adapter.source()).report.income,250100);
 });
-test('PDF failure acknowledges a verified save and never creates another transaction',async t=>{
-  const {adapter,service}=await fixture(t,true),tx=input();adapter.render=async()=>{throw new Error('export failed');};
+test('Verified saves return before PDF work; the scheduled refresh handles failures without duplicate cash',async t=>{
+  const {adapter,service,published}=await fixture(t,true),tx=input();let exports=0;
+  adapter.render=async()=>{exports++;throw new Error('export failed');};
   const result=await service.saveTransaction(tx);
-  assert.equal(result.saved,true);assert.equal(result.report.state,'ERROR');
+  assert.equal(result.saved,true);assert.equal(result.report.state,'READY');assert.match(result.report.message,/5 menit/);
+  assert.equal(exports,0);assert.equal(published.length,0);
+  assert.equal((await service.getDashboard('MASJID','2026-10')).report.state,'READY');
+  assert.equal((await service.refreshPublicPdf()).state,'ERROR');assert.equal(exports,1);
+  assert.equal((await service.getDashboard('MASJID','2026-10')).report.state,'ERROR');
   assert.equal((await service.saveTransaction(tx)).duplicate,true);
-  assert.equal((await adapter.source()).report.income,250100);
+  assert.equal(exports,1);assert.equal((await adapter.source()).report.income,250100);
+  adapter.render=async()=>Buffer.from('recovered PDF');
+  assert.equal((await service.refreshPublicPdf()).state,'PUBLISHED');assert.equal(published.length,1);
+  assert.equal((await service.getDashboard('MASJID','2026-10')).report.state,'PUBLISHED');
+});
+
+test('Pending PDFs survive service restarts and PHBI-only writes leave the published masjid report current',async t=>{
+  const {cfg,adapter,service,CashService,rendered}=await fixture(t,true);
+  await service.refreshPublicPdf();assert.equal(rendered.length,1);
+  const phbi=await service.saveTransaction(input({fund:'PHBI'}));assert.equal(phbi.report.state,'PUBLISHED');assert.equal(rendered.length,1);
+  await service.saveTransaction(input());assert.equal(rendered.length,1);
+  const restarted=new CashService(cfg,adapter);
+  assert.equal((await restarted.getDashboard('MASJID','2026-10')).report.state,'READY');
+  await service.refreshPublicPdf();assert.equal(rendered.length,2);
 });
 test('An edited old request moved before the opening cannot be inserted again',async t=>{
   const {cfg,service}=await fixture(t),tx=input();await service.saveTransaction(tx);

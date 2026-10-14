@@ -23,7 +23,7 @@ Jadwal QStash mengirim `Authorization: Bearer <CRON_SECRET>` melalui header forw
 
 Untuk aplikasi pribadi dengan satu pemilik, Google mengizinkan penggunaan tanpa proses verifikasi publik; peringatan login dapat tetap tampil. Lihat [pengecualian personal use Google](https://support.google.com/cloud/answer/13464323).
 
-Token dan sesi Redis tetap tersedia lintas invocation/deployment. Nama record sesi memakai hash identitas cookie; isi sesi dienkripsi. Sesi berakhir setelah 12 jam atau logout; logout mencabut sesi di semua function. Cadangkan kunci enkripsi serta konfigurasi secara privat. Jika Redis atau kunci hilang, hubungkan ulang Google; jangan mengubah transaksi atau baseline untuk memulihkan akses.
+Token dan sesi Redis tetap tersedia lintas invocation/deployment. Nama record sesi memakai hash identitas cookie; isi sesi dienkripsi. Sesi berakhir setelah 12 jam, atau 7 hari jika **Ingat saya selama 7 hari** dipilih pada login. TTL Redis dan cookie mengikuti batas sesi yang sama; logout mencabut sesi di semua function. Gunakan opsi 7 hari hanya di perangkat pribadi. Cadangkan kunci enkripsi serta konfigurasi secara privat. Jika Redis atau kunci hilang, hubungkan ulang Google; jangan mengubah transaksi atau baseline untuk memulihkan akses.
 
 Semua operasi dibatasi satu lock Redis per sumber. Lock berlaku 600 detik, lebih lama dari batas function 300 detik ditambah request Google maksimal 90 detik. Operasi berhenti mengirim request baru setelah 240 detik. Respons write yang terputus mempertahankan lock sampai kedaluwarsa; periksa UUID kiriman sebelum mengirim ulang. Jangan jalankan Apps Script atau aplikasi lain sebagai penulis/penerbit bersamaan.
 

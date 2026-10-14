@@ -15,12 +15,14 @@ async function fixture(t,automatic=false) {
   return {cfg,adapter,service,view,request,changes,published};
 }
 test('Edit updates the exact transaction and audit history; simultaneous retries keep one operation',async t=>{
-  const {adapter,service,view,request}=await fixture(t,true),tx=await view('Contoh biaya kebersihan');
+  const {adapter,service,view,request,published}=await fixture(t,true),tx=await view('Contoh biaya kebersihan');
   const correction=request(tx,'edit',{input:{fund:'MASJID',type:'out',code:'K2',date:'2026-10-10',description:'Biaya kebersihan terkoreksi',amount:60000}});
   const responses=await Promise.all([service.changeTransaction(correction),service.changeTransaction(correction)]);
   assert.deepEqual(responses.map(r=>r.duplicate),[false,true]);
+  assert.equal(responses[0].report.state,'READY');assert.equal(published.length,0);
   const corrected=await view('Biaya kebersihan terkoreksi');assert.equal(corrected.amount,60000);assert.equal(corrected.code,'K2');assert.equal(corrected.changes.length,1);assert.equal(corrected.changes[0].before.amount,50000);
   const source=await adapter.source();assert.equal(source.report.expense,60000);assert.equal(source.report.ending,1190000);
+  assert.equal((await service.refreshPublicPdf()).state,'PUBLISHED');assert.equal(published.length,1);
   await assert.rejects(service.changeTransaction({...correction,reason:'Different request'}),/ID perubahan/);
 });
 test('Delete is recoverable, keeps the same row and UUID, and excludes cash from the active report',async t=>{

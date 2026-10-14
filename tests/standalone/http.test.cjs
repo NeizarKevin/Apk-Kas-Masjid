@@ -4,7 +4,7 @@ const {mkdtemp,rm}=require('node:fs/promises');
 const {tmpdir}=require('node:os');
 const {join}=require('node:path');
 const crypto=require('node:crypto');
-async function fixture(t,live=false) {
+async function fixture(t,live=false,loginQuery='') {
   const [{loadConfig},{DemoAdapter},{OwnerAuth},{createApp}]=await Promise.all(['config','demo','auth','app'].map(name=>import('../../dist/'+name+'.js')));
   const dir=await mkdtemp(join(tmpdir(),'kas-http-'));t.after(()=>rm(dir,{recursive:true,force:true}));
   const cfg={...loadConfig({DEMO_MODE:'true',STATE_DIR:dir}),automatic:false,...(live ? {demo:false,owner:'owner@example.test',clientId:'test_client',clientSecret:'test_secret',encryptionKey:crypto.randomBytes(32).toString('base64')} : {})};
@@ -12,7 +12,7 @@ async function fixture(t,live=false) {
   const {app}=await createApp(cfg,adapter,auth);const server=app.listen(0,'127.0.0.1');
   await new Promise(resolve=>server.once('listening',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
   const origin='http://127.0.0.1:'+server.address().port;cfg.origin=origin;
-  const login=await fetch(origin+'/auth/login',{redirect:'manual'}),cookie=login.headers.getSetCookie().at(-1).split(';')[0];
+  const login=await fetch(origin+'/auth/login'+loginQuery,{redirect:'manual'}),cookie=login.headers.getSetCookie().at(-1).split(';')[0];
   return {cfg,origin,cookie,login,auth,adapter};
 }
 test('Every data, preview and write endpoint rejects anonymous requests; owner mutations enforce CSRF and Origin',async t=>{
@@ -76,4 +76,21 @@ test('Owner OAuth rotates the session, stores encrypted owner-bound tokens and v
   assert.equal(stored.owner,cfg.owner);assert.equal(stored.credentials.refresh_token,'offline_test_token');
   assert.equal(stored.credentials.refresh_token_expires_in,undefined);
   const {OwnerAuth}=await import('../../dist/auth.js');await assert.rejects(new OwnerAuth({...cfg,owner:'changed@example.test'}).initialize(),/Pemilik konfigurasi berubah/);
+});
+
+test('Remember-device lifetime is bound to the OAuth request; callback query parameters cannot extend it',async t=>{
+  const {OAuth2Client}=await import('google-auth-library');
+  const getToken=OAuth2Client.prototype.getToken,verify=OAuth2Client.prototype.verifyIdToken;
+  OAuth2Client.prototype.getToken=async()=>({tokens:{id_token:'synthetic',refresh_token:'offline_test_token'}});
+  OAuth2Client.prototype.verifyIdToken=async()=>({getPayload:()=>({email:'owner@example.test',email_verified:true})});
+  t.after(()=>{OAuth2Client.prototype.getToken=getToken;OAuth2Client.prototype.verifyIdToken=verify;});
+  for (const remember of [false,true]) {
+    const {origin,cookie,login,adapter}=await fixture(t,true,remember ? '?remember=1' : '');adapter.verifyTargets=async()=>{};
+    const state=new URL(login.headers.get('location')).searchParams.get('state');
+    const result=await fetch(origin+'/auth/callback?state='+state+'&code=fake&remember='+(remember?'0':'1'),{headers:{Cookie:cookie},redirect:'manual'});
+    assert.equal(result.status,302);const header=result.headers.getSetCookie().at(-1);
+    const maxAge=Number(/Max-Age=(\d+)/.exec(header)[1]),expected=remember ? 604800 : 43200;
+    assert.ok(maxAge<=expected && maxAge>=expected-5);assert.match(header,/HttpOnly/);assert.match(header,/SameSite=Lax/);
+    assert.equal((await fetch(origin+'/api/session',{headers:{Cookie:header.split(';')[0]}}).then(r=>r.json())).authenticated,true);
+  }
 });

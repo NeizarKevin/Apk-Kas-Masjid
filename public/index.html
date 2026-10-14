@@ -293,6 +293,7 @@ dialog{width:min(480px,calc(100% - 32px));max-height:90vh;margin:auto;border:1px
 .login-panel{max-width:788px;margin:18px auto 0;padding:24px;background:white;border:1px solid var(--border);border-radius:20px}
 .login-panel h2{font-size:18px;margin-bottom:8px}.login-panel p{font-size:14px;line-height:1.6;color:var(--muted);margin-bottom:16px}
 .login-link{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;background:var(--green);border-radius:12px;color:white;text-decoration:none;font-size:14px;font-weight:700}
+.remember-option{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:14px;cursor:pointer}.remember-option input{width:20px;height:20px;accent-color:var(--green)}.login-panel .remember-hint{font-size:12px}
 button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d8ab43;outline-offset:3px}
 button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#notice{white-space:pre-line}
 @media(min-width:720px){.scroll{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.report-card,#notice,.history-card{grid-column:1/-1}.scroll>.card,.voice-card,.history-card{margin-bottom:0}.voice-card{grid-column:2;grid-row:3}.scroll>.card:not(.report-card){grid-column:1;grid-row:3}.summary-grid{gap:14px}.sum-label{font-size:11px}}
@@ -342,7 +343,7 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
 </div>
 
 <div id="demoBanner" class="demo-banner" hidden><strong>Mode demo — data contoh.</strong> Transaksi dan PDF di sini digunakan untuk pengujian aplikasi.</div>
-<section id="loginPanel" class="login-panel" hidden><h2>Pembukuan kas, dalam satu tempat</h2><p id="loginText">Masuk dengan akun pemilik untuk melanjutkan.</p><a id="loginLink" class="login-link" href="/auth/login">Masuk dengan Google</a><p style="margin:16px 0 0"><a href="/privacy">Privasi dan penggunaan data Google</a></p></section>
+<section id="loginPanel" class="login-panel" hidden><h2>Pembukuan kas, dalam satu tempat</h2><p id="loginText">Masuk dengan akun pemilik untuk melanjutkan.</p><label class="remember-option"><input id="rememberDevice" type="checkbox" aria-describedby="rememberHint">Ingat saya selama 7 hari</label><p id="rememberHint" class="remember-hint">Centang hanya di perangkat pribadi. Saat dibuka dari ikon home screen, tidak perlu login setiap mencatat. Tanpa centang, sesi berlaku 12 jam.</p><a id="loginLink" class="login-link" href="/auth/login">Masuk dengan Google</a><p style="margin:16px 0 0"><a href="/privacy">Privasi dan penggunaan data Google</a></p></section>
 <div id="accountRow" class="account-row" hidden><span>Sesi pemilik · K1/K2/K3 adalah pemegang uang</span><div class="account-actions"><a id="reconnectGoogle" href="/auth/login?reconnect=1">Hubungkan ulang Google</a><button id="logout" class="secondary" type="button">Keluar</button></div></div>
 <div class="scroll">
   <div id="notice" class="notice" role="status" hidden></div>
@@ -730,7 +731,7 @@ function toggleVoice() {
       $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
     }
     function renderReport(status) {
-      const names = {PUBLISHED:'Diperbarui',UNCHANGED:'Sudah sesuai',BLOCKED:'Ditahan',ERROR:'Perlu diperiksa',SETUP:'Belum aktif',READY:'Siap diaktifkan'};
+      const names = {PUBLISHED:'Diperbarui',UNCHANGED:'Sudah sesuai',BLOCKED:'Ditahan',ERROR:'Perlu diperiksa',SETUP:'Belum aktif',READY:'Belum diperbarui'};
       $('reportState').textContent = names[status.state] || 'Memeriksa';
       $('reportState').className = 'badge' + (status.state === 'ERROR' ? ' error' : ['BLOCKED','SETUP'].includes(status.state) ? ' warning' : '');
       $('reportMessage').textContent = status.message;
@@ -758,7 +759,7 @@ function toggleVoice() {
       if (!pending) { if (!$('date').value) $('date').value = data.today; }
       $('date').max = data.today; $('date').min = data.checkpoint.date;
       renderReport(data.report);
-      $('automationNote').textContent = data.automatic ? 'PDF diperbarui setelah transaksi tersimpan. Perubahan langsung di Sheet diperiksa server sekitar setiap 5 menit, meski aplikasi ditutup.' : 'Publikasi otomatis belum diaktifkan. Gunakan pratinjau untuk memeriksa laporan.';
+      $('automationNote').textContent = data.automatic ? 'Simpan tidak menunggu pembuatan PDF. Server memperbarui PDF sekitar setiap 5 menit, meski aplikasi ditutup. Gunakan Perbarui PDF jika perlu segera.' : 'Publikasi otomatis belum diaktifkan. Gunakan pratinjau untuk memeriksa laporan.';
       $('pdfLink').hidden = !data.pdfUrl;
       if (validPdfUrl(data.pdfUrl)) $('pdfLink').href = data.pdfUrl;
       else { $('pdfLink').hidden = true; $('pdfLink').removeAttribute('href'); }
@@ -836,7 +837,7 @@ function toggleVoice() {
           }
           persistChange(request);
         }
-        setBusy(true);setChangeBusy(true);$('changeNotice').textContent='Menyimpan perubahan dan memeriksa laporan…';
+        setBusy(true);setChangeBusy(true);$('changeNotice').textContent='Menyimpan dan memverifikasi perubahan di Sheet…';
         const result=await api('changeTransaction',pendingChange);
         if (!result.changed || result.id!==pendingChange.id) throw new Error('Perubahan belum terkonfirmasi.');
         persistChange(null);$('changeDialog').close();editing=null;
@@ -903,7 +904,7 @@ function toggleVoice() {
         const payload = readInput();
         if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
         if (!pending) persistPending({...payload,id:crypto.randomUUID()});
-        setBusy(true); notice('Menyimpan transaksi dan memeriksa laporan…');
+        setBusy(true); notice('Menyimpan dan memverifikasi transaksi di Sheet…');
         const result = await api('saveTransaction',pending);
         if (!result.saved || result.id !== pending.id) throw new Error('Penyimpanan belum terkonfirmasi. Gunakan kirim ulang.');
         const fund = pending.fund;
@@ -962,6 +963,9 @@ function toggleVoice() {
       $('voice-result').className = 'voice-result'; chooseType('in');
     });
     $('voice-btn').addEventListener('click',toggleVoice);
+    $('rememberDevice').addEventListener('change',()=>{
+      $('loginLink').href='/auth/login'+($('rememberDevice').checked ? '?remember=1' : '');
+    });
     $('logout').addEventListener('click',async () => {
       const response=await fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin'});
       if (response.ok) location.reload(); else notice('Keluar belum berhasil. Muat ulang dan coba kembali.',true);

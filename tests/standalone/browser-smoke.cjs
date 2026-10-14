@@ -23,7 +23,15 @@ async function run() {
     await page.goto(origin);await page.waitForSelector('#loginPanel:not([hidden])');
     assert.equal(await page.locator('#submitButton').isDisabled(),true);
     assert.equal((await context.request.get(origin+'/api/dashboard')).status(),401);
+    assert.equal(await page.locator('#rememberDevice').isChecked(),false);
+    await page.locator('#rememberDevice').check();assert.equal(await page.locator('#loginLink').getAttribute('href'),'/auth/login?remember=1');
+    await page.locator('#rememberDevice').uncheck();assert.equal(await page.locator('#loginLink').getAttribute('href'),'/auth/login');
+    await page.locator('#rememberDevice').check();
     await page.locator('#loginLink').click();await page.waitForFunction(()=>document.getElementById('connection').textContent==='Demo aktif');
+    const cookie=(await context.cookies()).find(c=>c.name==='kas_session');assert.ok(cookie.expires>Date.now()/1000+6*24*60*60);
+    const reopened=await browser.newContext({storageState:await context.storageState()}),homeScreen=await reopened.newPage();
+    await homeScreen.goto(origin);await homeScreen.waitForFunction(()=>document.getElementById('connection').textContent==='Demo aktif');
+    assert.equal(await homeScreen.locator('#loginPanel').isVisible(),false);await reopened.close();
     assert.equal(await page.locator('#currentBalance').textContent(),'Rp1.200.000');
     assert.equal(await page.locator('#demoBanner').isVisible(),true);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
@@ -44,8 +52,10 @@ async function run() {
     assert.equal(await page.locator('#currentBalance').textContent(),'Rp1.300.001');
     const dashboard=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();
     assert.equal(dashboard.transactions.filter(tx=>tx.description==='=Literal browser test').length,1);
-    assert.equal(dashboard.report.state,'UNCHANGED');
-    await page.getByText('Opsi laporan',{exact:true}).click();await page.locator('#previewPdf').click();
+    assert.equal(dashboard.report.state,'READY');assert.match(await page.locator('#reportMessage').textContent(),/5 menit/);
+    await page.getByText('Opsi laporan',{exact:true}).click();await page.locator('#refreshPdf').click();
+    await page.waitForFunction(()=>!document.getElementById('submitButton').disabled && ['Diperbarui','Sudah sesuai'].includes(document.getElementById('reportState').textContent),{},{timeout:120000});
+    await page.locator('#previewPdf').click();
     await page.waitForSelector('#previewLink:not([hidden])',{timeout:120000});
     const preview=await context.request.get(origin+'/api/pdf/preview');assert.equal(preview.status(),200);
     await writeFile(join(evidence,'preview-demo.pdf'),await preview.body());
@@ -77,8 +87,8 @@ async function run() {
     await context.close();
     // The process worker publishes at startup without any logged-in browser.
     assert.ok((await readFile(join(dir,'public.pdf'))).length>1000);
-    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
-    console.log('Browser smoke passed: mobile, desktop, login/logout, UUID retry across reload, edit/delete/restore, history search, PHBI, literal text, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
+    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,rememberDevice:true,reopenWithoutLogin:true,deferredPdf:true,manualPdfRefresh:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
+    console.log('Browser smoke passed: mobile, desktop, remembered login/reopen/logout, deferred and manual PDF, UUID retry across reload, edit/delete/restore, history search, PHBI, literal text, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
   } finally {
     await browser?.close();server.kill();await new Promise(resolve=>server.once('exit',resolve));await rm(dir,{recursive:true,force:true});
   }

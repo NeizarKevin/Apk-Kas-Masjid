@@ -19,6 +19,16 @@ export class CashService {
   private blocked(source: Source): Status | null {
     return source.reconciliation.ok ? null : {state:'BLOCKED',message:'PDF ditahan: saldo buku dan hitungan fisik berbeda. Cocokkan transaksi di Sheet.',reconciliation:source.reconciliation};
   }
+  private async reportStatus(source: Source): Promise<Status> {
+    const blocked=this.blocked(source);if (blocked) return blocked;
+    const publication=await this.publication(),report=publication.status;
+    if (report.state !== 'ERROR' && (report.state === 'BLOCKED' || (publication.hash !== signature(source.report) && (this.cfg.automatic || report.state !== 'SETUP')))) {
+      return {state:'READY',message:this.cfg.automatic
+        ? 'PDF menunggu pembaruan otomatis, sekitar 5 menit. Gunakan Perbarui PDF jika dibutuhkan sekarang.'
+        : 'Pembukuan berubah. PDF jamaah belum sesuai; gunakan pratinjau atau perbarui laporan.'};
+    }
+    return report;
+  }
   getDashboard(fund: string, month: string) {
     return this.queue.run(async () => {
       if (!['MASJID','PHBI'].includes(fund)) throw new Error('Pilih jenis dana.');
@@ -31,10 +41,7 @@ export class CashService {
       const selected = visible.filter(tx => tx.date.slice(0,7) === month);
       const balance = checkpoint.amount + all.filter(tx => m.cashIsAfterCheckpoint_(tx,checkpoint)).reduce((sum,tx)=>sum+(tx.type === 'in' ? tx.amount : -tx.amount),0);
       if (!Number.isSafeInteger(balance)) throw new Error('Saldo melewati batas angka aman.');
-      const publication=await this.publication();
-      let report = this.blocked(source) || publication.status;
-      if (source.reconciliation.ok && ['PUBLISHED','UNCHANGED'].includes(report.state) && publication.hash!==signature(source.report)) report={state:'READY',message:'Pembukuan berubah. PDF jamaah belum sesuai; gunakan pratinjau atau perbarui laporan.'};
-      if (source.reconciliation.ok && report.state === 'BLOCKED') report = {state:'READY',message:'Saldo buku sesuai. Laporan siap diperbarui.'};
+      const report=await this.reportStatus(source);
       return {today,month,fund,checkpoint,balance,bookBalance:fund === 'MASJID' ? source.report.ending : null,
         income:selected.filter(tx=>tx.type === 'in').reduce(m.cashSum_,0),expense:selected.filter(tx=>tx.type === 'out').reduce(m.cashSum_,0),
         transactions:selected.slice().sort(m.cashSort_).reverse().map(tx=>transactionView(source,tx)),deletedTransactions:deletedViews(source,this.cfg,fund,month),report,
@@ -61,9 +68,8 @@ export class CashService {
       let warning: string | null = null;
       try {await this.adapter.extendFilter(verified.transactions.concat(verified.phbiTransactions).find(row=>row.meta?.id === tx.id)!);}
       catch {warning='Transaksi tersimpan. Rentang filter Sheet perlu diperiksa.';}
-      let report: Status;
-      try {report=this.cfg.automatic ? await this.publishLocked(false) : setup;}
-      catch (error) {report=await this.status({state:'ERROR',message:'Transaksi tersimpan. PDF belum diperbarui: ' + (error as Error).message});}
+      // The existing five-minute worker owns PDF publication; saves only acknowledge verified Sheet data.
+      const report=await this.reportStatus(verified);
       return {saved:true,duplicate:!!existing,id:tx.id,report,warning};
     });
   }
@@ -82,9 +88,7 @@ export class CashService {
       await this.adapter.change(request);
       const after=await this.adapter.source(),receipt=changeReceipt(after,request.id);
       if (!receipt || receipt.key!==request.key) throw new Error('Perubahan belum terverifikasi. Kirim ulang dengan ID perubahan yang sama.');
-      let report: Status;
-      try {report=this.cfg.automatic ? await this.publishLocked(false) : setup;}
-      catch (error) {report=await this.status({state:'ERROR',message:'Perubahan tersimpan. PDF belum diperbarui: '+(error as Error).message});}
+      const report=await this.reportStatus(after);
       return {changed:true,id:request.id,action:request.action,duplicate,report};
     });
   }

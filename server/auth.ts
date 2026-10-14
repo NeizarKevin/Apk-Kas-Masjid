@@ -5,7 +5,8 @@ import type {Express,Request,Response,NextFunction} from 'express';
 import {TokenStore,AppState} from './state.js';
 import type {Adapter,Config} from './types.js';
 
-interface Session {id: string; csrf: string; expires: number; owner: boolean; oauth?: {state:string;verifier:string;expires:number}}
+interface Session {id: string; csrf: string; expires: number; owner: boolean; remember?: boolean; oauth?: {state:string;verifier:string;expires:number;remember?:boolean}}
+const sessionLifetime = (remember: boolean) => (remember ? 7*24 : 12)*60*60*1000;
 const random = () => randomBytes(32).toString('base64url');
 export const equalSecret = (a: string, b: string) => Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 export class OwnerAuth {
@@ -54,12 +55,12 @@ export class OwnerAuth {
       if (this.sessions.size >= 1000) throw new Error('Terlalu banyak sesi. Coba kembali nanti.');
       session={id:random(),csrf:random(),expires:Date.now()+10*60*1000,owner:false};
       await this.saveSession(session);
-      this.cookie(res,session.id);
+      this.cookie(res,session);
     }
     return session;
   }
-  private cookie(res: Response,id: string) {
-    res.cookie('kas_session',id,{httpOnly:true,sameSite:'lax',secure:this.cfg.origin.startsWith('https://'),path:'/',maxAge:12*60*60*1000});
+  private cookie(res: Response,session: Session) {
+    res.cookie('kas_session',session.id,{httpOnly:true,sameSite:'lax',secure:this.cfg.origin.startsWith('https://'),path:'/',maxAge:Math.max(1,session.expires-Date.now())});
   }
   routes(app: Express, adapter: Adapter) {
     app.get('/api/session',async(req,res) => {
@@ -68,13 +69,14 @@ export class OwnerAuth {
     });
     app.get('/auth/login',async (req,res) => {
       const session = (await this.session(req,res,true))!;
+      const remember=req.query.remember === '1' || (req.query.reconnect === '1' && session.owner && session.remember === true);
       if (this.cfg.demo) {
         const old = session.id;
-        await this.deleteSession(old);session.id=random();session.csrf=random();session.owner=true;session.expires=Date.now()+12*60*60*1000;
-        await this.saveSession(session);this.cookie(res,session.id);res.redirect('/');return;
+        await this.deleteSession(old);session.id=random();session.csrf=random();session.owner=true;session.remember=remember;session.expires=Date.now()+sessionLifetime(remember);
+        await this.saveSession(session);this.cookie(res,session);res.redirect('/');return;
       }
       const pkce = await this.client.generateCodeVerifierAsync();
-      session.oauth={state:random(),verifier:pkce.codeVerifier,expires:Date.now()+10*60*1000};
+      session.oauth={state:random(),verifier:pkce.codeVerifier,expires:Date.now()+10*60*1000,remember};
       await this.saveSession(session);
       res.redirect(this.client.generateAuthUrl({access_type:'offline',scope:['openid','email','https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive'],
         state:session.oauth.state,code_challenge:pkce.codeChallenge,code_challenge_method:'S256' as any,prompt:this.connected && req.query.reconnect !== '1' ? 'select_account' : 'consent',login_hint:this.cfg.owner}));
@@ -102,11 +104,11 @@ export class OwnerAuth {
         catch (error) {this.client.setCredentials(this.tokens);throw error;}
         this.tokens=credentials;await this.saveTokens();
         await this.deleteSession(session!.id);
-        const authenticated: Session={id:random(),csrf:random(),expires:Date.now()+12*60*60*1000,owner:true};
+        const authenticated: Session={id:random(),csrf:random(),expires:Date.now()+sessionLifetime(pending.remember === true),owner:true,remember:pending.remember === true};
         await this.saveSession(authenticated);return authenticated;
         });
         if (!authenticated) {res.status(403).send('Aplikasi hanya untuk akun pemilik.');return;}
-        this.cookie(res,authenticated.id);res.redirect('/');
+        this.cookie(res,authenticated);res.redirect('/');
       } catch {res.status(400).send('Koneksi Google belum berhasil. Periksa OAuth, API, akun pemilik, dan hak akses file asli, lalu login kembali.');}
     });
     app.post('/auth/logout',this.requireOwner,this.csrf,async(req,res) => {
