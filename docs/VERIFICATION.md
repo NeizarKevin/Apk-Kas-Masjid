@@ -4,7 +4,7 @@ Dibangun dari remote `main` commit `48d3f02258d1a6526c66f5b0bb82b46e746bb541`, b
 
 ## Cakupan
 
-- Build TypeScript dan 76 tes otomatis, termasuk regresi 44 tes lama. Regresi zona waktu memastikan nomor tanggal kalender Sheet tetap sama dengan pengaturan workbook lama.
+- Build TypeScript dan 82 tes otomatis, termasuk regresi 44 tes lama. Regresi zona waktu memastikan nomor tanggal kalender Sheet tetap sama dengan pengaturan workbook lama.
 - Adapter: jurnal tunggal, write A:F, formula sebagai teks, PHBI null, metadata, UUID, checkpoint, template, target ID lama, checksum, dan izin.
 - Layanan: retry bersamaan, restart, respons hilang sesudah commit, koreksi tanggal lama, PDF gagal setelah simpan, sumber berubah, signature, dan PHBI terpisah.
 - Koreksi: edit/hapus/pulihkan pada baris yang sama, note cadangan, alasan dan riwayat, UUID perubahan setelah respons putus, konflik versi, larangan perpindahan dana, proteksi checkpoint, dan kompatibilitas parser Apps Script lama. Browser juga menguji pencarian serta retry perubahan setelah reload.
@@ -18,8 +18,22 @@ OAuth Client web sudah dibuat dan dipasang pada konfigurasi lokal privat. Login 
 
 Ekspor native melalui workbook laporan asli dan upload ke PDF pratinjau privat lama berhasil. Ketiga halaman A4 diperiksa isi serta visualnya. Hash snapshot jurnal sumber, checksum PDF publik, dan izinnya sama sebelum/sesudah pengujian. Tidak ada transaksi contoh yang ditulis ke sumber asli.
 
-Write transaksi/edit/hapus/pulihkan pada sumber asli dan pergantian PDF publik belum dilakukan. Publikasi otomatis backend masih dimatikan; Apps Script lama tetap dipertahankan sampai cutover. Hosting belum dipilih. OAuth masih berstatus Testing; izin offline dapat kedaluwarsa setelah tujuh hari dan perlu dihubungkan ulang.
+Aplikasi produksi berjalan di **https://kas-masjid-albarokah.vercel.app** pada Vercel Hobby, Redis Free, dan QStash Free. Login Google pemilik, pembacaan kas/PHBI, ekspor native melalui template asli, audit render tiga halaman di Vercel, dan upload PDF publik pada ID lama berhasil. Pemeriksaan terpisah melalui API membuktikan jurnal sumber tidak berubah, saldo cocok, checksum PDF sesuai, izin publik tetap sama, dan arsip privat cocok dengan PDF sebelumnya.
 
-Mock bukan bukti API Google menerima penulisan transaksi produksi. Uji mutasi browser menggunakan demo dan PDF sintetis; koneksi nyata diuji untuk baca data dan pratinjau privat. Pekerja demo terbukti membuat PDF tanpa sesi browser; jadwal lima menit pada hosting tetap harus diuji setelah deployment. Dockerfile disiapkan untuk satu proses dengan volume; pengujian container memerlukan daemon Docker aktif.
+OAuth berstatus In production. Persetujuan offline pemilik diperbarui; respons grant baru tidak menyertakan batas refresh token tujuh hari. Kredensial disimpan terenkripsi di Redis dan cadangan lokal privat. Sesi tetap tersedia setelah deployment berubah. Backend menolak email selain pemilik; Google tetap dapat menampilkan peringatan aplikasi pribadi belum diverifikasi.
 
-Ulangi `npm test` dan `npm run test:browser`. Artefak berada di `test-results/`, diabaikan Git. Ikuti koneksi OAuth dan cutover dalam README serta DEPLOYMENT sebelum menggunakan data asli.
+`disableAutomation` lama berhasil dijalankan. Dua trigger kas lama telah dihapus dengan izin pemilik; daftar trigger proyek menunjukkan nol. Deployment web app versi 15 diarsipkan untuk rollback. Project, kode, ledger, workbook laporan, arsip, dan PDF tidak dihapus. Server lokal pengujian dihentikan agar tidak menjadi penulis kedua.
+
+Jadwal QStash setelah cutover berhasil mengirim HTTP 200 pada 14 Oktober 2026 pukul 22:20 WIB saat halaman aplikasi ditutup. Status bersama berubah menjadi UNCHANGED: backend membaca sumber, mengenali laporan yang sama, dan melewati ekspor ulang. Browser maupun server lokal tidak dibutuhkan oleh pemeriksaan ini.
+
+## Pengujian shared state
+
+Enam tes tambahan mencakup enkripsi record yang terikat nama, manipulasi ciphertext, TTL sesi, dua instance memperebutkan lock, penolakan write saat Redis gagal/deadline lewat, lease yang dipertahankan saat respons write hilang, sesi lintas instance, logout bersama, endpoint jadwal dengan secret, konfigurasi cloud yang menolak mode tidak aman, serta respons OAuth sesudah lock dilepas. Regresi OAuth juga memastikan grant baru tidak mewarisi metadata kedaluwarsa token Testing sebelumnya.
+
+## Batas pengujian
+
+Tidak ada transaksi dummy, edit nominal, hapus, atau pemulihan yang dilakukan pada jurnal asli. Mutasi tersebut diuji dengan data sintetis dan mock API; penulisan Sheets nyata diuji melalui workbook laporan asli, tanpa mengubah pembukuan kas. Perubahan manual pada jurnal produksi tidak dibuat hanya untuk pengujian.
+
+Paket gratis mempunyai kuota dan tidak menjamin SLA. Jika layanan berhenti, periksa dashboard Vercel/Upstash dan koneksi Google; jangan mengubah saldo pembukaan atau mengaktifkan layanan berbayar sebagai perbaikan otomatis.
+
+Ulangi `npm test` dan `npm run test:browser`. Artefak sintetis berada di `test-results/`, diabaikan Git. Snapshot, konfigurasi, token, audit file asli, serta ID privat tidak masuk repository atau ZIP sumber.

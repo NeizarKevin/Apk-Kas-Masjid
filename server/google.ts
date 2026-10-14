@@ -4,15 +4,22 @@ import {appendPlan,buildSource,findRequest,todayJakarta} from './accounting.js';
 import {cashValidateInput_,cashSameInput_} from './model.js';
 import {changePlan} from './changes.js';
 import {templateSheets,workbookPlan,verifyWorkbook} from './workbook.js';
+import {assertLease,uncertainWrite} from './state.js';
 import type {Adapter,ChangeRequest,Config,GoogleObject,Input,Report,Source,Transaction} from './types.js';
 
 const fields = 'spreadsheetId,properties(timeZone),sheets(properties,developerMetadata,basicFilter,data(startRow,startColumn,rowData(values(effectiveValue,userEnteredValue,userEnteredFormat,dataValidation,note))))';
 export class GoogleAdapter implements Adapter {
-  constructor(private cfg: Config, private auth: OAuth2Client, private fetcher: typeof fetch = fetch) {}
+  constructor(private cfg: Config, private auth: OAuth2Client, private fetcher: typeof fetch = fetch,private saveTokens:()=>Promise<void> = async()=>{}) {}
   async request(url: string, options: RequestInit = {}): Promise<any> {
     const token = await this.auth.getAccessToken();
+    await this.saveTokens();
     if (!token.token) throw new Error('Hubungkan akun Google pemilik terlebih dahulu.');
-    const response = await this.fetcher(url,{...options,signal:AbortSignal.timeout(90000),headers:{Authorization:'Bearer ' + token.token,...options.headers}});
+    assertLease();
+    const writing=!!options.method && options.method !== 'GET';
+    let response: Response;
+    try {response=await this.fetcher(url,{...options,signal:AbortSignal.timeout(90000),headers:{Authorization:'Bearer ' + token.token,...options.headers}});}
+    catch (error) {if (writing) uncertainWrite();throw error;}
+    if (writing && response.status >= 500) uncertainWrite();
     if (!response.ok) throw new Error(`Google API gagal (HTTP ${response.status}). Periksa izin file dan koneksi Google.`);
     return response.headers.get('content-type')?.includes('application/json') ? response.json() : Buffer.from(await response.arrayBuffer());
   }

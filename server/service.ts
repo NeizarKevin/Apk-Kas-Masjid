@@ -1,5 +1,4 @@
-import {join} from 'node:path';
-import {readJson,atomicJson,SerialQueue} from './state.js';
+import {AppState} from './state.js';
 import {findRequest,signature,todayJakarta} from './accounting.js';
 import {inspectPdf} from './pdf.js';
 import * as m from './model.js';
@@ -9,13 +8,12 @@ import type {Adapter,Config,Fund,Input,Source,Status} from './types.js';
 interface Publication {hash?: string; updatedAt?: string; status: Status}
 const setup: Status = {state:'SETUP',message:'Pratinjau tersedia. Publikasi otomatis belum diaktifkan.'};
 export class CashService {
-  private queue = new SerialQueue();
-  private statusPath: string;
-  constructor(readonly cfg: Config, readonly adapter: Adapter, private audit = inspectPdf) {this.statusPath=join(cfg.stateDir,'report-status.json');}
-  private publication() {return readJson<Publication>(this.statusPath,{status:setup});}
+  private queue: AppState;
+  constructor(readonly cfg: Config, readonly adapter: Adapter, private audit = inspectPdf) {this.queue=new AppState(cfg);}
+  private publication() {return this.queue.read<Publication>('report-status.json',{status:setup});}
   private async status(status: Status) {
     const saved = await this.publication();
-    await atomicJson(this.statusPath,{...saved,status});
+    await this.queue.write('report-status.json',{...saved,status});
     return status;
   }
   private blocked(source: Source): Status | null {
@@ -109,10 +107,10 @@ export class CashService {
     const current = await this.adapter.source();
     if (!current.reconciliation.ok || signature(current.report) !== hash) throw new Error('Sumber berubah saat ekspor. PDF lama dipertahankan.');
     const pdfUrl = await this.adapter.publish(bytes,preview);
-    await atomicJson(join(this.cfg.stateDir,preview ? 'preview-audit.json' : 'public-audit.json'),audit);
+    await this.queue.write(preview ? 'preview-audit.json' : 'public-audit.json',audit);
     if (preview) return {state:'READY' as const,message:'Pratinjau privat siap.',pdfUrl};
     const updatedAt = new Date().toISOString(), status: Status = {state:'PUBLISHED',message:'Laporan kas publik berhasil diperbarui.',updatedAt};
-    await atomicJson(this.statusPath,{hash,updatedAt,status});
+    await this.queue.write('report-status.json',{hash,updatedAt,status});
     return status;
   }
   refreshPublicPdf() {

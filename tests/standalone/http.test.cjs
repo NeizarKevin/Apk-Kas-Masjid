@@ -64,13 +64,16 @@ test('Owner OAuth rotates the session, stores encrypted owner-bound tokens and v
   OAuth2Client.prototype.getToken=async()=>({tokens:{id_token:'synthetic',refresh_token:'offline_test_token'}});
   OAuth2Client.prototype.verifyIdToken=async()=>({getPayload:()=>({email:'owner@example.test',email_verified:true})});
   t.after(()=>{OAuth2Client.prototype.getToken=getToken;OAuth2Client.prototype.verifyIdToken=verify;});
-  const {cfg,origin,cookie,login,adapter}=await fixture(t,true),state=new URL(login.headers.get('location')).searchParams.get('state');
+  const {cfg,origin,cookie,login,adapter,auth}=await fixture(t,true),state=new URL(login.headers.get('location')).searchParams.get('state');
+  const {TokenStore}=await import('../../dist/state.js');
+  await new TokenStore(cfg.stateDir,cfg.encryptionKey).save({owner:cfg.owner,credentials:{refresh_token:'old_testing_token',refresh_token_expires_in:604800}});await auth.initialize();
   let verified=0;adapter.verifyTargets=async()=>{verified++;};
   const result=await fetch(origin+'/auth/callback?state='+state+'&code=fake',{headers:{Cookie:cookie},redirect:'manual'});assert.equal(result.status,302);assert.equal(verified,1);
   const authenticated=result.headers.getSetCookie().at(-1).split(';')[0];assert.notEqual(authenticated,cookie);
   assert.equal((await fetch(origin+'/api/session',{headers:{Cookie:authenticated}}).then(r=>r.json())).authenticated,true);
   assert.equal((await fetch(origin+'/api/session',{headers:{Cookie:cookie}}).then(r=>r.json())).authenticated,false);
-  const {TokenStore}=await import('../../dist/state.js'),stored=await new TokenStore(cfg.stateDir,cfg.encryptionKey).load();
+  const stored=await new TokenStore(cfg.stateDir,cfg.encryptionKey).load();
   assert.equal(stored.owner,cfg.owner);assert.equal(stored.credentials.refresh_token,'offline_test_token');
+  assert.equal(stored.credentials.refresh_token_expires_in,undefined);
   const {OwnerAuth}=await import('../../dist/auth.js');await assert.rejects(new OwnerAuth({...cfg,owner:'changed@example.test'}).initialize(),/Pemilik konfigurasi berubah/);
 });

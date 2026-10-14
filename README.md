@@ -2,9 +2,11 @@
 
 Aplikasi administrasi bendahara dengan backend Node.js + TypeScript dan antarmuka hijau dari aplikasi lama. UI dan API dilayani pada origin yang sama. Google Sheet asli tetap sumber pembukuan; PDF publik diperbarui pada File ID lama sehingga tautan dan QR tetap sama.
 
+Aplikasi online: **https://kas-masjid-albarokah.vercel.app**. Masuk memakai akun Google pemilik. Konfigurasi hosting memakai Vercel Hobby, Redis Free, dan QStash Free; detail kuota serta pemulihan ada pada [panduan deployment](docs/DEPLOYMENT.md).
+
 ## Jalankan dan coba
 
-Gunakan Node.js **22.16 atau lebih baru**. Dari direktori repo:
+Gunakan Node.js **24.x**. Dari direktori repo:
 
 ```sh
 npm ci
@@ -54,7 +56,7 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - Transaksi yang sudah termasuk hitung fisik terbaru dikunci dari koreksi aplikasi. Cocokkan langsung di Sheet agar angka hitungan fisik tidak berubah diam-diam. Dana transaksi tidak dipindah melalui edit. Gunakan pencarian dan penyaring jenis transaksi untuk menemukan rincian bulan yang dipilih.
 - Checkpoint baru memeriksa saldo buku terhadap uang fisik. Selisih menahan PDF; backend tidak mengubah baseline atau membuat penyesuaian otomatis.
 - Tanggal kalender dibaca/ditulis sebagai serial Sheets tanpa pergeseran zona waktu. Pengaturan zona waktu workbook lama dipertahankan; batas tanggal hari ini pada aplikasi memakai Asia/Jakarta.
-- Saat aktif, satu proses server memeriksa edit manual sekitar lima menit dan memperbarui PDF setelah simpan. Signature yang sama melewati ekspor ulang. Server dan volume harus selalu hidup; browser boleh ditutup.
+- Saat aktif, server memeriksa edit manual sekitar lima menit dan memperbarui PDF setelah simpan. Pada hosting gratis, QStash memanggil backend Vercel dan Redis menyimpan status, token, sesi, serta lock bersama. Signature yang sama melewati ekspor ulang. Browser dan komputer pengguna boleh ditutup.
 
 ## PDF dan keamanan data
 
@@ -77,7 +79,7 @@ Nilai dan notes ditulis bersama lewat [Sheets batchUpdate](https://developers.go
 | `server/google.ts`, `server/workbook.ts` | Adapter Google dan template |
 | `server/service.ts` | Dashboard, simpan, serialisasi, publikasi |
 | `server/auth.ts`, `server/state.ts` | OAuth, CSRF, token, volume, lock |
-| `server/main.ts` | HTTP dan polling lima menit |
+| `server/main.ts`, `server/cloud.ts`, `api/index.js` | Server lokal atau function Vercel |
 | `apps-script/`, `index.html` | Versi lama untuk regresi dan rollback |
 | `tests/standalone/` | Tes backend dan browser baru |
 

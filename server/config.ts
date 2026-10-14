@@ -21,6 +21,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const baseline = (name: string, unknown: boolean): Baseline => cashValidateBaseline_(JSON.parse(required(name)), unknown) as Baseline;
   const cfg: Config = {
     demo, port, origin, stateDir: resolve(env.STATE_DIR || (demo ? '.state-demo' : '.state')),
+    cloud:env.VERCEL === '1',redisUrl:env.KV_REST_API_URL || '',redisToken:env.KV_REST_API_TOKEN || '',cronSecret:env.CRON_SECRET || '',
     owner: demo ? 'demo@example.test' : required('OWNER_EMAIL').trim().toLowerCase(),
     clientId: demo ? '' : required('GOOGLE_CLIENT_ID'), clientSecret: demo ? '' : required('GOOGLE_CLIENT_SECRET'),
     encryptionKey: demo ? '' : required('TOKEN_ENCRYPTION_KEY'), automatic: demo || env.AUTO_PUBLISH_ENABLED === 'true',
@@ -36,7 +37,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     if (Buffer.from(cfg.encryptionKey, 'base64').length !== 32) throw new Error('TOKEN_ENCRYPTION_KEY harus 32 byte base64.');
     if (cfg.sourceId === cfg.reportId || cfg.pdfId === cfg.previewId || new Set([cfg.journalId,cfg.phbiId,cfg.syncId]).size !== 3) throw new Error('Target privat, publik, dan sumber wajib berbeda.');
     if (cfg.baseline.date !== '2026-10-08' || cfg.phbiBaseline.date !== cfg.baseline.date) throw new Error('Saldo pembukaan harus tetap 8 Oktober 2026.');
-    if (env.WEB_CONCURRENCY && env.WEB_CONCURRENCY !== '1') throw new Error('Aplikasi ini hanya boleh dijalankan dalam satu proses.');
+    if (!cfg.redisUrl && env.WEB_CONCURRENCY && env.WEB_CONCURRENCY !== '1') throw new Error('Tanpa Redis, aplikasi hanya boleh dijalankan dalam satu proses.');
   }
+  if (!!cfg.redisUrl !== !!cfg.redisToken || cfg.redisUrl && !cfg.redisUrl.startsWith('https://')) throw new Error('Konfigurasi Redis privat tidak lengkap.');
+  if (cfg.cloud && (demo || !cfg.redisUrl || cfg.cronSecret.length < 32)) throw new Error('Hosting membutuhkan Redis privat dan CRON_SECRET minimal 32 karakter; mode demo tidak boleh dipublikasikan.');
   return cfg;
 }

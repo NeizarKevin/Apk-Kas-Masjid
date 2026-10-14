@@ -24,6 +24,7 @@ export interface Source {book: GoogleObject; journal: Snapshot; phbi: Snapshot; 
 export interface Config {
   demo: boolean; origin: string; port: number; stateDir: string; owner: string;
   clientId: string; clientSecret: string; encryptionKey: string; automatic: boolean;
+  redisUrl: string; redisToken: string; cronSecret: string; cloud: boolean;
   sourceId: string; reportId: string; pdfId: string; previewId: string; archiveId: string;
   journalId: number; phbiId: number; syncId: number; reportSheetIds: number[];
   baseline: Baseline; phbiBaseline: Baseline;

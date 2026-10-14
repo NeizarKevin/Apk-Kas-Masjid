@@ -1,0 +1,13 @@
+.env*
+.state*
+.private
+.local
+work
+test-results
+tests
+apps-script
+docs
+dist
+node_modules
+client_secret*.json
+oauth-client*.json

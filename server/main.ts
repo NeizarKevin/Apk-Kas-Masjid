@@ -10,7 +10,7 @@ if (process.argv.includes('--demo')) process.env.DEMO_MODE='true';
 if (existsSync('.env') && process.env.DEMO_MODE !== 'true') process.loadEnvFile('.env');
 const cfg=loadConfig(),release=await acquireProcessLock(cfg.stateDir),auth=new OwnerAuth(cfg);
 await auth.initialize();
-const adapter=cfg.demo ? new DemoAdapter(cfg) : new GoogleAdapter(cfg,auth.client);
+const adapter=cfg.demo ? new DemoAdapter(cfg) : new GoogleAdapter(cfg,auth.client,fetch,()=>auth.flush());
 const {app,service}=await createApp(cfg,adapter,auth);
 const host=cfg.demo || new URL(cfg.origin).protocol === 'http:' ? '127.0.0.1' : '0.0.0.0';
 const server=app.listen(cfg.port,host,()=>console.log(`Kas Masjid ${cfg.demo ? '(DEMO: data sintetis)' : ''} berjalan di ${cfg.origin}`));
