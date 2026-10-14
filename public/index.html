@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kas Masjid">
+<title>Kas Masjid</title>
+<style>
+:root {
+  --green: #1a7a3f;
+  --green-light: #e8f5ee;
+  --green-mid: #c3e6d1;
+  --red: #d63031;
+  --red-light: #fdf0f0;
+  --bg: #f0f4f0;
+  --card: #ffffff;
+  --text: #0f1f14;
+  --muted: #556f5f;
+  --border: #dde8df;
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+  overscroll-behavior: none;
+}
+
+.topbar {
+  background: var(--green);
+  padding: 52px 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.topbar::before {
+  content: '';
+  position: absolute;
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  top: -60px; right: -50px;
+}
+.topbar::after {
+  content: '';
+  position: absolute;
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+  bottom: -30px; left: 10px;
+}
+.topbar-inner { position: relative; z-index: 1; }
+.topbar-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.brand-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
+.brand h1 { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.4px; }
+.brand p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 1px; font-weight: 500; }
+.conn-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px; padding: 5px 10px;
+  backdrop-filter: blur(4px);
+}
+.conn-dot { width: 6px; height: 6px; border-radius: 50%; background: #5effa0; }
+.conn-dot.off { background: #ffb347; }
+.conn-label { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 600; }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.sum-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 11px 10px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.sum-label { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.sum-val { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1; }
+.sum-val.out { color: #ffb3ae; }
+.sum-val.negative { color: #ffb3ae; }
+
+.scroll {
+  padding: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+/* Voice card */
+.voice-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+.voice-inner { display: flex; align-items: center; gap: 14px; }
+.voice-btn {
+  width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--green-light); transition: all 0.2s; -webkit-appearance: none;
+  position: relative;
+}
+.voice-btn svg { width: 22px; height: 22px; stroke: var(--green); fill: none; stroke-width: 2; transition: all 0.2s; }
+.voice-btn.listening {
+  background: var(--red-light);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.voice-btn.listening svg { stroke: var(--red); }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214,48,49,0.3); }
+  50% { box-shadow: 0 0 0 12px rgba(214,48,49,0); }
+}
+.voice-info { flex: 1; min-width: 0; }
+.voice-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.voice-hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.voice-result {
+  margin-top: 12px; padding: 10px 14px;
+  background: var(--bg); border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text); font-weight: 500;
+  display: none; line-height: 1.5;
+}
+.voice-result.show { display: block; }
+.voice-result strong { color: var(--green); }
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+.section-label {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 16px;
+}
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.form-group input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 500;
+  background: #fafcfa;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  -webkit-appearance: none;
+  width: 100%;
+}
+.form-group input::placeholder { color: #bfcfc4; font-weight: 400; }
+.form-group input:focus {
+  outline: none;
+  border-color: var(--green);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
+}
+.form-group input[type="number"] { font-variant-numeric: tabular-nums; }
+.form-group select {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 500;
+  background: #fafcfa;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%237a8f80%27 stroke-width=%272.5%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+.form-group select:focus {
+  outline: none;
+  border-color: var(--green);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
+}
+.form-group input.voice-filled { border-color: var(--green); background: var(--green-light); }
+
+.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.toggle-btn {
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: #fafcfa;
+  color: var(--muted);
+  -webkit-appearance: none;
+}
+.toggle-btn.active-in { background: var(--green-light); border-color: var(--green); color: var(--green); }
+.toggle-btn.active-out { background: var(--red-light); border-color: var(--red); color: var(--red); }
+
+.amount-wrap { position: relative; }
+.amount-prefix {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; font-weight: 700; color: var(--muted); pointer-events: none;
+}
+.amount-wrap input { padding-left: 38px; }
+
+.btn-row { display: flex; gap: 10px; margin-top: 16px; }
+.btn-primary {
+  flex: 1; padding: 14px;
+  background: var(--green);
+  color: #fff; border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: transform 0.1s, opacity 0.15s;
+  -webkit-appearance: none;
+  letter-spacing: -0.2px;
+}
+.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.4; }
+.btn-reset {
+  padding: 14px 18px;
+  background: var(--bg);
+  color: var(--muted); border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  -webkit-appearance: none;
+  transition: opacity 0.15s;
+}
+.btn-reset:active { opacity: 0.7; }
+
+.history-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+.history-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f4f0;
+}
+.history-head .section-label { margin: 0; }
+.badge {
+  font-size: 12px; background: var(--bg); color: var(--muted);
+  padding: 4px 10px; border-radius: 20px; font-weight: 700;
+}
+.empty {
+  padding: 40px 20px; text-align: center;
+  color: #bfcfc4; font-size: 14px; font-weight: 500;
+}
+/* The original green interface and voice form remain the base design. */
+.topbar-inner,.scroll{max-width:780px;margin:auto}.sum-val{font-size:clamp(12px,2.5vw,17px);line-height:1.3;overflow-wrap:anywhere}.sum-card{min-width:0}.form-group{min-width:0}.form-group input{min-width:0}
+.hint{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0}.report-head,.buttons{display:flex;gap:10px;align-items:center;justify-content:space-between}.report-head .section-label{margin:0}.buttons{justify-content:flex-start;flex-wrap:wrap;margin:12px 0}.secondary{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:white;color:var(--green);font:600 12px inherit;text-decoration:none;cursor:pointer;display:inline-block}.secondary:disabled{opacity:.5;cursor:wait}.badge.warning{background:#fff1d8;color:#865509}.badge.error{background:var(--red-light);color:var(--red)}
+.notice{padding:14px;border-radius:var(--radius-sm);background:var(--green-light);color:var(--green);font-size:13px;line-height:1.6;white-space:pre-line;margin-bottom:14px}.notice.error{background:var(--red-light);color:var(--red)}.reconcile{padding:12px;background:#fff8eb;border-radius:var(--radius-sm);font-size:13px;margin-top:12px}.reconcile div{display:flex;justify-content:space-between;gap:12px}.transaction{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)}.description{font-size:14px;font-weight:700;overflow-wrap:anywhere}.meta{font-size:11px;line-height:1.6;color:var(--muted)}.amount{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}.amount.in{color:var(--green)}.amount.out{color:var(--red)}.history-foot{padding:14px 20px}.voice-result{white-space:pre-line}[hidden]{display:none!important}#reportMessage{white-space:pre-line}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--green-mid);outline-offset:3px}button:disabled{cursor:wait}.sum-label{line-height:1.5}
+@media(max-width:400px){.summary-grid{grid-template-columns:1fr 1fr}.sum-card:last-child{grid-column:1/-1}.transaction{grid-template-columns:1fr}.amount{text-align:right}.topbar{padding-top:32px}}
+
+/* Compact layout: the form stays central and less-used report controls fold away. */
+.topbar{padding:24px 16px 16px}.topbar-row{margin-bottom:14px}.scroll{padding:12px}.card,.voice-card{padding:16px;margin-bottom:12px}.section-label{margin-bottom:12px}.header-filters{margin-bottom:12px}.header-filters label{color:#ffffffbd;font-size:11px}.header-filters input,.header-filters select{padding:9px 10px;font-size:12px;background:#fff;min-height:38px}.sum-card{padding:10px}.voice-inner{gap:10px}.voice-btn{width:42px;height:42px}.voice-title{font-size:13px}.voice-hint{font-size:11px}.voice-card{padding:12px 16px}.report-card{padding:12px 16px}.report-card .hint{margin:8px 0}.report-card .buttons{margin:8px 0}.report-card .section-label{font-size:10px}.report-card summary{font-size:11px;color:var(--muted);cursor:pointer}.report-card details{margin-top:8px}.secondary{font-size:12px;font-family:inherit;font-weight:600}.form-group label{font-size:11px}.form-group input,.form-group select{padding-top:10px;padding-bottom:10px;font-size:14px}.btn-row{margin-top:12px}.btn-primary,.btn-reset{padding-top:12px;padding-bottom:12px;font-size:14px}.history-head{padding:14px 16px}.transaction{padding:12px 16px}.history-foot{padding:12px 16px;display:flex;gap:12px;align-items:center}.history-foot .hint{margin:0}.brand p{font-size:10px}.notice{margin-bottom:12px}.report-head{flex-wrap:wrap}.sum-val{font-variant-numeric:tabular-nums}
+</style>
+<style>
+.topbar{padding-top:30px;background:linear-gradient(135deg,#135d35,#208249)}
+.brand p,.sum-label{color:rgba(255,255,255,.9)}input::placeholder{color:#65796e}
+.topbar-inner,.scroll{max-width:820px}.brand h1{font-size:21px}.sum-card{padding:15px 12px}.sum-val{font-size:clamp(14px,3vw,22px)}
+.card,.voice-card,.history-card{border:1px solid var(--border);box-shadow:0 3px 14px #173e2510}
+.account-row{max-width:788px;margin:16px auto 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:0 16px;font-size:12px;color:var(--muted)}
+.account-actions{display:flex;align-items:center;gap:12px}.account-actions a{color:var(--green)}
+.demo-banner{max-width:788px;margin:14px auto 0;padding:12px 16px;border:1px solid #e4b65a;border-radius:12px;background:#fff5dd;color:#6a490b;font-size:13px;line-height:1.5}
+.login-panel{max-width:788px;margin:18px auto 0;padding:24px;background:white;border:1px solid var(--border);border-radius:20px}
+.login-panel h2{font-size:18px;margin-bottom:8px}.login-panel p{font-size:14px;line-height:1.6;color:var(--muted);margin-bottom:16px}
+.login-link{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;background:var(--green);border-radius:12px;color:white;text-decoration:none;font-size:14px;font-weight:700}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d8ab43;outline-offset:3px}
+button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#notice{white-space:pre-line}
+@media(min-width:720px){.scroll{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.report-card,#notice,.history-card{grid-column:1/-1}.scroll>.card,.voice-card,.history-card{margin-bottom:0}.voice-card{grid-column:2;grid-row:3}.scroll>.card:not(.report-card){grid-column:1;grid-row:3}.summary-grid{gap:14px}.sum-label{font-size:11px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <h1>Kas Masjid</h1>
+          <p>Masjid Al-Barokah Taskombang</p>
+        </div>
+      </div>
+      <div class="conn-pill">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span class="conn-label" id="connection">Memuat</span>
+      </div>
+    </div>
+  <div class="header-filters" aria-label="Pilihan dana dan bulan">
+    <div class="form-grid">
+      <div class="form-group"><label for="fund">Dana</label><select id="fund"><option value="MASJID">Kas masjid</option><option value="PHBI">PHBI</option></select></div>
+      <div class="form-group"><label for="month">Bulan rincian</label><input id="month" type="month"></div>
+    </div>
+
+  </div>
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="sum-label">Pemasukan bulan ini</div>
+        <div class="sum-val" id="totalIncome">—</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Pengeluaran bulan ini</div>
+        <div class="sum-val out" id="totalExpense">—</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Saldo saat ini</div>
+        <div class="sum-val" id="currentBalance">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="demoBanner" class="demo-banner" hidden><strong>Mode demo — data contoh.</strong> Transaksi dan PDF di sini digunakan untuk pengujian aplikasi.</div>
+<section id="loginPanel" class="login-panel" hidden><h2>Pembukuan kas, dalam satu tempat</h2><p id="loginText">Masuk dengan akun pemilik untuk melanjutkan.</p><a id="loginLink" class="login-link" href="/auth/login">Masuk dengan Google</a></section>
+<div id="accountRow" class="account-row" hidden><span>Sesi pemilik · K1/K2/K3 adalah pemegang uang</span><div class="account-actions"><a id="reconnectGoogle" href="/auth/login?reconnect=1">Hubungkan ulang Google</a><button id="logout" class="secondary" type="button">Keluar</button></div></div>
+<div class="scroll">
+  <div id="notice" class="notice" role="status" hidden></div>
+
+  <section class="card report-card" aria-label="Status PDF jamaah">
+    <div class="report-head"><div class="section-label">Laporan PDF jamaah</div><span id="reportState" class="badge">Memuat</span></div>
+    <p id="reportMessage" class="hint">Memeriksa laporan publik.</p>
+    <div id="reconciliation" class="reconcile" hidden></div>
+    <div class="buttons"><a id="openApp" class="secondary" hidden>Buka aplikasi Google</a><a id="pdfLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka PDF</a></div>
+    <details><summary>Opsi laporan</summary>
+      <p id="balanceNote" class="hint"></p><p id="automationNote" class="hint"></p>
+      <div class="buttons"><button id="previewPdf" type="button" class="secondary" disabled>Pratinjau</button><button id="refreshPdf" type="button" class="secondary" disabled>Perbarui PDF</button></div>
+      <a id="previewLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka pratinjau PDF</a>
+    </details>
+  </section>
+
+
+  <!-- Voice Input Card -->
+  <div class="voice-card">
+    <div class="voice-inner">
+      <button class="voice-btn" id="voice-btn" type="button" aria-label="Isi draf transaksi dengan suara">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div class="voice-info">
+        <div class="voice-title">Input Suara</div>
+        <div class="voice-hint" id="voice-hint">Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em></div>
+      </div>
+    </div>
+    <div class="voice-result" id="voice-result"></div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="card">
+    <div class="section-label">Transaksi Baru</div>
+    <p id="formFund" class="hint">Dana: Kas masjid</p>
+    <form id="transactionForm">
+    <div class="type-toggle">
+      <button class="toggle-btn active-in" id="incomeType" type="button" aria-pressed="true">↑ Pemasukan</button>
+      <button class="toggle-btn" id="expenseType" type="button" aria-pressed="false">↓ Pengeluaran</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="date">Tanggal</label>
+        <input type="date" id="date" required/>
+      </div>
+      <div class="form-group">
+        <label for="code">Bendahara</label>
+        <select id="code" required>
+
+          <option value="K1">K1 · Kevin</option>
+          <option value="K2">K2 · Arum / Ming Ming</option>
+          <option value="K3">K3 · Wawan</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label for="description">Keterangan</label>
+        <input type="text" id="description" maxlength="500" required placeholder="mis. Infaq Jumat"/>
+      </div>
+      <div class="form-group full">
+        <label id="amount-label" for="amount">Jumlah Pemasukan (Rp)</label>
+        <div class="amount-wrap">
+          <span class="amount-prefix">Rp</span>
+          <input type="text" id="amount" required placeholder="637.600" inputmode="numeric" autocomplete="off"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-reset" type="button" id="resetForm">Reset</button>
+      <button class="btn-primary" id="submitButton" type="submit" disabled>Simpan transaksi</button>
+    </div>
+    <p id="pendingNote" class="hint" hidden>Kiriman sebelumnya belum terkonfirmasi. Periksa isinya lalu kirim ulang dengan identitas yang sama.</p>
+    <button id="checkPending" type="button" class="secondary" hidden>Periksa kiriman sebelumnya</button>
+    </form>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-head">
+      <div class="section-label">Rincian bulan ini</div>
+      <span class="badge" id="historyCount">0 data</span>
+    </div>
+    <div id="history"><div class="empty">Memuat transaksi…</div></div>
+    <div class="history-foot"><button id="refreshData" type="button" class="secondary" disabled>Muat ulang</button><span class="hint">Koreksi transaksi di Sheet.</span></div>
+  </div>
+</div>
+
+<script>let recognition = null;
+let isListening = false;
+// Map kata angka bahasa Indonesia ke nilai numerik
+const ANGKA_MAP = {
+  'nol':0,'satu':1,'dua':2,'tiga':3,'empat':4,'lima':5,'enam':6,'tujuh':7,'delapan':8,'sembilan':9,'sepuluh':10,
+  'sebelas':11,'dua belas':12,'tiga belas':13,'empat belas':14,'lima belas':15,'enam belas':16,'tujuh belas':17,'delapan belas':18,'sembilan belas':19,
+  'dua puluh':20,'tiga puluh':30,'empat puluh':40,'lima puluh':50,'enam puluh':60,'tujuh puluh':70,'delapan puluh':80,'sembilan puluh':90,
+  'seratus':100,'dua ratus':200,'tiga ratus':300,'empat ratus':400,'lima ratus':500,'enam ratus':600,'tujuh ratus':700,'delapan ratus':800,'sembilan ratus':900,
+  'seribu':1000,'dua ribu':2000,'tiga ribu':3000,'empat ribu':4000,'lima ribu':5000,'enam ribu':6000,'tujuh ribu':7000,'delapan ribu':8000,'sembilan ribu':9000,'sepuluh ribu':10000,
+  'dua puluh ribu':20000,'tiga puluh ribu':30000,'empat puluh ribu':40000,'lima puluh ribu':50000,'enam puluh ribu':60000,'tujuh puluh ribu':70000,'delapan puluh ribu':80000,'sembilan puluh ribu':90000,
+  'seratus ribu':100000,'dua ratus ribu':200000,'tiga ratus ribu':300000,'empat ratus ribu':400000,'lima ratus ribu':500000,'enam ratus ribu':600000,'tujuh ratus ribu':700000,'delapan ratus ribu':800000,'sembilan ratus ribu':900000,
+  'satu juta':1000000,'dua juta':2000000,'tiga juta':3000000,'lima juta':5000000,'sepuluh juta':10000000
+};
+
+const KATA_MASUK = ['pemasukan','masuk','terima','diterima','infaq','infak','sedekah','donasi','zakat','sumbangan','iuran'];
+const KATA_KELUAR = ['pengeluaran','keluar','bayar','dibayar','beli','pembelian','biaya','bayaran','belanja'];
+
+function parseAngka(text) {
+  text = text.toLowerCase().trim();
+  // Coba langsung parse angka
+  const directNum = parseInt(text.replace(/[^0-9]/g, ''));
+  if (!isNaN(directNum) && directNum > 0) return directNum;
+  // Coba dari map kata
+  for (const [kata, val] of Object.entries(ANGKA_MAP).sort((a,b) => b[0].length - a[0].length)) {
+    if (text.includes(kata)) return val;
+  }
+  return null;
+}
+
+const BULAN_MAP = {
+  'januari':1,'jan':1,'februari':2,'feb':2,'maret':3,'mar':3,'april':4,'apr':4,
+  'mei':5,'juni':6,'jun':6,'juli':7,'jul':7,'agustus':8,'agu':8,'agus':8,
+  'september':9,'sep':9,'oktober':10,'okt':10,'november':11,'nov':11,'desember':12,'des':12
+};
+
+function parseKode(text) {
+  const lower = text.toLowerCase();
+  // "K1", "K2", "K3" langsung (termasuk "ka1", "ka 1")
+  if (/\bk[\s-]?1\b/i.test(lower) || lower.includes('ka satu') || lower.includes('ka 1')) return 'K1';
+  if (/\bk[\s-]?2\b/i.test(lower) || lower.includes('ka dua') || lower.includes('ka 2')) return 'K2';
+  if (/\bk[\s-]?3\b/i.test(lower) || lower.includes('ka tiga') || lower.includes('ka 3')) return 'K3';
+  // "kode satu/dua/tiga"
+  if (lower.includes('kode satu') || lower.includes('kode 1')) return 'K1';
+  if (lower.includes('kode dua') || lower.includes('kode 2')) return 'K2';
+  if (lower.includes('kode tiga') || lower.includes('kode 3')) return 'K3';
+  // deteksi angka setelah "k" di awal kalimat: "k1 infaq..."
+  const mStart = lower.match(/^k\s*([123])\b/);
+  if (mStart) return 'K' + mStart[1];
+  return null;
+}
+
+function parseTanggal(text) {
+  const lower = text.toLowerCase();
+  const now = new Date();
+  if (lower.includes('hari ini')) return toDateStr(now);
+  if (lower.includes('kemarin')) { const d = new Date(now); d.setDate(d.getDate()-1); return toDateStr(d); }
+  if (lower.includes('besok')) { const d = new Date(now); d.setDate(d.getDate()+1); return toDateStr(d); }
+  const bulanKeys = Object.keys(BULAN_MAP).join('|');
+  const reNama = new RegExp('(?:tanggal\\s*)?(\\d{1,2})\\s+(' + bulanKeys + ')(?:\\s+(\\d{4}))?', 'i');
+  const mNama = lower.match(reNama);
+  if (mNama) {
+    const tgl = parseInt(mNama[1]);
+    const bln = BULAN_MAP[mNama[2].toLowerCase()];
+    const thn = mNama[3] ? parseInt(mNama[3]) : now.getFullYear();
+    return `${thn}-${String(bln).padStart(2,'0')}-${String(tgl).padStart(2,'0')}`;
+  }
+  const reTgl = /tanggal\s+(\d{1,2})/i;
+  const mTgl = lower.match(reTgl);
+  if (mTgl) {
+    const tgl = parseInt(mTgl[1]);
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(tgl).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+function toDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function parseVoiceText(text) {
+  const lower = text.toLowerCase();
+  let tipe = null;
+  let keterangan = text;
+  let jumlah = null;
+  let tanggal = parseTanggal(lower);
+  let kode = parseKode(lower);
+
+  const amountText = lower.replace(/\bk[\s-]?[123]\b|ka\s+(?:satu|dua|tiga|[123])|kode\s+(?:satu|dua|tiga|[123])/gi, '').replace(new RegExp('(?:tanggal\\s*)?\\d{1,2}\\s+(?:' + Object.keys(BULAN_MAP).join('|') + ')(?:\\s+\\d{4})?', 'gi'), '').replace(/tanggal\s+\d{1,2}/gi, '');
+
+  if (KATA_KELUAR.some(k => lower.includes(k))) tipe = 'out';
+  else tipe = 'in';
+
+  // Cek dulu apakah ada angka dengan titik/koma ribuan seperti "500.000" atau "500,000"
+  const reRibuan = /\b(\d{1,3})[.,](\d{3})\b/g;
+  let mRibuan;
+  while ((mRibuan = reRibuan.exec(amountText)) !== null) {
+    const candidate = parseInt(mRibuan[1] + mRibuan[2]);
+    if (candidate > 0) { jumlah = candidate; break; }
+  }
+
+  if (!jumlah) {
+    const pola = [
+      /(\d[\d.,]*)\s*(juta|jt)/i,
+      /(\d[\d.,]*)\s*(ribu|rb|k)/i,
+      /(\d[\d.,]*)\s*(ratus)/i,
+      /(\d+)/
+    ];
+    for (const p of pola) {
+      const m = amountText.match(p);
+      if (m) {
+        let num = parseInt(m[1].replace(/[.,]/g,''));
+        if (p.source.includes('juta') || p.source.includes('jt')) num *= 1000000;
+        else if (p.source.includes('ribu') || p.source.includes('rb')) num *= 1000;
+        else if (p.source.includes('ratus')) num *= 100;
+        if (num > 0) { jumlah = num; break; }
+      }
+    }
+  }
+  if (!jumlah) jumlah = parseAngka(amountText);
+
+  const bulanKeys2 = Object.keys(BULAN_MAP).join('|');
+  keterangan = text
+    .replace(/\bk[123]\b/gi, '')
+    .replace(/kode\s*(satu|dua|tiga|[123])/gi, '')
+    .replace(/hari ini|kemarin|besok/gi, '')
+    .replace(new RegExp('(?:tanggal\\s*)?\\d{1,2}\\s+(?:' + bulanKeys2 + ')(?:\\s+\\d{4})?', 'gi'), '')
+    .replace(/tanggal\s+\d{1,2}/gi, '')
+    .replace(/\d[\d.,]*(juta|jt|ribu|rb|k|ratus)?/gi, '')
+    .replace(new RegExp('(' + [...KATA_MASUK,...KATA_KELUAR].join('|') + ')', 'gi'), '')
+    .replace(/\s+/g, ' ').trim();
+  if (!keterangan) keterangan = tipe === 'in' ? 'Pemasukan' : 'Pengeluaran';
+  keterangan = keterangan.charAt(0).toUpperCase() + keterangan.slice(1);
+
+  return { tipe, keterangan, jumlah, tanggal, kode };
+}
+
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.lang = 'id-ID';
+  r.continuous = false;
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+
+  r.onstart = () => {
+    isListening = true;
+    document.getElementById('voice-btn').classList.add('listening');
+    document.getElementById('voice-hint').textContent = '🎤 Mendengarkan... silakan bicara';
+    document.getElementById('voice-result').className = 'voice-result';
+  };
+
+  r.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const parsed = parseVoiceText(transcript);
+
+    // Isi form
+    chooseType(parsed.tipe);
+    if (parsed.tanggal) {
+      document.getElementById('date').value = parsed.tanggal;
+      document.getElementById('date').classList.add('voice-filled');
+    }
+    if (parsed.kode) {
+      document.getElementById('code').value = parsed.kode;
+    }
+    if (parsed.keterangan) {
+      document.getElementById('description').value = parsed.keterangan;
+      document.getElementById('description').classList.add('voice-filled');
+    }
+    if (parsed.jumlah) {
+      document.getElementById('amount').value = parsed.jumlah;
+      document.getElementById('amount').classList.add('voice-filled');
+    }
+
+    // Format tanggal untuk display
+    let tglDisplay = '(tanggal tidak berubah)';
+    if (parsed.tanggal) {
+      const d = new Date(parsed.tanggal + 'T00:00:00');
+      tglDisplay = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // Tampilkan hasil
+    const el = document.getElementById('voice-result');
+    el.className = 'voice-result show';
+    el.textContent = '“' + transcript + '”\n' + (parsed.tipe === 'in' ? 'Pemasukan' : 'Pengeluaran') + ' · ' + parsed.keterangan + ' · ' + (parsed.jumlah ? rupiah(parsed.jumlah) : 'Jumlah belum terdeteksi') + '\n' + (parsed.kode ? parsed.kode + ' · ' : '') + tglDisplay;
+
+
+    setTimeout(() => {
+      ['description','amount','date'].forEach(id => document.getElementById(id).classList.remove('voice-filled'));
+    }, 2000);
+  };
+
+  r.onerror = (e) => {
+    document.getElementById('voice-hint').innerHTML = 'Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em>';
+    const el = document.getElementById('voice-result');
+    el.className = 'voice-result show';
+    el.textContent = e.error === 'no-speech' ? '⚠️ Tidak ada suara terdeteksi.' : '⚠️ Error: ' + e.error;
+  };
+
+  r.onend = () => {
+    isListening = false;
+    document.getElementById('voice-btn').classList.remove('listening');
+    document.getElementById('voice-hint').innerHTML = 'Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em>';
+  };
+
+  return r;
+}
+
+function toggleVoice() {
+  if (busy || !dashboard || pending) { notice('Selesaikan kiriman sebelumnya dan tunggu data terhubung sebelum memakai input suara.', true); return; }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Browser kamu tidak mendukung input suara. Gunakan Chrome atau Safari terbaru.');
+    return;
+  }
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+  recognition = initRecognition();
+  recognition.start();
+}
+
+// =====================
+
+
+    'use strict';
+    const $ = id => document.getElementById(id);
+    let STORAGE_KEY = 'kas-masjid-pending-v1';
+    const rupiah = value => (Number(value) < 0 ? '−' : '') + 'Rp' + Math.abs(Number(value)).toLocaleString('id-ID');
+    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    let type = 'in', dashboard = null, pending = null, busy = false, loadVersion = 0;
+    let connected = false, csrf = '', demo = false;
+
+    async function api(method, ...args) {
+      if (!connected) throw new Error('Masuk dengan akun Google pemilik terlebih dahulu.');
+      const routes = {
+        getDashboard: ['/api/dashboard?' + new URLSearchParams({fund:args[0] || 'MASJID',month:args[1] || ''}), 'GET'],
+        saveTransaction: ['/api/transactions', 'POST'],
+        resolvePendingRequest: ['/api/transactions/' + encodeURIComponent(args[0]), 'GET'],
+        previewPublicPdf: ['/api/pdf/preview', 'POST'],
+        refreshPublicPdf: ['/api/pdf/refresh', 'POST']
+      };
+      const [url, verb] = routes[method];
+      const response = await fetch(url, {method:verb,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:verb === 'POST' ? JSON.stringify(args[0] || {}) : undefined,signal:AbortSignal.timeout(180000)});
+      const result = await response.json();
+      if (response.status === 401) {connected=false; $('loginPanel').hidden=false; $('accountRow').hidden=true; setBusy(false);}
+      if (!response.ok) throw new Error(result.error || 'Permintaan gagal. Coba kembali.');
+      return result;
+    }
+    function validPdfUrl(value) {
+      return /^https:\/\/drive\.google\.com\//.test(value || '') || (demo && /^\/api\/pdf\/(preview|public)$/.test(value || ''));
+    }
+    function displayDate(iso) {
+      const [y,m,d] = iso.split('-'); return d + ' ' + monthNames[Number(m)-1] + ' ' + y;
+    }
+    function notice(message, error = false) {
+      $('notice').textContent = message;
+      $('notice').className = 'notice' + (error ? ' error' : '');
+      $('notice').hidden = !message;
+    }
+    function chooseType(value) {
+      type = value;
+      $('incomeType').className = 'toggle-btn' + (value === 'in' ? ' active-in' : '');
+      $('expenseType').className = 'toggle-btn' + (value === 'out' ? ' active-out' : '');
+      $('amount-label').textContent = value === 'in' ? 'Jumlah Pemasukan (Rp)' : 'Jumlah Pengeluaran (Rp)';
+      $('incomeType').setAttribute('aria-pressed', value === 'in');
+      $('expenseType').setAttribute('aria-pressed', value === 'out');
+    }
+    function setBusy(value) {
+      busy = value;
+      ['fund','month','date','code','description','amount','incomeType','expenseType','refreshData','refreshPdf','previewPdf','submitButton','checkPending','resetForm','voice-btn'].forEach(id => {
+        $(id).disabled = value || !connected || !dashboard;
+      });
+      $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
+    }
+    function renderReport(status) {
+      const names = {PUBLISHED:'Diperbarui',UNCHANGED:'Sudah sesuai',BLOCKED:'Ditahan',ERROR:'Perlu diperiksa',SETUP:'Belum aktif',READY:'Siap diaktifkan'};
+      $('reportState').textContent = names[status.state] || 'Memeriksa';
+      $('reportState').className = 'badge' + (status.state === 'ERROR' ? ' error' : ['BLOCKED','SETUP'].includes(status.state) ? ' warning' : '');
+      $('reportMessage').textContent = status.message;
+      $('reconciliation').replaceChildren();
+      $('reconciliation').hidden = !status.reconciliation || status.reconciliation.ok;
+      if (status.reconciliation && !status.reconciliation.ok) {
+        const r = status.reconciliation;
+        const caption = document.createElement('p'); caption.textContent = 'Pencocokan per ' + displayDate(r.date); $('reconciliation').append(caption);
+        [['Saldo buku',r.book],['Uang fisik',r.actual],['Selisih',r.difference]].forEach(([label,value]) => {
+          const row = document.createElement('div'), text = document.createElement('span'), amount = document.createElement('strong');
+          text.textContent = label; amount.textContent = rupiah(value); row.append(text,amount); $('reconciliation').append(row);
+        });
+      }
+    }
+    function render(data) {
+      dashboard = data;
+      $('month').value = data.month;
+      $('formFund').textContent = 'Dana: ' + (data.fund === 'PHBI' ? 'PHBI' : 'Kas masjid');
+      $('totalIncome').textContent = rupiah(data.income);
+      $('totalExpense').textContent = rupiah(data.expense);
+      $('currentBalance').textContent = rupiah(data.balance);
+      const unknown = Object.values(data.checkpoint.holders).some(value => value === null);
+      $('balanceNote').textContent = 'Dari hasil hitung fisik ' + displayDate(data.checkpoint.date) + ', ditambah arus kas setelah sinkronisasi.' +
+        (unknown ? ' Saldo awal bendahara lain belum dihitung; angka ini hanya mencakup uang yang sudah dikonfirmasi.' : '');
+      if (!pending) { if (!$('date').value) $('date').value = data.today; }
+      $('date').max = data.today; $('date').min = data.checkpoint.date;
+      renderReport(data.report);
+      $('automationNote').textContent = data.automatic ? 'PDF diperbarui setelah transaksi tersimpan. Perubahan langsung di Sheet diperiksa server sekitar setiap 5 menit, meski aplikasi ditutup.' : 'Publikasi otomatis belum diaktifkan. Gunakan pratinjau untuk memeriksa laporan.';
+      $('pdfLink').hidden = !data.pdfUrl;
+      if (validPdfUrl(data.pdfUrl)) $('pdfLink').href = data.pdfUrl;
+      else { $('pdfLink').hidden = true; $('pdfLink').removeAttribute('href'); }
+      $('historyCount').textContent = data.transactions.length + ' transaksi';
+      $('history').replaceChildren();
+      data.transactions.forEach(tx => {
+        const row = document.createElement('div'), info = document.createElement('div'), description = document.createElement('div'), meta = document.createElement('div'), amount = document.createElement('div');
+        row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
+        meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
+        amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
+        info.append(description,meta); row.append(info,amount); $('history').append(row);
+      });
+      if (!data.transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
+      $('connection').textContent = demo ? 'Demo aktif' : 'Terhubung';
+      $('conn-dot').className = 'conn-dot';
+      setBusy(busy);
+    }
+    async function loadDashboard() {
+      const version = ++loadVersion;
+      try {
+        const data = await api('getDashboard', $('fund').value, $('month').value);
+        if (version !== loadVersion) return;
+        render(data);
+      } catch (error) {
+        if (version !== loadVersion) return;
+        $('connection').textContent = 'Belum terhubung'; $('conn-dot').className = 'conn-dot off'; notice(error.message, true);
+        // The displayed figures are stale; require a successful reload before writing.
+        dashboard = null; setBusy(false); $('refreshData').disabled = !connected;
+      }
+    }
+    function readInput() {
+      const raw = $('amount').value.trim();
+      if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw)) throw new Error('Gunakan Rupiah bulat, misalnya 637.600.');
+      const amount = Number(raw.replace(/\./g,''));
+      if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Nominal harus lebih dari nol.');
+      return {fund:$('fund').value,type,code:$('code').value,date:$('date').value,description:$('description').value.trim(),amount};
+    }
+    function samePayload(a,b) { return ['fund','type','code','date','description','amount'].every(key => a[key] === b[key]); }
+    function persistPending(value) {
+      // Keep only an unacknowledged request; transaction history always comes from the server.
+      if (value) localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      else localStorage.removeItem(STORAGE_KEY);
+      pending = value;
+      $('pendingNote').hidden = !value;
+      $('checkPending').hidden = !value;
+    }
+    function restorePending() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (stored && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(stored.id)) {
+          pending = stored; $('fund').value = stored.fund; chooseType(stored.type); $('code').value = stored.code;
+          $('date').value = stored.date; $('description').value = stored.description; $('amount').value = stored.amount;
+          $('pendingNote').hidden = false;
+          $('checkPending').hidden = false;
+        }
+      } catch (error) { notice('Kiriman sebelumnya tidak dapat dibaca. Periksa riwayat Sheet sebelum mengirim kembali.', true); }
+    }
+    $('transactionForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || !dashboard || !connected) return;
+      try {
+        const payload = readInput();
+        if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
+        if (!pending) persistPending({...payload,id:crypto.randomUUID()});
+        setBusy(true); notice('Menyimpan transaksi dan memeriksa laporan…');
+        const result = await api('saveTransaction',pending);
+        if (!result.saved || result.id !== pending.id) throw new Error('Penyimpanan belum terkonfirmasi. Gunakan kirim ulang.');
+        const fund = pending.fund;
+        persistPending(null); $('description').value = ''; $('amount').value = '';
+        renderReport(result.report);
+        let text = result.duplicate ? 'Transaksi ini sudah tersimpan. Tidak ada pencatatan ganda.' : demo ? 'Transaksi demo berhasil tersimpan.' : 'Transaksi berhasil tersimpan di Sheet.';
+        text += '\n' + (fund === 'PHBI' ? 'PHBI dicatat terpisah dari laporan kas masjid. ' : '') + result.report.message;
+        if (result.warning) text += '\n' + result.warning;
+        notice(text, result.report.state === 'ERROR');
+        await loadDashboard();
+      } catch (error) { notice(error.message + (pending ? '\nKiriman disimpan untuk dikirim ulang dengan identitas yang sama.' : ''), true); }
+      finally { setBusy(false); }
+    });
+    $('incomeType').addEventListener('click',() => chooseType('in'));
+    $('checkPending').addEventListener('click', async () => {
+      if (!pending || busy) return;
+      setBusy(true);
+      try {
+        const result = await api('resolvePendingRequest',pending.id);
+        if (result.id !== pending.id) throw new Error('Identitas kiriman belum dapat dipastikan.');
+        persistPending(null);
+        if (result.saved) { $('description').value = ''; $('amount').value = ''; }
+        notice(result.saved ? 'Kiriman sebelumnya sudah tersimpan. Tidak perlu dikirim lagi.' : 'Kiriman belum tersimpan. Isinya sekarang dapat diperbaiki sebelum dikirim.');
+        await loadDashboard();
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('expenseType').addEventListener('click',() => chooseType('out'));
+    ['fund','month'].forEach(id => $(id).addEventListener('change',async () => {
+      if (pending && id === 'fund') { $('fund').value = pending.fund; notice('Selesaikan kiriman yang belum terkonfirmasi sebelum mengganti dana.',true); return; }
+      if (id === 'fund') $('date').value = '';
+      setBusy(true); await loadDashboard(); setBusy(false);
+    }));
+    $('refreshData').addEventListener('click',async () => { setBusy(true); await loadDashboard(); setBusy(false); });
+    $('previewPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Menyiapkan pratinjau…'); $('previewLink').hidden = true;
+      try {
+        const result = await api('previewPublicPdf');
+        if (!result.ready) { renderReport(result.report); notice(result.report.message); return; }
+        if (!validPdfUrl(result.pdfUrl)) throw new Error('Tautan pratinjau belum dapat diverifikasi.');
+        $('previewLink').href = result.pdfUrl; $('previewLink').hidden = false;
+        notice('Pratinjau privat siap. Periksa seluruh halaman sebelum memperbarui laporan jamaah.');
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('refreshPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Memeriksa dan memperbarui laporan…');
+      try { const result = await api('refreshPublicPdf'); renderReport(result); notice(result.message,result.state === 'ERROR'); await loadDashboard(); }
+      catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('resetForm').addEventListener('click', () => {
+      if (pending) { notice('Periksa kiriman sebelumnya sebelum mereset form.', true); return; }
+      $('code').value = 'K1'; $('description').value = ''; $('amount').value = '';
+      if (dashboard) $('date').value = dashboard.today;
+      $('voice-result').className = 'voice-result'; chooseType('in');
+    });
+    $('voice-btn').addEventListener('click',toggleVoice);
+    $('logout').addEventListener('click',async () => {
+      const response=await fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin'});
+      if (response.ok) location.reload(); else notice('Keluar belum berhasil. Muat ulang dan coba kembali.',true);
+    });
+    async function boot() {
+      setBusy(false);
+      try {
+        const response=await fetch('/api/session',{credentials:'same-origin'}), session=await response.json();
+        demo=session.demo;connected=session.authenticated;csrf=session.csrf || '';
+        if (demo) STORAGE_KEY='kas-masjid-demo-pending-v1';
+        $('demoBanner').hidden=!demo;
+        $('reconnectGoogle').hidden=demo;
+        $('loginPanel').hidden=connected;
+        $('accountRow').hidden=!connected;
+        $('loginLink').textContent=demo ? 'Buka demo aplikasi' : 'Masuk dengan Google';
+        $('loginText').textContent=demo ? 'Coba pencatatan, pemisahan PHBI, dan laporan PDF menggunakan data contoh.' : 'Masuk dengan akun pemilik untuk melihat pembukuan dan mencatat transaksi.';
+        if (connected) {restorePending();await loadDashboard();}
+        else {
+          $('connection').textContent='Belum masuk';$('conn-dot').className='conn-dot off';
+          $('reportMessage').textContent='Masuk untuk melihat status laporan.';
+          $('history').replaceChildren();setBusy(false);
+        }
+      } catch {notice('Server belum dapat dihubungi. Muat ulang aplikasi.',true);}
+    }
+    boot();
+  </script>
+</body>
+</html>

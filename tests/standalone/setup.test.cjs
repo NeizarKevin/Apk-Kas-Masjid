@@ -1,0 +1,20 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {mkdtemp,readFile,writeFile,rm}=require('node:fs/promises');
+const {resolve,join,sep}=require('node:path');
+const {tmpdir}=require('node:os');
+const {spawnSync}=require('node:child_process');
+test('Local OAuth import preserves private targets, generates an encryption key, and never prints the secret',async t=>{
+  const dir=await mkdtemp(join(tmpdir(),'kas-setup-'));
+  t.after(async()=>{assert.ok(resolve(dir).startsWith(resolve(tmpdir())+sep+'kas-setup-'));await rm(dir,{recursive:true,force:true});});
+  const env="APP_ORIGIN=http://localhost:3000\nGOOGLE_CLIENT_ID=replace_id\nGOOGLE_CLIENT_SECRET=replace_secret\nTOKEN_ENCRYPTION_KEY=replace_key\nSOURCE_SPREADSHEET_ID=original_test_id\n";
+  await writeFile(join(dir,'.env'),env);
+  const clientPath=join(dir,'client.json');
+  await writeFile(clientPath,JSON.stringify({web:{client_id:'test_client',client_secret:'synthetic_secret',redirect_uris:['http://localhost:3000/auth/callback']}}));
+  const script=resolve('scripts/setup-google.cjs'),result=spawnSync(process.execPath,[script,clientPath],{cwd:dir,encoding:'utf8',windowsHide:true});
+  assert.equal(result.status,0);assert.equal((result.stdout+result.stderr).includes('synthetic_secret'),false);
+  const saved=await readFile(join(dir,'.env'),'utf8');assert.ok(saved.includes('SOURCE_SPREADSHEET_ID=original_test_id'));assert.ok(saved.includes("GOOGLE_CLIENT_SECRET='synthetic_secret'"));
+  assert.equal(Buffer.from(saved.match(/^TOKEN_ENCRYPTION_KEY='([^']+)'/m)[1],'base64').length,32);
+  await writeFile(clientPath,JSON.stringify({web:{client_id:'test_client',client_secret:'synthetic_secret',redirect_uris:['http://wrong.test/auth/callback']}}));
+  const invalid=spawnSync(process.execPath,[script,clientPath],{cwd:dir,encoding:'utf8',windowsHide:true});assert.equal(invalid.status,1);assert.equal(await readFile(join(dir,'.env'),'utf8'),saved);
+});

@@ -3,4 +3,15 @@ node_modules/
 *.log
 .clasp.json
 *.json.local
+.env
+.env.*
+!.env.example
+.state/
+.state-demo/
+dist/
+.private/
+work/
+test-results/
+oauth-client*.json
+client_secret*.json
 

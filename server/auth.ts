@@ -1,0 +1,104 @@
+import {randomBytes,timingSafeEqual} from 'node:crypto';
+import {OAuth2Client} from 'google-auth-library';
+import type {Credentials} from 'google-auth-library';
+import type {Express,Request,Response,NextFunction} from 'express';
+import {TokenStore} from './state.js';
+import type {Adapter,Config} from './types.js';
+
+interface Session {id: string; csrf: string; expires: number; owner: boolean; oauth?: {state:string;verifier:string;expires:number}}
+const random = () => randomBytes(32).toString('base64url');
+export const equalSecret = (a: string, b: string) => Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
+export class OwnerAuth {
+  readonly client: OAuth2Client;
+  private sessions = new Map<string,Session>();
+  private tokens: Credentials = {};
+  private store: TokenStore;
+  private tokenSave: Promise<unknown> = Promise.resolve();
+  constructor(private cfg: Config) {
+    this.client = new OAuth2Client(cfg.clientId,cfg.clientSecret,cfg.origin + '/auth/callback');
+    this.store = new TokenStore(cfg.stateDir,cfg.encryptionKey);
+    this.client.on('tokens',tokens => {
+      this.tokens={...this.tokens,...tokens};
+      this.tokenSave=this.tokenSave.then(()=>this.store.save({owner:this.cfg.owner,credentials:this.tokens})).catch(()=>{console.error('Token Google tidak dapat disimpan. Periksa volume persisten.');});
+    });
+  }
+  async initialize() {
+    if (!this.cfg.demo) {
+      const stored=await this.store.load<{owner:string;credentials:Credentials}>();
+      if (stored && stored.owner !== this.cfg.owner) throw new Error('Pemilik konfigurasi berubah. Hubungkan OAuth pemilik yang benar pada volume privat baru.');
+      this.tokens=stored?.credentials || {};this.client.setCredentials(this.tokens);
+    }
+  }
+  get connected() {return this.cfg.demo || !!this.tokens.refresh_token;}
+  private session(req: Request, res: Response, create = false) {
+    const id = /(?:^|;\s*)kas_session=([^;]+)/.exec(req.headers.cookie || '')?.[1];
+    let session = id ? this.sessions.get(id) : undefined;
+    if (session && session.expires < Date.now()) {this.sessions.delete(session.id);session=undefined;}
+    if (!session && create) {
+      for (const [key,value] of this.sessions) if (value.expires < Date.now()) this.sessions.delete(key);
+      if (this.sessions.size >= 1000) throw new Error('Terlalu banyak sesi. Coba kembali nanti.');
+      session={id:random(),csrf:random(),expires:Date.now()+12*60*60*1000,owner:false};
+      this.sessions.set(session.id,session);
+      this.cookie(res,session.id);
+    }
+    return session;
+  }
+  private cookie(res: Response,id: string) {
+    res.cookie('kas_session',id,{httpOnly:true,sameSite:'lax',secure:this.cfg.origin.startsWith('https://'),path:'/',maxAge:12*60*60*1000});
+  }
+  routes(app: Express, adapter: Adapter) {
+    app.get('/api/session',(req,res) => {
+      const session = this.session(req,res);
+      res.json({authenticated:!!session?.owner,csrf:session?.owner ? session.csrf : null,demo:this.cfg.demo,connected:this.connected});
+    });
+    app.get('/auth/login',async (req,res) => {
+      const session = this.session(req,res,true)!;
+      if (this.cfg.demo) {
+        const old = session.id;
+        this.sessions.delete(old);session.id=random();session.csrf=random();session.owner=true;
+        this.sessions.set(session.id,session);this.cookie(res,session.id);res.redirect('/');return;
+      }
+      const pkce = await this.client.generateCodeVerifierAsync();
+      session.oauth={state:random(),verifier:pkce.codeVerifier,expires:Date.now()+10*60*1000};
+      res.redirect(this.client.generateAuthUrl({access_type:'offline',scope:['openid','email','https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive'],
+        state:session.oauth.state,code_challenge:pkce.codeChallenge,code_challenge_method:'S256' as any,prompt:this.connected && req.query.reconnect !== '1' ? 'select_account' : 'consent',login_hint:this.cfg.owner}));
+    });
+    app.get('/auth/callback',async (req,res) => {
+      const session = this.session(req,res), pending = session?.oauth;
+      if (!pending || pending.expires < Date.now() || typeof req.query.state !== 'string' || !equalSecret(req.query.state,pending.state) || typeof req.query.code !== 'string') {res.status(400).send('Login kedaluwarsa atau tidak valid. Mulai lagi dari halaman aplikasi.');return;}
+      delete session!.oauth;
+      try {
+        // Exchange on an isolated client: never persist tokens before checking the owner's ID token.
+        const exchange = new OAuth2Client(this.cfg.clientId,this.cfg.clientSecret,this.cfg.origin + '/auth/callback');
+        const {tokens} = await exchange.getToken({code:req.query.code,codeVerifier:pending.verifier});
+        if (!tokens.id_token) throw new Error('Identitas akun Google belum tersedia.');
+        const ticket = await exchange.verifyIdToken({idToken:tokens.id_token,audience:this.cfg.clientId}), identity=ticket.getPayload();
+        if (!identity?.email_verified || identity.email?.toLowerCase() !== this.cfg.owner) {res.status(403).send('Aplikasi hanya untuk akun pemilik.');return;}
+        if (!tokens.refresh_token && !this.tokens.refresh_token) throw new Error('Izin offline belum diberikan. Hubungkan ulang dengan persetujuan Google.');
+        const credentials={...this.tokens,...tokens};
+        exchange.setCredentials(credentials);
+        // Verify the configured original files with the same transport and credentials before accepting the connection.
+        this.client.setCredentials(credentials);
+        try {await adapter.verifyTargets();}
+        catch (error) {this.client.setCredentials(this.tokens);throw error;}
+        this.tokens=credentials;await this.store.save({owner:this.cfg.owner,credentials:this.tokens});
+        this.sessions.delete(session!.id);
+        const authenticated: Session={id:random(),csrf:random(),expires:Date.now()+12*60*60*1000,owner:true};
+        this.sessions.set(authenticated.id,authenticated);this.cookie(res,authenticated.id);res.redirect('/');
+      } catch {res.status(400).send('Koneksi Google belum berhasil. Periksa OAuth, API, akun pemilik, dan hak akses file asli, lalu login kembali.');}
+    });
+    app.post('/auth/logout',this.requireOwner,this.csrf,(req,res) => {
+      const session=this.session(req,res);if (session) this.sessions.delete(session.id);
+      res.clearCookie('kas_session',{path:'/'});res.json({ok:true});
+    });
+  }
+  requireOwner = (req: Request,res: Response,next: NextFunction) => {
+    if (!this.session(req,res)?.owner) {res.status(401).json({error:'Masuk dengan akun Google pemilik terlebih dahulu.'});return;}
+    next();
+  };
+  csrf = (req: Request,res: Response,next: NextFunction) => {
+    const session=this.session(req,res), token=req.get('X-CSRF-Token') || '';
+    if (!session?.owner || req.get('Origin') !== this.cfg.origin || !equalSecret(token,session.csrf)) {res.status(403).json({error:'Sesi permintaan tidak valid. Muat ulang aplikasi.'});return;}
+    next();
+  };
+}

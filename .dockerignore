@@ -1,0 +1,11 @@
+.git
+.env*
+.state*
+.private
+node_modules
+dist
+tests
+test-results
+work
+apps-script
+*.log

@@ -1,5 +1,32 @@
 {
   "name": "kas-masjid-auto-pdf",
   "private": true,
-  "scripts": {"test": "node --test tests/*.test.cjs"}
+  "type": "module",
+  "engines": {"node": ">=22.16.0"},
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "tsx server/main.ts",
+    "demo": "npm run build && node dist/main.js --demo",
+    "test": "npm run build && node --test tests/*.test.cjs tests/standalone/*.test.cjs",
+    "test:legacy": "node --test tests/*.test.cjs",
+    "test:browser": "npm run build && node tests/standalone/browser-smoke.cjs",
+    "setup:google": "node scripts/setup-google.cjs"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.11",
+    "express": "^5.3.0",
+    "google-auth-library": "^11.3.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.4.299",
+    "playwright": "^1.64.0",
+    "proper-lockfile": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/proper-lockfile": "^4.1.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
 }
