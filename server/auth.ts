@@ -1,4 +1,4 @@
-import {randomBytes,timingSafeEqual} from 'node:crypto';
+import {randomBytes,timingSafeEqual,createHash} from 'node:crypto';
 import {OAuth2Client} from 'google-auth-library';
 import type {Credentials} from 'google-auth-library';
 import type {Express,Request,Response,NextFunction} from 'express';
@@ -34,15 +34,16 @@ export class OwnerAuth {
   }
   private saveTokens() {const value={owner:this.cfg.owner,credentials:this.tokens};return this.state.redis ? this.state.write('google-credentials',value) : this.store.save(value);}
   async flush() {await this.tokenSave;}
+  private sessionName(id: string) {return 'session:'+createHash('sha256').update(id).digest('hex');}
   private async saveSession(session: Session) {
-    if (this.state.redis) await this.state.write('session:'+session.id,session,Math.max(1,Math.ceil((session.expires-Date.now())/1000)));
+    if (this.state.redis) await this.state.write(this.sessionName(session.id),session,Math.max(1,Math.ceil((session.expires-Date.now())/1000)));
     else this.sessions.set(session.id,session);
   }
-  private async deleteSession(id: string) {if (this.state.redis) await this.state.remove('session:'+id);else this.sessions.delete(id);}
+  private async deleteSession(id: string) {if (this.state.redis) await this.state.remove(this.sessionName(id));else this.sessions.delete(id);}
   get connected() {return this.cfg.demo || !!this.tokens.refresh_token;}
   private async session(req: Request, res: Response, create = false) {
     const id = /(?:^|;\s*)kas_session=([^;]+)/.exec(req.headers.cookie || '')?.[1];
-    let session = id && /^[A-Za-z0-9_-]{43}$/.test(id) ? (this.state.redis ? await this.state.read<Session|undefined>('session:'+id,undefined) : this.sessions.get(id)) : undefined;
+    let session = id && /^[A-Za-z0-9_-]{43}$/.test(id) ? (this.state.redis ? await this.state.read<Session|undefined>(this.sessionName(id),undefined) : this.sessions.get(id)) : undefined;
     if (session && session.expires < Date.now()) {await this.deleteSession(session.id);session=undefined;}
     if (!session && create) {
       if (this.state.redis) {

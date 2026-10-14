@@ -43,11 +43,12 @@ test('Owner session survives a different function instance; logout revokes it ev
   const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>new Promise(r=>server.close(r)));
   cfg.origin='http://127.0.0.1:'+server.address().port;
   const login=await fetch(cfg.origin+'/auth/login',{redirect:'manual'}),cookie=login.headers.getSetCookie().at(-1).split(';')[0];
+  assert.equal([...redis.data.keys()].some(key=>key.includes(cookie.split('=')[1])),false,'Redis key names must not expose the bearer cookie');
   const session=await (await fetch(cfg.origin+'/api/session',{headers:{Cookie:cookie}})).json();assert.equal(session.authenticated,true);
   let allowed=false;await auth2.requireOwner({headers:{cookie}}, {status(){throw Error('denied');}},()=>allowed=true);assert.equal(allowed,true);
   const logout=await fetch(cfg.origin+'/auth/logout',{method:'POST',headers:{Cookie:cookie,Origin:cfg.origin,'X-CSRF-Token':session.csrf}});assert.equal(logout.status,200);
   let denied;await auth2.requireOwner({headers:{cookie}},{status(s){denied=s;return this;},json(){}},()=>assert.fail());assert.equal(denied,401);
-  const id=crypto.randomBytes(32).toString('base64url');await a.write('session:'+id,{id,csrf:'test',expires:0,owner:true},600);
+  const id=crypto.randomBytes(32).toString('base64url');await a.write('session:'+crypto.createHash('sha256').update(id).digest('hex'),{id,csrf:'test',expires:0,owner:true},600);
   await auth2.requireOwner({headers:{cookie:'kas_session='+id}},{status(s){denied=s;return this;},json(){}},()=>assert.fail());assert.equal(denied,401);
 });
 test('Scheduled endpoint requires a secret and does no work before cutover; cloud config fails closed',async t=>{
