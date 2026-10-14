@@ -18,6 +18,7 @@ function cashConfig_() {
     expectedStartDate: cashIso_(data.NEW_PERIOD_START_DATE || '2026-10-08'),
     phbiId: data.PHBI_SHEET_ID ? Number(data.PHBI_SHEET_ID) : null,
     syncId: data.SYNC_SHEET_ID ? Number(data.SYNC_SHEET_ID) : null,
+    journalId: data.CASH_JOURNAL_SHEET_ID ? Number(data.CASH_JOURNAL_SHEET_ID) : null,
     writeInId: data.WRITE_INCOME_SHEET_ID ? Number(data.WRITE_INCOME_SHEET_ID) : null,
     writeOutId: data.WRITE_EXPENSE_SHEET_ID ? Number(data.WRITE_EXPENSE_SHEET_ID) : null};
 }
@@ -72,14 +73,29 @@ function cashSource_(cfg) {
   cfg.phbiId = cfg.phbiId === null ? uniqueTitle('RAW PHBI') : cfg.phbiId;
   cfg.syncId = cfg.syncId === null ? uniqueTitle('REKAP CHAT 2022-2026') : cfg.syncId;
   var headers = cashReadGrids_(cfg, properties, {}, true);
-  var matched = headers.filter(function (s) { return cashStream_(s.rows[0] || []); });
+  var markedJournals = metadata.sheets.filter(function (s) {
+    return (s.developerMetadata || []).some(function (m) {
+      return m.metadataKey === 'KAS_JOURNAL' && m.metadataValue === 'MASJID';
+    });
+  });
+  if (markedJournals.length > 1) throw new Error('Lebih dari satu jurnal kas masjid aktif. Periksa metadata KAS_JOURNAL.');
+  if (cfg.journalId !== null && markedJournals.length && markedJournals[0].properties.sheetId !== cfg.journalId)
+    throw new Error('ID jurnal kas masjid tidak cocok dengan metadata sumber.');
+  if (cfg.journalId === null && markedJournals.length) cfg.journalId = markedJournals[0].properties.sheetId;
+  var matched = headers.filter(function (s) {
+    return cfg.journalId !== null ? s.id === cfg.journalId : cashStream_(s.rows[0] || []);
+  });
+  if (cfg.journalId !== null && (matched.length !== 1 || !cashJournalHeader_(matched[0].rows[0] || [])))
+    throw new Error('Jurnal kas masjid yang dikonfigurasi tidak tersedia atau headernya berubah.');
   matched.forEach(function (snapshot) {
     var native = metadata.sheets.filter(function (s) { return s.properties.sheetId === snapshot.id; })[0];
     var funds = (native.developerMetadata || []).filter(function (m) { return m.metadataKey === 'KAS_DANA'; });
     if (funds.length > 1) throw new Error('Metadata dana tab ' + snapshot.title + ' ambigu.');
     snapshot.fund = funds.length ? funds[0].metadataValue : null;
+    snapshot.journal = snapshot.id === cfg.journalId;
   });
   var widths = {}; widths[cfg.phbiId] = 6; widths[cfg.syncId] = 8;
+  if (cfg.journalId !== null) widths[cfg.journalId] = 6;
   var selected = properties.filter(function (p) {
     return p.sheetId === cfg.phbiId || p.sheetId === cfg.syncId ||
       matched.some(function (s) { return s.id === p.sheetId; });
@@ -91,6 +107,7 @@ function cashSource_(cfg) {
   var transactionsGrids = grids.filter(function (g) { return matched.some(function (s) { return s.id === g.id; }); });
   transactionsGrids.forEach(function (g) {
     g.fund = matched.filter(function (s) { return s.id === g.id; })[0].fund;
+    g.journal = g.id === cfg.journalId;
   });
   var ledger = cashReadLedger_(transactionsGrids, cfg.startDate, metadata.properties.timeZone);
   var phbi = grids.filter(function (g) { return g.id === cfg.phbiId; })[0];
@@ -158,7 +175,8 @@ function cashPhbiRows_(grid, timeZone) {
   return result.sort(cashSort_);
 }
 function cashDestination_(state, type) {
-  var configured = type === 'in' ? state.cfg.writeInId : state.cfg.writeOutId;
+  var configured = state.cfg.journalId !== null && state.cfg.journalId !== undefined
+    ? state.cfg.journalId : type === 'in' ? state.cfg.writeInId : state.cfg.writeOutId;
   var candidates = state.ledger.streams.filter(function (s) { return s.type === type; });
   if (configured !== null) {
     var exact = candidates.filter(function (s) { return s.id === configured; });
@@ -184,7 +202,7 @@ function cashAppend_(state, tx) {
   var cfg = state.cfg, checkpoint = state.checkpoints[tx.fund];
   var dest = tx.fund === 'PHBI' ? {id: cfg.phbiId, title: state.phbi.title} : cashDestination_(state, tx.type);
   var grid = state.grids.filter(function (g) { return g.id === dest.id; })[0];
-  var width = tx.fund === 'PHBI' ? 6 : 4, exemplar = grid.rows.length;
+  var width = tx.fund === 'PHBI' || dest.journal ? 6 : 4, exemplar = grid.rows.length;
   while (exemplar > 1 && !grid.rows[exemplar - 1][0]) exemplar--;
   var formatResponse = Sheets.Spreadsheets.get(cfg.sourceId, {
     ranges: ["'" + dest.title.replace(/'/g, "''") + "'!A" + Math.max(2, exemplar) + ':' +
@@ -198,7 +216,10 @@ function cashAppend_(state, tx) {
   var values = tx.fund === 'PHBI'
     ? [cashSerial_(tx.date), tx.code, tx.description, tx.type === 'in' ? tx.amount : '',
       tx.type === 'out' ? tx.amount : '', 'Aplikasi kas / ' + tx.id]
-    : [cashSerial_(tx.date), tx.code, tx.description, tx.amount];
+    : dest.journal
+      ? [cashSerial_(tx.date), tx.code, tx.description, tx.type === 'in' ? tx.amount : '',
+        tx.type === 'out' ? tx.amount : '', meta.createdAt]
+      : [cashSerial_(tx.date), tx.code, tx.description, tx.amount];
   var cells = values.map(function (v, i) {
     var c = {userEnteredValue: typeof v === 'number' ? {numberValue: v} : {stringValue: v},
       userEnteredFormat: styles[i] && styles[i].userEnteredFormat || {}};
@@ -210,8 +231,23 @@ function cashAppend_(state, tx) {
     return c;
   });
   // Typed stringValue keeps a description beginning "=" as literal text, not a formula.
-  Sheets.Spreadsheets.batchUpdate({requests: [{appendCells: {sheetId: dest.id,
-    rows: [{values: cells}], fields: 'userEnteredValue,userEnteredFormat,dataValidation,note'}}]}, cfg.sourceId);
+  var fields = 'userEnteredValue,userEnteredFormat,dataValidation,note', requests = [];
+  if (dest.journal) {
+    // Wallet formulas in I:Z must not push the next A:F transaction to row 41.
+    var next = grid.rows.length;
+    while (next > 1 && (grid.rows[next - 1] || []).every(emptyCashCell_) &&
+        ((grid.notes || [])[next - 1] || []).every(emptyCashCell_)) next--;
+    var native = state.metadata && state.metadata.sheets.filter(function (s) {
+      return s.properties.sheetId === dest.id;
+    })[0];
+    if (native && next >= native.properties.gridProperties.rowCount)
+      requests.push({appendDimension: {sheetId: dest.id, dimension: 'ROWS',
+        length: next - native.properties.gridProperties.rowCount + 1}});
+    requests.push({updateCells: {range: {sheetId: dest.id, startRowIndex: next,
+      endRowIndex: next + 1, startColumnIndex: 0, endColumnIndex: width},
+      rows: [{values: cells}], fields: fields}});
+  } else requests.push({appendCells: {sheetId: dest.id, rows: [{values: cells}], fields: fields}});
+  Sheets.Spreadsheets.batchUpdate({requests: requests}, cfg.sourceId);
 }
 function cashStatus_(status) {
   PropertiesService.getScriptProperties().setProperty('REPORT_STATUS', JSON.stringify(status));
@@ -375,6 +411,7 @@ function configureApp() {
   p.setProperties({OWNER_EMAIL: active, PHBI_SHEET_ID: String(state.cfg.phbiId), SYNC_SHEET_ID: String(state.cfg.syncId),
     WRITE_INCOME_SHEET_ID: String(cashDestination_(state, 'in').id),
     WRITE_EXPENSE_SHEET_ID: String(cashDestination_(state, 'out').id)});
+  if (state.cfg.journalId !== null) p.setProperty('CASH_JOURNAL_SHEET_ID', String(state.cfg.journalId));
   if (state.cfg.mode === 'NEW_PERIOD') {
     p.setProperty('REPORT_MODE', 'NEW_PERIOD');
     if (!state.cfg.baseline) p.setProperty('REPORT_BASELINE', JSON.stringify(state.reportBaseline));

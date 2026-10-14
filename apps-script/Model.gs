@@ -60,18 +60,27 @@ function cashStream_(header) {
   if (!CASH_HEADERS_.every(function (x, i) { return x === h[i]; })) return null;
   return h[3] === 'pemasukan' ? 'in' : h[3] === 'pengeluaran' ? 'out' : null;
 }
+function cashJournalHeader_(header) {
+  return ['tanggal', 'kode', 'keterangan', 'pemasukan', 'pengeluaran', 'timestamp']
+    .every(function (value, i) { return cashHeader_(header[i]) === value; });
+}
 function cashReadLedger_(snapshots, startDate, timeZone) {
   var transactions = [], streams = [], seenIds = {};
   snapshots.forEach(function (sheet) {
-    var type = cashStream_(sheet.rows[0] || []);
+    var journal = sheet.journal === true;
+    var type = journal ? 'journal' : cashStream_(sheet.rows[0] || []);
     if (!type) return;
+    if (journal && !cashJournalHeader_(sheet.rows[0] || []))
+      throw new Error('Header jurnal ' + sheet.title + ' harus Tanggal | Kode | Keterangan | Pemasukan | Pengeluaran | Timestamp.');
     if (sheet.fund && sheet.fund !== 'MASJID') return;
     if (!sheet.fund && /\b(PHBI|RAMADHAN|RAMADAN)\b/i.test(sheet.title))
       throw new Error('Tetapkan dana tab ' + sheet.title + ' sebelum dimasukkan ke laporan masjid.');
-    var dates = [], memoAmountNext = false;
+    var dates = [], datesIn = [], datesOut = [], memoAmountNext = false;
     sheet.rows.slice(1).forEach(function (row, i) {
       var rowNumber = i + 2;
       if (row.every(emptyCashCell_)) { memoAmountNext = false; return; }
+      // Old requests left timestamps without transactions; they are not cash movements.
+      if (journal && row.slice(0, 5).every(emptyCashCell_)) return;
       // Existing cash-count memo in the expense tab is not an expense.
       var noTransactionCells = [row[0], row[2], row[3]].every(emptyCashCell_);
       if (type === 'out' && noTransactionCells && /^Kas real K[123]\b/i.test(String(row[1] || ''))) {
@@ -85,24 +94,35 @@ function cashReadLedger_(snapshots, startDate, timeZone) {
         var date = cashIso_(row[0], timeZone);
         var description = String(row[2] || '').trim();
         if (!description) throw new Error('Keterangan kosong.');
-        var amount = cashMoney_(row[3], false);
+        var rowType = type, amount;
+        if (journal) {
+          var incoming = emptyCashCell_(row[3]) ? 0 : cashMoney_(row[3], true);
+          var outgoing = emptyCashCell_(row[4]) ? 0 : cashMoney_(row[4], true);
+          if ((incoming > 0) === (outgoing > 0)) throw new Error('Isi satu kolom arus kas saja: Pemasukan atau Pengeluaran.');
+          rowType = incoming > 0 ? 'in' : 'out';
+          amount = incoming || outgoing;
+        } else amount = cashMoney_(row[3], false);
         var meta = cashMeta_((sheet.notes && sheet.notes[i + 1] || [])[0]);
         if (meta && meta.id) {
           if (seenIds[meta.id]) throw new Error('ID transaksi aplikasi terulang.');
           seenIds[meta.id] = true;
         }
         dates.push(date);
+        (rowType === 'in' ? datesIn : datesOut).push(date);
         if (date < startDate) return;
         transactions.push({date: date, code: String(row[1] || '').trim(),
-          description: description, amount: amount, type: type, fund: 'MASJID',
+          description: description, amount: amount, type: rowType, fund: 'MASJID',
           sheetId: sheet.id, sheetTitle: sheet.title, row: rowNumber, meta: meta});
       } catch (error) {
-        throw new Error(sheet.title + '!A' + rowNumber + ':D' + rowNumber + ': ' + error.message);
+        throw new Error(sheet.title + '!A' + rowNumber + ':' + (journal ? 'F' : 'D') + rowNumber + ': ' + error.message);
       }
     });
-    dates.sort();
-    streams.push({id: sheet.id, title: sheet.title, type: type, index: sheet.index,
-      firstDate: dates[0] || null, lastDate: dates[dates.length - 1] || null});
+    (journal ? ['in', 'out'] : [type]).forEach(function (streamType) {
+      var streamDates = journal ? (streamType === 'in' ? datesIn : datesOut) : dates;
+      streamDates.sort();
+      streams.push({id: sheet.id, title: sheet.title, type: streamType, index: sheet.index,
+        journal: journal, firstDate: streamDates[0] || null, lastDate: streamDates[streamDates.length - 1] || null});
+    });
   });
   ['in', 'out'].forEach(function (type) {
     var periods = streams.filter(function (s) { return s.type === type && s.firstDate; })
