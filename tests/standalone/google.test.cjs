@@ -64,6 +64,19 @@ test('Template readback is verified and mismatch prevents export',async()=>{
   assert.throws(()=>verifyWorkbook(reportBook,cfg,report,plan),/Ringkasan/);
   assert.equal(calls.some(c=>c.url.includes('/export?')),false);
 });
+test('Google changes use one exact A:F update including recoverable notes, preserving surrounding cells',async()=>{
+  const {adapter,cfg,calls}=await fixture(),{transactionView,deletedViews}=await import('../../dist/changes.js');
+  const source=await adapter.source(),view=transactionView(source,source.transactions[0]);
+  const correction={id:crypto.randomUUID(),key:view.key,revision:view.revision,action:'edit',reason:'Koreksi bukti',input:{fund:'MASJID',type:'in',code:'K2',date:view.date,description:'=Literal corrected',amount:250100}};
+  await adapter.change(correction);await adapter.change(correction);
+  const changed=await adapter.source(),actual=changed.transactions.find(tx=>tx.description==='=Literal corrected');assert.equal(actual.meta.changes.length,1);
+  const writes=calls.filter(call=>call.options.method==='POST'&&call.url.includes(cfg.sourceId));assert.equal(writes.length,1);
+  const update=JSON.parse(writes[0].options.body).requests[0].updateCells;assert.equal(update.range.endColumnIndex,6);assert.equal(update.range.startRowIndex,view.key.split(':')[1]-1);assert.equal(update.fields,'userEnteredValue,note');assert.deepEqual(update.rows[0].values[2].userEnteredValue,{stringValue:'=Literal corrected'});
+  const next=transactionView(changed,actual);await adapter.change({id:crypto.randomUUID(),key:next.key,revision:next.revision,action:'delete',reason:'Hapus contoh'});
+  const deleted=await adapter.source(),removed=deletedViews(deleted,cfg,'MASJID','2026-10')[0];assert.equal(deleted.report.income,0);
+  await adapter.change({id:crypto.randomUUID(),key:removed.key,revision:removed.revision,action:'restore',reason:'Pulihkan contoh'});
+  assert.equal((await adapter.source()).report.income,250100);
+});
 test('An intervening manual row is preserved by rereading the source before the exact range write',async()=>{
   const {adapter,source,cfg}=await fixture(),before=await adapter.source();
   const manual={values:['2026-10-10','K1','Manual baru',77,'',''].map(cell)};

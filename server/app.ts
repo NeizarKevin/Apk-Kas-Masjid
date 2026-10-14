@@ -27,6 +27,8 @@ export async function createApp(cfg: Config,adapter: Adapter,auth: OwnerAuth,ser
   app.get('/api/dashboard',auth.requireOwner,async(req,res)=>res.json(await service.getDashboard(String(req.query.fund || 'MASJID'),String(req.query.month || ''))));
   app.post('/api/transactions',auth.requireOwner,auth.csrf,async(req,res)=>res.json(await service.saveTransaction(req.body)));
   app.get('/api/transactions/:id',auth.requireOwner,async(req,res)=>res.json(await service.resolvePendingRequest(String(req.params.id))));
+  app.post('/api/changes',auth.requireOwner,auth.csrf,async(req,res)=>res.json(await service.changeTransaction(req.body)));
+  app.get('/api/changes/:id',auth.requireOwner,async(req,res)=>res.json(await service.resolveChange(String(req.params.id))));
   app.post('/api/pdf/preview',auth.requireOwner,auth.csrf,async(_req,res)=>res.json(await service.previewPublicPdf()));
   app.post('/api/pdf/refresh',auth.requireOwner,auth.csrf,async(_req,res)=>res.json(await service.refreshPublicPdf()));
   if (cfg.demo) app.get('/api/pdf/:kind',auth.requireOwner,async(req,res)=>{

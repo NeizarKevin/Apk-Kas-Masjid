@@ -43,6 +43,8 @@ export function buildSource(book: GoogleObject, cfg: Config): Source {
 export function findRequest(source: Source, id: string): Input | null {
   const tx = source.transactions.concat(source.phbiTransactions).find(tx => tx.meta?.id === id);
   if (!tx) {
+    const removed=[source.journal,source.phbi].flatMap(grid=>grid.notes.slice(1).map(notes=>m.cashMeta_(notes[0]))).find(meta=>meta?.id===id && meta.deleted);
+    if (removed) return {id,fund:removed.fund,type:removed.type,code:removed.code,date:removed.date,description:removed.description,amount:removed.amount};
     if ([source.journal,source.phbi].some(grid => grid.notes.slice(1).some(notes => m.cashMeta_(notes[0])?.id === id))) throw new Error('ID kiriman sudah ada di luar periode aktif. Periksa koreksi transaksi di Sheet sebelum mengirim ulang.');
     return null;
   }

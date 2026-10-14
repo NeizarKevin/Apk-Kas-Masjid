@@ -4,7 +4,8 @@ import {appendPlan,buildSource} from './accounting.js';
 import {atomicJson,readJson} from './state.js';
 import {renderDemoPdf} from './pdf.js';
 import * as m from './model.js';
-import type {Adapter,Config,GoogleObject,Input,Report,Source,Transaction} from './types.js';
+import {changePlan} from './changes.js';
+import type {Adapter,ChangeRequest,Config,GoogleObject,Input,Report,Source,Transaction} from './types.js';
 
 export function demoBook(cfg: Config): GoogleObject {
   const value = (v: string | number) => ({userEnteredValue:typeof v === 'number' ? {numberValue:v} : {stringValue:v}});
@@ -29,6 +30,15 @@ export class DemoAdapter implements Adapter {
     await atomicJson(join(this.cfg.stateDir,'demo-sheet.json'),book);
   }
   async extendFilter(_saved: Transaction) {}
+  async change(request: ChangeRequest) {
+    const source=await this.source(),plan=changePlan(source,request,this.cfg);
+    for (const entry of plan.requests) {
+      const update=entry.updateCells,sheet=source.book.sheets.find((sheet: GoogleObject)=>sheet.properties.sheetId===update.range.sheetId);
+      const old=sheet.data[0].rowData[update.range.startRowIndex];
+      sheet.data[0].rowData[update.range.startRowIndex]={values:update.rows[0].values.map((value: GoogleObject,i: number)=>({...old.values?.[i],...value}))};
+    }
+    if (plan.requests.length) await atomicJson(join(this.cfg.stateDir,'demo-sheet.json'),source.book);
+  }
   async render(report: Report) {return renderDemoPdf(report);}
   async publish(bytes: Buffer, preview: boolean) {
     await writeFile(join(this.cfg.stateDir,preview ? 'preview.pdf' : 'public.pdf'),bytes,{mode:0o600});

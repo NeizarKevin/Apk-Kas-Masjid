@@ -17,12 +17,13 @@ async function fixture(t,live=false) {
 }
 test('Every data, preview and write endpoint rejects anonymous requests; owner mutations enforce CSRF and Origin',async t=>{
   const {origin,cookie}=await fixture(t);
-  for(const [path,method] of [['/api/dashboard','GET'],['/api/transactions/x','GET'],['/api/transactions','POST'],['/api/pdf/preview','POST'],['/api/pdf/refresh','POST'],['/api/pdf/public','GET']]) assert.equal((await fetch(origin+path,{method})).status,401,path);
+  for(const [path,method] of [['/api/dashboard','GET'],['/api/transactions/x','GET'],['/api/transactions','POST'],['/api/changes','POST'],['/api/changes/x','GET'],['/api/pdf/preview','POST'],['/api/pdf/refresh','POST'],['/api/pdf/public','GET']]) assert.equal((await fetch(origin+path,{method})).status,401,path);
   const session=await (await fetch(origin+'/api/session',{headers:{Cookie:cookie}})).json();assert.equal(session.authenticated,true);
   const tx={id:crypto.randomUUID(),fund:'MASJID',type:'in',code:'K1',date:'2026-10-09',description:'=Literal text',amount:123};
   const request=headers=>fetch(origin+'/api/transactions',{method:'POST',headers:{Cookie:cookie,'Content-Type':'application/json',...headers},body:JSON.stringify(tx)});
   assert.equal((await request({Origin:origin})).status,403);
   assert.equal((await request({Origin:'https://attacker.test','X-CSRF-Token':session.csrf})).status,403);
+  assert.equal((await fetch(origin+'/api/changes',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:'{}'})).status,403);
   const saved=await request({Origin:origin,'X-CSRF-Token':session.csrf});assert.equal(saved.status,200);assert.equal((await saved.json()).saved,true);
   const again=await request({Origin:origin,'X-CSRF-Token':session.csrf});assert.equal((await again.json()).duplicate,true);
   assert.equal((await fetch(origin+'/api/dashboard',{headers:{Cookie:cookie}})).status,200);

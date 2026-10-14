@@ -45,11 +45,25 @@ async function run() {
     const dashboard=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();
     assert.equal(dashboard.transactions.filter(tx=>tx.description==='=Literal browser test').length,1);
     assert.equal(dashboard.report.state,'UNCHANGED');
-    await page.locator('summary').click();await page.locator('#previewPdf').click();
+    await page.getByText('Opsi laporan',{exact:true}).click();await page.locator('#previewPdf').click();
     await page.waitForSelector('#previewLink:not([hidden])',{timeout:120000});
     const preview=await context.request.get(origin+'/api/pdf/preview');assert.equal(preview.status(),200);
     await writeFile(join(evidence,'preview-demo.pdf'),await preview.body());
     const audit=JSON.parse(await readFile(join(dir,'preview-audit.json'),'utf8'));assert.equal(audit.pageCount,3);assert.equal(audit.pages.length,3);
+    await page.locator('#historySearch').fill('literal');assert.equal(await page.locator('#history .transaction').count(),1);await page.locator('#historySearch').fill('');
+    const changeIds=[];let dropChange=true;
+    await page.route('**/api/changes',async route=>{changeIds.push(route.request().postDataJSON().id);const response=await route.fetch();if(dropChange){dropChange=false;await route.abort('failed');}else await route.fulfill({response});});
+    await page.getByRole('button',{name:'Edit =Literal browser test',exact:true}).click();await page.locator('#changeAmount').fill('125.001');await page.locator('#changeReason').fill('Koreksi sesuai kuitansi uji');await page.locator('#changeSubmit').click();
+    await page.waitForFunction(()=>document.getElementById('changeSubmit').textContent==='Kirim ulang perubahan',{},{timeout:120000});
+    await page.reload();await page.waitForFunction(()=>document.getElementById('changeDialog').open && document.getElementById('changeSubmit').textContent==='Kirim ulang perubahan');
+    assert.equal(await page.locator('#changeAmount').inputValue(),'125001');
+    await page.locator('#changeSubmit').click();await page.waitForFunction(()=>!document.getElementById('changeDialog').open && !document.getElementById('submitButton').disabled,{},{timeout:120000});
+    assert.equal(changeIds[0],changeIds[1]);assert.equal(await page.locator('#currentBalance').textContent(),'Rp1.325.001');
+    const corrected=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();assert.equal(corrected.transactions.find(tx=>tx.description==='=Literal browser test').changes.length,1);
+    await page.getByRole('button',{name:'Hapus =Literal browser test',exact:true}).click();await page.locator('#changeCancel').click();assert.equal(await page.locator('#currentBalance').textContent(),'Rp1.325.001');
+    await page.getByRole('button',{name:'Hapus =Literal browser test',exact:true}).click();await page.locator('#changeReason').fill('Duplikat pada bukti uji');await page.locator('#changeSubmit').click();await page.waitForFunction(()=>!document.getElementById('changeDialog').open && document.getElementById('currentBalance').textContent==='Rp1.200.000',{},{timeout:120000});
+    await page.locator('#deletedCount').click();await page.getByRole('button',{name:'Pulihkan =Literal browser test',exact:true}).click();await page.locator('#changeReason').fill('Pulihkan sesuai bukti yang benar');await page.locator('#changeSubmit').click();await page.waitForFunction(()=>!document.getElementById('changeDialog').open && document.getElementById('currentBalance').textContent==='Rp1.325.001',{},{timeout:120000});
+    assert.equal(await page.locator('#deletedSection').isVisible(),false);
     // Real print pagination with long descriptions, multiple months and repeated table headings.
     const [{renderDemoPdf,inspectPdf},m]=await Promise.all([import('../../dist/pdf.js'),import('../../dist/model.js')]);
     const tx=Array.from({length:75},(_,i)=>({date:i<40?'2026-10-09':'2026-11-09',description:'Contoh rincian '+i+' '+('keterangan panjang '.repeat(i%3===0?20:1)),amount:100+i,type:i%2?'in':'out',fund:'MASJID',code:'K1',sheetId:1,row:i+2,meta:null}));
@@ -63,8 +77,8 @@ async function run() {
     await context.close();
     // The process worker publishes at startup without any logged-in browser.
     assert.ok((await readFile(join(dir,'public.pdf'))).length>1000);
-    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
-    console.log('Browser smoke passed: mobile, desktop, login/logout, UUID retry, PHBI, literal text, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
+    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
+    console.log('Browser smoke passed: mobile, desktop, login/logout, UUID retry across reload, edit/delete/restore, history search, PHBI, literal text, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
   } finally {
     await browser?.close();server.kill();await new Promise(resolve=>server.once('exit',resolve));await rm(dir,{recursive:true,force:true});
   }

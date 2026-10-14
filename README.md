@@ -50,6 +50,8 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - Notes `KAS_APP_V1 ` menyimpan UUID serta metadata bersama nilai dalam satu batch. Respons putus memakai UUID yang sama. Dua transaksi nyata yang identik tetap diterima dengan ID berbeda. Keterangan berawalan `=` ditulis sebagai teks literal.
 - K1/K2/K3 adalah pemegang uang, bukan akun login. Semua endpoint data/write/pratinjau dibatasi pemilik. Perubahan memerlukan CSRF serta Origin yang cocok; cookie HttpOnly, SameSite=Lax, Secure pada HTTPS.
 - Simpan dikonfirmasi dengan baca ulang sebelum `saved:true`. Kegagalan PDF ditampilkan terpisah dan tidak menggandakan transaksi.
+- **Edit, Hapus, dan Pulihkan** tersedia pada rincian transaksi. Perubahan harus disertai alasan, memakai pemeriksaan versi baris, dan mempunyai UUID sendiri untuk kirim ulang yang aman. Riwayat tersimpan dalam note baris Sheet yang sama; tidak menambah database pembukuan kedua. Hapus mengosongkan A:F serta menyimpan cadangan privat pada note, tanpa menghapus atau menggeser baris. Tombstone tetap menahan UUID dan posisi baris agar transaksi yang dihapus tidak muncul kembali akibat retry.
+- Transaksi yang sudah termasuk hitung fisik terbaru dikunci dari koreksi aplikasi. Cocokkan langsung di Sheet agar angka hitungan fisik tidak berubah diam-diam. Dana transaksi tidak dipindah melalui edit. Gunakan pencarian dan penyaring jenis transaksi untuk menemukan rincian bulan yang dipilih.
 - Checkpoint baru memeriksa saldo buku terhadap uang fisik. Selisih menahan PDF; backend tidak mengubah baseline atau membuat penyesuaian otomatis.
 - Saat aktif, satu proses server memeriksa edit manual sekitar lima menit dan memperbarui PDF setelah simpan. Signature yang sama melewati ekspor ulang. Server dan volume harus selalu hidup; browser boleh ditutup.
 
@@ -70,6 +72,7 @@ Nilai dan notes ditulis bersama lewat [Sheets batchUpdate](https://developers.go
 | `public/index.html` | UI mandiri, fetch API, login, retry, suara |
 | `server/model.ts` | Port aturan pembukuan murni dari model lama |
 | `server/accounting.ts` | Snapshot, identitas kiriman, write A:F |
+| `server/changes.ts` | Edit/hapus/pulihkan, versi baris, dan riwayat perubahan |
 | `server/google.ts`, `server/workbook.ts` | Adapter Google dan template |
 | `server/service.ts` | Dashboard, simpan, serialisasi, publikasi |
 | `server/auth.ts`, `server/state.ts` | OAuth, CSRF, token, volume, lock |

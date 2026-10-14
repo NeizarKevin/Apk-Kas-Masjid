@@ -2,8 +2,11 @@ export type Fund = 'MASJID' | 'PHBI';
 export type Code = 'K1' | 'K2' | 'K3';
 export interface Baseline { date: string; amount: number; holders: Record<Code, number | null> }
 export interface Input { id: string; fund: Fund; type: 'in' | 'out'; code: Code; date: string; description: string; amount: number }
+export interface ChangeRequest {id: string; key: string; revision: string; action: 'edit' | 'delete' | 'restore'; reason: string; input?: Omit<Input, 'id'>}
+export interface ChangeEvent {id: string; action: ChangeRequest['action']; at: string; actor: string; reason: string; requestHash: string; before: Omit<Input, 'id'>; after?: Omit<Input, 'id'>}
+export interface TransactionMeta extends Input {createdAt: string; afterSync: boolean; checkpointKey: string; reportBaselineKey: string; deleted?: boolean; backup?: GoogleObject[]; changes?: ChangeEvent[]; originalNote?: string}
 export interface Transaction extends Omit<Input, 'id'> {
-  meta: (Input & {createdAt: string; afterSync: boolean; checkpointKey: string; reportBaselineKey: string}) | null;
+  meta: TransactionMeta | null;
   sheetId: number; sheetTitle: string; row: number;
 }
 export interface Report {
@@ -29,6 +32,7 @@ export interface Adapter {
   source(): Promise<Source>;
   verifyTargets(): Promise<void>;
   append(source: Source, tx: Input): Promise<void>;
+  change(request: ChangeRequest): Promise<void>;
   extendFilter(saved: Transaction): Promise<void>;
   render(report: Report): Promise<Buffer>;
   publish(bytes: Buffer, preview: boolean): Promise<string>;

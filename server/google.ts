@@ -2,8 +2,9 @@ import {OAuth2Client} from 'google-auth-library';
 import {createHash} from 'node:crypto';
 import {appendPlan,buildSource,findRequest,todayJakarta} from './accounting.js';
 import {cashValidateInput_,cashSameInput_} from './model.js';
+import {changePlan} from './changes.js';
 import {templateSheets,workbookPlan,verifyWorkbook} from './workbook.js';
-import type {Adapter,Config,GoogleObject,Input,Report,Source,Transaction} from './types.js';
+import type {Adapter,ChangeRequest,Config,GoogleObject,Input,Report,Source,Transaction} from './types.js';
 
 const fields = 'spreadsheetId,properties(timeZone),sheets(properties,developerMetadata,basicFilter,data(startRow,startColumn,rowData(values(effectiveValue,userEnteredValue,userEnteredFormat,dataValidation,note))))';
 export class GoogleAdapter implements Adapter {
@@ -55,6 +56,10 @@ export class GoogleAdapter implements Adapter {
     }
     cashValidateInput_(tx,todayJakarta(),fresh.checkpoints[tx.fund]);
     await this.batch(this.cfg.sourceId,appendPlan(fresh,tx,this.cfg));
+  }
+  async change(request: ChangeRequest) {
+    const plan=changePlan(await this.source(),request,this.cfg);
+    if (plan.requests.length) await this.batch(this.cfg.sourceId,plan.requests);
   }
   async extendFilter(saved: Transaction) {
     const book = await this.metadata(this.cfg.sourceId), filter = book.sheets.find((sheet: GoogleObject) => sheet.properties.sheetId === saved.sheetId)?.basicFilter;

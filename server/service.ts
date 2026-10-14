@@ -3,6 +3,7 @@ import {readJson,atomicJson,SerialQueue} from './state.js';
 import {findRequest,signature,todayJakarta} from './accounting.js';
 import {inspectPdf} from './pdf.js';
 import * as m from './model.js';
+import {changeReceipt,validatedChange,transactionView,deletedViews} from './changes.js';
 import type {Adapter,Config,Fund,Input,Source,Status} from './types.js';
 
 interface Publication {hash?: string; updatedAt?: string; status: Status}
@@ -32,11 +33,13 @@ export class CashService {
       const selected = visible.filter(tx => tx.date.slice(0,7) === month);
       const balance = checkpoint.amount + all.filter(tx => m.cashIsAfterCheckpoint_(tx,checkpoint)).reduce((sum,tx)=>sum+(tx.type === 'in' ? tx.amount : -tx.amount),0);
       if (!Number.isSafeInteger(balance)) throw new Error('Saldo melewati batas angka aman.');
-      let report = this.blocked(source) || (await this.publication()).status;
+      const publication=await this.publication();
+      let report = this.blocked(source) || publication.status;
+      if (source.reconciliation.ok && ['PUBLISHED','UNCHANGED'].includes(report.state) && publication.hash!==signature(source.report)) report={state:'READY',message:'Pembukuan berubah. PDF jamaah belum sesuai; gunakan pratinjau atau perbarui laporan.'};
       if (source.reconciliation.ok && report.state === 'BLOCKED') report = {state:'READY',message:'Saldo buku sesuai. Laporan siap diperbarui.'};
       return {today,month,fund,checkpoint,balance,bookBalance:fund === 'MASJID' ? source.report.ending : null,
         income:selected.filter(tx=>tx.type === 'in').reduce(m.cashSum_,0),expense:selected.filter(tx=>tx.type === 'out').reduce(m.cashSum_,0),
-        transactions:selected.slice().sort(m.cashSort_).reverse().map(({date,code,description,type,amount})=>({date,code,description,type,amount})),report,
+        transactions:selected.slice().sort(m.cashSort_).reverse().map(tx=>transactionView(source,tx)),deletedTransactions:deletedViews(source,this.cfg,fund,month),report,
         pdfUrl:this.cfg.demo ? '/api/pdf/public' : `https://drive.google.com/file/d/${this.cfg.pdfId}/view`,
         automatic:this.cfg.automatic,demo:this.cfg.demo,reportStartDate:source.report.startDate,reportOpening:source.report.opening};
     });
@@ -48,6 +51,7 @@ export class CashService {
       const raw = input as Input;
       const tx = m.cashValidateInput_(raw,todayJakarta(),source.checkpoints[raw?.fund || 'MASJID']) as Input;
       const existing = findRequest(source,tx.id);
+      if (existing && !source.transactions.concat(source.phbiTransactions).some(row=>row.meta?.id===tx.id)) throw new Error('Kiriman ini pernah tersimpan dan sudah dihapus. Gunakan transaksi baru, jangan kirim ulang UUID lama.');
       if (existing && !m.cashSameInput_(existing,tx)) throw new Error('ID kiriman tidak boleh dipakai untuk transaksi berbeda.');
       let verified = source;
       if (!existing) {
@@ -70,6 +74,27 @@ export class CashService {
       if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)) throw new Error('ID kiriman tidak valid.');
       const transaction = findRequest(await this.adapter.source(),id);
       return {id,saved:!!transaction,transaction};
+    });
+  }
+  changeTransaction(input: unknown) {
+    return this.queue.run(async()=>{
+      const request=validatedChange(input);
+      await this.adapter.verifyTargets();
+      const before=await this.adapter.source(),duplicate=!!changeReceipt(before,request.id);
+      await this.adapter.change(request);
+      const after=await this.adapter.source(),receipt=changeReceipt(after,request.id);
+      if (!receipt || receipt.key!==request.key) throw new Error('Perubahan belum terverifikasi. Kirim ulang dengan ID perubahan yang sama.');
+      let report: Status;
+      try {report=this.cfg.automatic ? await this.publishLocked(false) : setup;}
+      catch (error) {report=await this.status({state:'ERROR',message:'Perubahan tersimpan. PDF belum diperbarui: '+(error as Error).message});}
+      return {changed:true,id:request.id,action:request.action,duplicate,report};
+    });
+  }
+  resolveChange(id: string) {
+    return this.queue.run(async()=>{
+      if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)) throw new Error('ID perubahan tidak valid.');
+      const receipt=changeReceipt(await this.adapter.source(),id);
+      return {id,changed:!!receipt};
     });
   }
   private async publishLocked(preview: boolean) {

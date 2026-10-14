@@ -154,7 +154,7 @@ body {
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-group.full { grid-column: 1 / -1; }
 .form-group label { font-size: 12px; color: var(--muted); font-weight: 600; }
-.form-group input {
+.form-group input, .history-filters input {
   padding: 12px 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
@@ -168,14 +168,14 @@ body {
   width: 100%;
 }
 .form-group input::placeholder { color: #bfcfc4; font-weight: 400; }
-.form-group input:focus {
+.form-group input:focus, .history-filters input:focus {
   outline: none;
   border-color: var(--green);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
 }
 .form-group input[type="number"] { font-variant-numeric: tabular-nums; }
-.form-group select {
+.form-group select, .history-filters select {
   padding: 12px 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
@@ -193,7 +193,7 @@ body {
   background-position: right 14px center;
   cursor: pointer;
 }
-.form-group select:focus {
+.form-group select:focus, .history-filters select:focus {
   outline: none;
   border-color: var(--green);
   background-color: #fff;
@@ -286,6 +286,9 @@ body {
 .card,.voice-card,.history-card{border:1px solid var(--border);box-shadow:0 3px 14px #173e2510}
 .account-row{max-width:788px;margin:16px auto 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:0 16px;font-size:12px;color:var(--muted)}
 .account-actions{display:flex;align-items:center;gap:12px}.account-actions a{color:var(--green)}
+.history-filters{display:flex;gap:10px;padding:0 20px 16px}.history-filters input{flex:1;min-width:0}.history-filters select{max-width:150px}
+.row-actions{display:flex;gap:8px;margin-top:8px}.row-actions button{font-size:12px;padding:5px 12px}.danger{color:#b22929;border-color:#efd1d1}.audit{font-size:12px;color:var(--muted);margin-top:8px}.audit p{margin-top:8px;line-height:1.5}.deleted-list{padding:16px 20px;border-top:1px solid var(--border)}
+dialog{width:min(480px,calc(100% - 32px));max-height:90vh;margin:auto;border:1px solid var(--border);border-radius:20px;padding:24px;color:var(--text);box-shadow:0 15px 60px #12332333}dialog::backdrop{background:#10261988}dialog h2{font-size:20px;margin-bottom:8px}dialog .hint{margin-bottom:16px}dialog fieldset{border:0}dialog .buttons{justify-content:flex-end;margin-top:18px}#changeNotice{white-space:pre-line}#changeReason{width:100%;resize:vertical;min-height:75px;font:inherit;padding:12px;border:1px solid var(--border);border-radius:12px}
 .demo-banner{max-width:788px;margin:14px auto 0;padding:12px 16px;border:1px solid #e4b65a;border-radius:12px;background:#fff5dd;color:#6a490b;font-size:13px;line-height:1.5}
 .login-panel{max-width:788px;margin:18px auto 0;padding:24px;background:white;border:1px solid var(--border);border-radius:20px}
 .login-panel h2{font-size:18px;margin-bottom:8px}.login-panel p{font-size:14px;line-height:1.6;color:var(--muted);margin-bottom:16px}
@@ -422,10 +425,29 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
       <div class="section-label">Rincian bulan ini</div>
       <span class="badge" id="historyCount">0 data</span>
     </div>
-    <div id="history"><div class="empty">Memuat transaksi…</div></div>
-    <div class="history-foot"><button id="refreshData" type="button" class="secondary" disabled>Muat ulang</button><span class="hint">Koreksi transaksi di Sheet.</span></div>
+    <div class="history-filters"><input id="historySearch" type="search" aria-label="Cari transaksi" placeholder="Cari keterangan atau pemegang uang"><select id="historyType" aria-label="Saring jenis transaksi"><option value="">Semua jenis</option><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
+<div id="history"><div class="empty">Memuat transaksi…</div></div>
+    <details id="deletedSection" class="deleted-list" hidden><summary id="deletedCount">Transaksi dihapus</summary><div id="deletedHistory"></div></details>
+    <div class="history-foot"><button id="refreshData" type="button" class="secondary" disabled>Muat ulang</button><span class="hint">Perubahan tersimpan dengan alasan dan riwayat.</span></div>
   </div>
 </div>
+
+<dialog id="changeDialog" aria-labelledby="changeTitle">
+  <h2 id="changeTitle">Edit transaksi</h2><p id="changeSummary" class="hint"></p>
+  <form id="changeForm">
+    <fieldset id="changeFields"><div class="form-grid">
+      <div class="form-group"><label for="changeDate">Tanggal</label><input id="changeDate" type="date" required></div>
+      <div class="form-group"><label for="changeCode">Pemegang uang</label><select id="changeCode"><option>K1</option><option>K2</option><option>K3</option></select></div>
+      <div class="form-group full"><label for="changeType">Jenis transaksi</label><select id="changeType"><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
+      <div class="form-group full"><label for="changeDescription">Keterangan</label><input id="changeDescription" required maxlength="500"></div>
+      <div class="form-group full"><label for="changeAmount">Jumlah (Rp)</label><input id="changeAmount" required inputmode="numeric"></div>
+    </div></fieldset>
+    <div class="form-group"><label for="changeReason">Alasan perubahan</label><textarea id="changeReason" required minlength="3" maxlength="300" placeholder="Contoh: nominal pada bukti berbeda"></textarea></div>
+    <p id="changeNotice" class="hint" role="status"></p>
+    <button id="changeCheck" type="button" class="secondary" hidden>Periksa perubahan sebelumnya</button>
+    <div class="buttons"><button id="changeCancel" type="button" class="secondary">Batal</button><button id="changeSubmit" type="submit" class="btn-primary">Simpan perubahan</button></div>
+  </form>
+</dialog>
 
 <script>let recognition = null;
 let isListening = false;
@@ -658,7 +680,8 @@ function toggleVoice() {
     let STORAGE_KEY = 'kas-masjid-pending-v1';
     const rupiah = value => (Number(value) < 0 ? '−' : '') + 'Rp' + Math.abs(Number(value)).toLocaleString('id-ID');
     const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    let type = 'in', dashboard = null, pending = null, busy = false, loadVersion = 0;
+    let type = 'in', dashboard = null, pending = null, pendingChange = null, editing = null, busy = false, loadVersion = 0;
+    let CHANGE_KEY = 'kas-masjid-change-pending-v1';
     let connected = false, csrf = '', demo = false;
 
     async function api(method, ...args) {
@@ -667,6 +690,8 @@ function toggleVoice() {
         getDashboard: ['/api/dashboard?' + new URLSearchParams({fund:args[0] || 'MASJID',month:args[1] || ''}), 'GET'],
         saveTransaction: ['/api/transactions', 'POST'],
         resolvePendingRequest: ['/api/transactions/' + encodeURIComponent(args[0]), 'GET'],
+        changeTransaction: ['/api/changes','POST'],
+        resolveChange: ['/api/changes/' + encodeURIComponent(args[0]),'GET'],
         previewPublicPdf: ['/api/pdf/preview', 'POST'],
         refreshPublicPdf: ['/api/pdf/refresh', 'POST']
       };
@@ -699,8 +724,9 @@ function toggleVoice() {
     function setBusy(value) {
       busy = value;
       ['fund','month','date','code','description','amount','incomeType','expenseType','refreshData','refreshPdf','previewPdf','submitButton','checkPending','resetForm','voice-btn'].forEach(id => {
-        $(id).disabled = value || !connected || !dashboard;
+        $(id).disabled = value || !connected || !dashboard || (!!pendingChange && !['refreshData','checkPending'].includes(id));
       });
+      document.querySelectorAll('.row-actions button').forEach(button=>{button.disabled=value || !!pending || !!pendingChange || button.dataset.locked==='true';});
       $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
     }
     function renderReport(status) {
@@ -736,20 +762,100 @@ function toggleVoice() {
       $('pdfLink').hidden = !data.pdfUrl;
       if (validPdfUrl(data.pdfUrl)) $('pdfLink').href = data.pdfUrl;
       else { $('pdfLink').hidden = true; $('pdfLink').removeAttribute('href'); }
-      $('historyCount').textContent = data.transactions.length + ' transaksi';
-      $('history').replaceChildren();
-      data.transactions.forEach(tx => {
-        const row = document.createElement('div'), info = document.createElement('div'), description = document.createElement('div'), meta = document.createElement('div'), amount = document.createElement('div');
-        row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
-        meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
-        amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
-        info.append(description,meta); row.append(info,amount); $('history').append(row);
-      });
-      if (!data.transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
+      renderHistory();
       $('connection').textContent = demo ? 'Demo aktif' : 'Terhubung';
       $('conn-dot').className = 'conn-dot';
       setBusy(busy);
     }
+    function renderHistory() {
+      if (!dashboard) return;
+      const query=$('historySearch').value.trim().toLowerCase(),kind=$('historyType').value;
+      const transactions=dashboard.transactions.filter(tx=>(!kind || tx.type===kind) && [tx.description,tx.code,displayDate(tx.date)].join(' ').toLowerCase().includes(query));
+      $('historyCount').textContent = transactions.length + ' dari ' + dashboard.transactions.length + ' transaksi';
+      $('history').replaceChildren();
+      transactions.forEach(tx => {
+        const row = document.createElement('div'), info = document.createElement('div'), description = document.createElement('div'), meta = document.createElement('div'), amount = document.createElement('div');
+        row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
+        meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
+        amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
+        info.append(description,meta); addActions(info,tx,false); row.append(info,amount); $('history').append(row);
+      });
+      if (!transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = dashboard.transactions.length ? 'Tidak ada transaksi yang cocok.' : 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
+      const deleted=dashboard.deletedTransactions || [];
+      $('deletedSection').hidden=!deleted.length;$('deletedCount').textContent='Transaksi dihapus ('+deleted.length+')';$('deletedHistory').replaceChildren();
+      deleted.forEach(tx=>{
+        const row=document.createElement('div'),label=document.createElement('p');row.className='transaction';
+        label.textContent=displayDate(tx.date)+' · '+tx.description+' · '+rupiah(tx.amount);row.append(label);addActions(row,tx,true);$('deletedHistory').append(row);
+      });
+      setBusy(busy);
+    }
+    function addActions(parent,tx,deleted) {
+      const actions=document.createElement('div');actions.className='row-actions';
+      (deleted ? [['restore','Pulihkan']] : [['edit','Edit'],['delete','Hapus']]).forEach(([action,label])=>{
+        const button=document.createElement('button');button.type='button';button.className='secondary'+(action==='delete' ? ' danger' : '');button.textContent=label;button.dataset.locked=String(!tx.editable);button.setAttribute('aria-label',label+' '+tx.description);
+        if (!tx.editable) button.title='Sudah termasuk hitung fisik terakhir; koreksi langsung di Sheet.';
+        button.addEventListener('click',()=>openChange(action,tx));actions.append(button);
+      });parent.append(actions);
+      if (tx.changes?.length) {
+        const detail=document.createElement('details'),summary=document.createElement('summary');detail.className='audit';summary.textContent='Riwayat perubahan ('+tx.changes.length+')';detail.append(summary);
+        tx.changes.slice().reverse().forEach(event=>{
+          const text=document.createElement('p');text.textContent=({edit:'Diedit',delete:'Dihapus',restore:'Dipulihkan'}[event.action] || 'Diubah')+' · '+new Date(event.at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+'\n'+event.reason;detail.append(text);
+        });parent.append(detail);
+      }
+    }
+    function openChange(action,tx,restoring=false) {
+      if ((busy || pending || pendingChange) && !restoring) {notice('Selesaikan kiriman yang belum terkonfirmasi dahulu.',true);return;}
+      editing={action,tx};$('changeTitle').textContent={edit:'Edit transaksi',delete:'Hapus transaksi',restore:'Pulihkan transaksi'}[action];
+      $('changeSummary').textContent=displayDate(tx.date)+' · '+tx.description+' · '+rupiah(tx.amount)+(action==='delete' ? '\nTransaksi akan dikeluarkan dari saldo dan laporan. Catatan tetap dapat dipulihkan.' : '');
+      const formData=restoring && action==='edit' ? pendingChange.input : tx;
+      $('changeDate').value=formData.date;$('changeDate').min=dashboard.checkpoint.date;$('changeDate').max=dashboard.today;$('changeCode').value=formData.code;$('changeType').value=formData.type;$('changeDescription').value=formData.description;$('changeAmount').value=formData.amount;
+      $('changeFields').hidden=action!=='edit';$('changeFields').disabled=action!=='edit';$('changeReason').value=restoring ? pendingChange.reason : '';
+      $('changeNotice').textContent=restoring ? 'Perubahan sebelumnya belum terkonfirmasi. Kirim ulang atau periksa statusnya.' : '';
+      setChangeBusy(false);if (!$('changeDialog').open) $('changeDialog').showModal();
+    }
+    function setChangeBusy(value) {
+      ['changeDate','changeCode','changeType','changeDescription','changeAmount','changeReason'].forEach(id=>{$(id).disabled=value || !!pendingChange;});
+      $('changeCancel').disabled=value || !!pendingChange;$('changeCheck').hidden=!pendingChange;$('changeCheck').disabled=value;$('changeSubmit').disabled=value;
+      $('changeSubmit').textContent=value ? 'Memproses…' : pendingChange ? 'Kirim ulang perubahan' : {edit:'Simpan perubahan',delete:'Hapus transaksi',restore:'Pulihkan transaksi'}[editing?.action || 'edit'];
+    }
+    function persistChange(value) {
+      if (value) {
+        value={...value,fund:dashboard.fund,month:dashboard.month,view:{fund:editing.tx.fund,type:editing.tx.type,code:editing.tx.code,date:editing.tx.date,description:editing.tx.description,amount:editing.tx.amount,key:editing.tx.key,revision:editing.tx.revision,editable:editing.tx.editable}};
+        localStorage.setItem(CHANGE_KEY,JSON.stringify(value));
+      } else localStorage.removeItem(CHANGE_KEY);
+      pendingChange=value;setBusy(busy);
+    }
+    $('changeForm').addEventListener('submit',async event=>{
+      event.preventDefault();if (busy || !editing) return;
+      try {
+        if (!pendingChange) {
+          const request={id:crypto.randomUUID(),key:editing.tx.key,revision:editing.tx.revision,action:editing.action,reason:$('changeReason').value.trim()};
+          if (editing.action==='edit') {
+            const raw=$('changeAmount').value.trim();if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw)) throw new Error('Gunakan jumlah Rupiah bulat.');
+            request.input={fund:dashboard.fund,type:$('changeType').value,code:$('changeCode').value,date:$('changeDate').value,description:$('changeDescription').value.trim(),amount:Number(raw.replace(/\./g,''))};
+          }
+          persistChange(request);
+        }
+        setBusy(true);setChangeBusy(true);$('changeNotice').textContent='Menyimpan perubahan dan memeriksa laporan…';
+        const result=await api('changeTransaction',pendingChange);
+        if (!result.changed || result.id!==pendingChange.id) throw new Error('Perubahan belum terkonfirmasi.');
+        persistChange(null);$('changeDialog').close();editing=null;
+        notice('Perubahan berhasil tersimpan. '+result.report.message,result.report.state==='ERROR');await loadDashboard();
+      } catch(error) {$('changeNotice').textContent=error.message+(pendingChange ? '\nGunakan kirim ulang dengan identitas yang sama, atau periksa status sebelum memperbaiki draf.' : '');}
+      finally {setBusy(false);setChangeBusy(false);}
+    });
+    $('changeCheck').addEventListener('click',async()=>{
+      if (!pendingChange || busy) return;setBusy(true);setChangeBusy(true);
+      try {
+        const result=await api('resolveChange',pendingChange.id);if (result.id!==pendingChange.id) throw new Error('Identitas perubahan belum dapat dipastikan.');
+        persistChange(null);$('changeDialog').close();editing=null;
+        notice(result.changed ? 'Perubahan sebelumnya sudah tersimpan.' : 'Perubahan belum tersimpan. Muat ulang lalu buka transaksi terbaru untuk mencoba kembali.');await loadDashboard();
+      } catch(error) {$('changeNotice').textContent=error.message;}
+      finally {setBusy(false);setChangeBusy(false);}
+    });
+    $('changeCancel').addEventListener('click',()=>{if (!pendingChange && !busy){$('changeDialog').close();editing=null;}});
+    $('changeDialog').addEventListener('cancel',event=>{if (pendingChange || busy) event.preventDefault();});
+    ['historySearch','historyType'].forEach(id=>$(id).addEventListener('input',renderHistory));
     async function loadDashboard() {
       const version = ++loadVersion;
       try {
@@ -792,7 +898,7 @@ function toggleVoice() {
     }
     $('transactionForm').addEventListener('submit', async event => {
       event.preventDefault();
-      if (busy || !dashboard || !connected) return;
+      if (busy || pendingChange || !dashboard || !connected) return;
       try {
         const payload = readInput();
         if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
@@ -872,7 +978,17 @@ function toggleVoice() {
         $('accountRow').hidden=!connected;
         $('loginLink').textContent=demo ? 'Buka demo aplikasi' : 'Masuk dengan Google';
         $('loginText').textContent=demo ? 'Coba pencatatan, pemisahan PHBI, dan laporan PDF menggunakan data contoh.' : 'Masuk dengan akun pemilik untuk melihat pembukuan dan mencatat transaksi.';
-        if (connected) {restorePending();await loadDashboard();}
+        if (connected) {
+          if (demo) CHANGE_KEY='kas-masjid-demo-change-pending-v1';
+          const saved=JSON.parse(localStorage.getItem(CHANGE_KEY) || 'null');
+          if (saved?.fund) {$('fund').value=saved.fund;$('month').value=saved.month || '';}
+          restorePending();await loadDashboard();
+          if (saved && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(saved.id)) {
+            pendingChange=saved;
+            const target=saved.view || dashboard.transactions.concat(dashboard.deletedTransactions || []).find(tx=>tx.key===saved.key) || saved.input;
+            if (target) openChange(saved.action,target,true);
+          }
+        }
         else {
           $('connection').textContent='Belum masuk';$('conn-dot').className='conn-dot off';
           $('reportMessage').textContent='Masuk untuk melihat status laporan.';

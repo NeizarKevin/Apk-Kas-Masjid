@@ -4,9 +4,10 @@ Dibangun dari remote `main` commit `48d3f02258d1a6526c66f5b0bb82b46e746bb541`, b
 
 ## Cakupan
 
-- Build TypeScript dan regresi 44 tes lama.
+- Build TypeScript dan 75 tes otomatis, termasuk regresi 44 tes lama.
 - Adapter: jurnal tunggal, write A:F, formula sebagai teks, PHBI null, metadata, UUID, checkpoint, template, target ID lama, checksum, dan izin.
 - Layanan: retry bersamaan, restart, respons hilang sesudah commit, koreksi tanggal lama, PDF gagal setelah simpan, sumber berubah, signature, dan PHBI terpisah.
+- Koreksi: edit/hapus/pulihkan pada baris yang sama, note cadangan, alasan dan riwayat, UUID perubahan setelah respons putus, konflik versi, larangan perpindahan dana, proteksi checkpoint, dan kompatibilitas parser Apps Script lama. Browser juga menguji pencarian serta retry perubahan setelah reload.
 - Keamanan: endpoint anonim, CSRF/Origin, PKCE/state, email berbeda, rotasi sesi, token terenkripsi terikat pemilik, request size, Host, CSP akhir baris Windows.
 - Chromium nyata pada 390 × 844 dan 1280 × 900: login/logout, form, PHBI, UUID sesudah respons diputus, teks literal, pratinjau tiga halaman, dan delapan halaman rincian panjang dengan header lanjutan.
 - Semua halaman PDF contoh dirender dan diperiksa visual. PDF publik asli juga diperiksa baca saja: tiga halaman A4, isi cocok dengan jurnal dan checkpoint saat pembacaan. Snapshot dan nominal asli disimpan privat di luar Git.

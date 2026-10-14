@@ -25,6 +25,7 @@ Penguncian proses di STATE_DIR menolak server kedua pada volume yang sama. Volum
 3. Biarkan `AUTO_PUBLISH_ENABLED=false`. Buat pratinjau pada file privat lama; periksa semua halaman dan bandingkan hasil pembukuan.
 4. Uji transaksi nyata yang memang akan dicatat, termasuk baca ulang dan UUID retry. Jangan memasukkan transaksi dummy ke Sheet produksi. Rekonsiliasi transaksi di Sheet asli.
 5. Jika hasil sesuai, aktifkan publikasi di server (`AUTO_PUBLISH_ENABLED=true`) dan hentikan publikasi/trigger Apps Script lama lewat `disableAutomation`. Jangan biarkan dua penerbit PDF berjalan bersamaan. Aplikasi lama dan versi deployment tetap tersedia untuk rollback.
+   Untuk memakai edit/hapus/pulihkan, hentikan penggunaan form input Apps Script lama. Parser lama tetap membaca baris aktif yang sama, tetapi mekanisme retry lama tidak mengenali penanda transaksi yang dihapus oleh backend baru.
 6. Periksa PDF lewat QR lama, izin, checksum, periode, rincian, dan arsip privat. Tutup browser, edit transaksi yang memang perlu dikoreksi di Sheet, lalu pastikan polling server mendeteksi perubahan.
 
 Sheet dan Drive tidak memiliki transaksi atomik lintas layanan; edit manual tepat setelah pemeriksaan terakhir bisa muncul pada polling berikutnya. Backend menahan publikasi saat sumber berubah selama ekspor atau saldo tidak cocok. Jangan mengubah baseline untuk menutup selisih.
