@@ -231,8 +231,23 @@ function cashAppend_(state, tx) {
     return c;
   });
   // Typed stringValue keeps a description beginning "=" as literal text, not a formula.
-  Sheets.Spreadsheets.batchUpdate({requests: [{appendCells: {sheetId: dest.id,
-    rows: [{values: cells}], fields: 'userEnteredValue,userEnteredFormat,dataValidation,note'}}]}, cfg.sourceId);
+  var fields = 'userEnteredValue,userEnteredFormat,dataValidation,note', requests = [];
+  if (dest.journal) {
+    // Wallet formulas in I:Z must not push the next A:F transaction to row 41.
+    var next = grid.rows.length;
+    while (next > 1 && (grid.rows[next - 1] || []).every(emptyCashCell_) &&
+        ((grid.notes || [])[next - 1] || []).every(emptyCashCell_)) next--;
+    var native = state.metadata && state.metadata.sheets.filter(function (s) {
+      return s.properties.sheetId === dest.id;
+    })[0];
+    if (native && next >= native.properties.gridProperties.rowCount)
+      requests.push({appendDimension: {sheetId: dest.id, dimension: 'ROWS',
+        length: next - native.properties.gridProperties.rowCount + 1}});
+    requests.push({updateCells: {range: {sheetId: dest.id, startRowIndex: next,
+      endRowIndex: next + 1, startColumnIndex: 0, endColumnIndex: width},
+      rows: [{values: cells}], fields: fields}});
+  } else requests.push({appendCells: {sheetId: dest.id, rows: [{values: cells}], fields: fields}});
+  Sheets.Spreadsheets.batchUpdate({requests: requests}, cfg.sourceId);
 }
 function cashStatus_(status) {
   PropertiesService.getScriptProperties().setProperty('REPORT_STATUS', JSON.stringify(status));

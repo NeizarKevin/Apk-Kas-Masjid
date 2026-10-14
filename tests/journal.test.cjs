@@ -62,14 +62,15 @@ test('Source selects only the marked journal even when old split tabs still cont
   assert.throws(()=>g.cashSource_(cfg),/Lebih dari satu jurnal/);
 });
 
-test('Appending either cash flow uses the same journal and puts its amount in the matching column', () => {
+test('Cash flows use the next A:F journal row even when wallet formulas occupy rows farther down', () => {
   const {gas:g}=loadGas();let write;
-  g.Sheets={Spreadsheets:{get:()=>({sheets:[{data:[{rowData:[{values:[]}]}]}]}),batchUpdate:p=>{write=p.requests[0].appendCells;}}};
-  const state={cfg:{sourceId:'source_private',journalId:20,writeInId:1,writeOutId:2,phbiId:3},ledger:{streams:[{id:20,title:'Apk Kas Masjid',type:'in',journal:true},{id:20,title:'Apk Kas Masjid',type:'out',journal:true}]},grids:[journal([])],checkpoints:{MASJID:opening,PHBI:{date:'2026-10-08',amount:300,holders:{K1:300,K2:null,K3:null}}},reportBaseline:opening};
+  g.Sheets={Spreadsheets:{get:()=>({sheets:[{data:[{rowData:[{values:[]}]}]}]}),batchUpdate:p=>{write=p.requests.find(r=>r.updateCells||r.appendCells);}}};
+  const state={cfg:{sourceId:'source_private',journalId:20,writeInId:1,writeOutId:2,phbiId:3},ledger:{streams:[{id:20,title:'Apk Kas Masjid',type:'in',journal:true},{id:20,title:'Apk Kas Masjid',type:'out',journal:true}]},grids:[journal([['2026-10-09','K1','Existing row',50,'','']])],metadata:{sheets:[{properties:{sheetId:20,gridProperties:{rowCount:1000,columnCount:26}}}]},checkpoints:{MASJID:opening,PHBI:{date:'2026-10-08',amount:300,holders:{K1:300,K2:null,K3:null}}},reportBaseline:opening};
   for(const type of ['in','out']) {
     const entry={id:'22222222-2222-4222-8222-222222222222',fund:'MASJID',type,code:'K1',date:'2026-10-09',description:'=literal description',amount:75};
-    g.cashAppend_(state,entry);const cells=write.rows[0].values;
-    assert.equal(write.sheetId,20);assert.equal(cells.length,6);
+    g.cashAppend_(state,entry);const cells=write.updateCells.rows[0].values;
+    assert.equal(write.updateCells.range.sheetId,20);assert.equal(cells.length,6);
+    assert.equal(write.updateCells.range.startRowIndex,2);
     assert.equal(cells[type==='in'?3:4].userEnteredValue.numberValue,75);
     assert.equal(cells[type==='in'?4:3].userEnteredValue.stringValue,'');
     assert.equal(cells[2].userEnteredValue.stringValue,'=literal description');
@@ -77,5 +78,15 @@ test('Appending either cash flow uses the same journal and puts its amount in th
   }
   state.phbi={title:'RAW PHBI'};state.grids.push({id:3,rows:[header]});state.phbiBaseline=state.checkpoints.PHBI;
   g.cashAppend_(state,{id:'33333333-3333-4333-8333-333333333333',fund:'PHBI',type:'out',code:'K1',date:'2026-10-09',description:'Separate PHBI',amount:25});
-  assert.equal(write.sheetId,3);assert.equal(write.rows[0].values[4].userEnteredValue.numberValue,25);
+  assert.equal(write.appendCells.sheetId,3);assert.equal(write.appendCells.rows[0].values[4].userEnteredValue.numberValue,25);
+});
+
+test('A full journal grows its row grid before writing the next transaction in the same batch', () => {
+  const {gas:g}=loadGas();let requests;
+  g.Sheets={Spreadsheets:{get:()=>({sheets:[{data:[{rowData:[{values:[]}]}]}]}),batchUpdate:p=>{requests=p.requests;}}};
+  const j=journal([['2026-10-09','K1','Existing row',50,'','']]);
+  const state={cfg:{sourceId:'source_private',journalId:20},metadata:{sheets:[{properties:{sheetId:20,gridProperties:{rowCount:2}}}]},ledger:{streams:[{id:20,title:j.title,type:'out',journal:true}]},grids:[j],checkpoints:{MASJID:opening},reportBaseline:opening};
+  g.cashAppend_(state,{id:'44444444-4444-4444-8444-444444444444',fund:'MASJID',type:'out',code:'K1',date:'2026-10-09',description:'New row',amount:25});
+  assert.deepEqual(json(requests[0]),{appendDimension:{sheetId:20,dimension:'ROWS',length:1}});
+  assert.equal(requests[1].updateCells.range.startRowIndex,2);
 });
