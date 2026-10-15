@@ -32,6 +32,10 @@ Enam tes tambahan mencakup enkripsi record yang terikat nama, manipulasi ciphert
 
 ## Batas pengujian
 
+Antarmuka Midnight diperiksa pada Chromium dengan lebar 320, 390, 768, 1280, dan 1440 piksel: posisi form/riwayat, batas kontrol, angka besar dan keterangan panjang, serta tombol dialog tetap berada dalam viewport termasuk layar 320 × 650. Susunan desktop memakai dua kolom; HP satu kolom tanpa penempatan grid paksa yang mendahulukan riwayat. Dialog memiliki satu area isi yang bergulir dan footer tindakan tetap terlihat.
+
+Hapus banyak diuji pada data demo: pilih hasil pencarian, pengosongan pilihan saat filter berubah, pembatalan sebelum konfirmasi tanpa write, batas 50 dan baris terkunci, UUID yang sama setelah respons commit hilang dan reload, alasan tersimpan, dua tombstone tanpa riwayat ganda, pemulihan satu transaksi, jeda, konflik versi karena edit lain saat antrean berjalan, serta pemeriksaan status sebelum membatalkan sisa. Konflik menghasilkan satu HTTP 400 yang memang diharapkan dalam tes; tidak ada galat JavaScript. Tidak ada transaksi asli yang dihapus untuk pengujian.
+
 Impor CSV diuji dengan pratinjau tanpa write, UTF-8 BOM, kutipan/newline, pemisah koma/titik koma, tanggal dan Rupiah, data invalid, batas ukuran/baris, kandidat duplikat, PHBI, respons simpan hilang, dan UUID saat retry. Endpoint template/pratinjau menolak akses anonim serta CSRF/Origin salah; batas JSON yang lebih besar hanya berlaku pada pratinjau impor. Browser HP/desktop juga membuktikan pratinjau tanpa write, kandidat duplikat tidak dicentang otomatis, teks literal, retry dengan UUID yang sama sesudah reload, jeda/lanjut, pembatalan sesudah respons hilang, dan PHBI terpisah. Tidak ada CSV contoh yang diimpor ke pembukuan produksi.
 
 Tidak ada transaksi dummy, edit nominal, hapus, atau pemulihan yang dilakukan pada jurnal asli. Mutasi tersebut diuji dengan data sintetis dan mock API; penulisan Sheets nyata diuji melalui workbook laporan asli, tanpa mengubah pembukuan kas. Perubahan manual pada jurnal produksi tidak dibuat hanya untuk pengujian.

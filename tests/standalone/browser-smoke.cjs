@@ -121,14 +121,93 @@ async function run() {
     await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor dijeda')&&!document.getElementById('importSubmit').disabled);
     assert.match(await page.locator('#importSummary').textContent(),/1 tersimpan/);
     await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor selesai: 2'));await page.locator('#importClose').click();
+    // Bulk deletion is bounded to filtered, editable rows and survives a committed response being lost.
+    await page.unroute('**/api/changes');
+    const beforeBulk=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();
+    await page.locator('#fund').selectOption('MASJID');await page.waitForFunction(()=>document.getElementById('formFund').textContent==='Dana: Kas masjid');
+    await page.locator('#selectMode').click();await page.locator('#selectAll').check();assert.ok(await page.locator('#history input:checked').count()>2);
+    await page.locator('#historySearch').fill('Impor jeda');assert.equal(await page.locator('#history input:checked').count(),0);assert.equal(await page.locator('#deleteSelected').isDisabled(),true);
+    await page.locator('#selectAll').check();assert.equal(await page.locator('#history input:checked').count(),2);
+    await page.locator('#deleteSelected').click();await page.locator('#bulkClose').click();
+    assert.equal((await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json()).balance,beforeBulk.balance);
+    await page.locator('#deleteSelected').click();await page.locator('#bulkReason').fill('Hapus dua catatan contoh yang ganda');
+    const bulkIds=[];let lostBulk=true;
+    await page.route('**/api/changes',async route=>{bulkIds.push(route.request().postDataJSON().id);const response=await route.fetch();if(lostBulk){lostBulk=false;await route.abort('failed');}else await route.fulfill({response});});
+    await page.locator('#bulkSubmit').click();await page.waitForFunction(()=>document.getElementById('bulkNotice').textContent.includes('Penghapusan terhenti')&&!document.getElementById('bulkSubmit').disabled);
+    assert.equal(await page.locator('#submitButton').isDisabled(),true);await page.reload();
+    await page.waitForFunction(()=>document.getElementById('bulkDialog').open && document.getElementById('bulkNotice').textContent.includes('sebelumnya'));
+    assert.equal(await page.locator('#bulkReason').inputValue(),'Hapus dua catatan contoh yang ganda');assert.equal(await page.locator('#bulkReason').isDisabled(),true);
+    await page.locator('#bulkSubmit').click();await page.waitForFunction(()=>document.getElementById('bulkNotice').textContent.includes('Selesai: 2')&&!document.getElementById('bulkClose').disabled);
+    assert.equal(bulkIds.length,3);assert.equal(bulkIds[0],bulkIds[1]);assert.notEqual(bulkIds[1],bulkIds[2]);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('kas-masjid-demo-bulk-delete-v1')),null);
+    const afterBulk=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();assert.equal(afterBulk.balance,beforeBulk.balance-30);
+    assert.equal(afterBulk.deletedTransactions.filter(tx=>tx.description.startsWith('Impor jeda')).length,2);assert.ok(afterBulk.deletedTransactions.filter(tx=>tx.description.startsWith('Impor jeda')).every(tx=>tx.changes.length===1));
+    assert.equal(afterBulk.transactions.filter(tx=>!tx.description.startsWith('Impor jeda')).length,beforeBulk.transactions.length-2);
+    await page.locator('#bulkClose').click();await page.locator('#deletedCount').click();
+    await page.getByRole('button',{name:'Pulihkan Impor jeda pertama',exact:true}).click();await page.locator('#changeReason').fill('Pulihkan transaksi pilihan sesuai bukti');await page.locator('#changeSubmit').click();
+    await page.waitForFunction(()=>!document.getElementById('changeDialog').open&&!document.getElementById('submitButton').disabled);
+    assert.equal((await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json()).balance,beforeBulk.balance-20);
+    // Stop on a stale row revision; cancelling the remainder resolves the last attempted ID first.
+    await page.locator('#openImport').click();
+    await page.locator('#importFile').setInputFiles({name:'bulk-konflik.csv',mimeType:'text/csv',buffer:Buffer.from('Tanggal;Dana;Jenis;Bendahara;Keterangan;Jumlah\n2026-10-10;MASJID;in;K1;Bulk konflik A;300\n2026-10-10;MASJID;in;K1;Bulk konflik B;400')});
+    await page.waitForFunction(()=>document.getElementById('importSummary').textContent.includes('2 dipilih'));await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor selesai: 2'));await page.locator('#importClose').click();
+    const conflictStart=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();
+    await page.locator('#historySearch').fill('Bulk konflik');await page.locator('#selectMode').click();await page.locator('#selectAll').check();await page.locator('#deleteSelected').click();await page.locator('#bulkReason').fill('Pembersihan catatan contoh');
+    await page.unroute('**/api/changes');let intervened=false,conflicted;
+    const session=await (await context.request.get(origin+'/api/session')).json();
+    await page.route('**/api/changes',async route=>{
+      const req=route.request().postDataJSON(),response=await route.fetch();
+      if(!intervened){intervened=true;const other=conflictStart.transactions.find(tx=>tx.description.startsWith('Bulk konflik')&&tx.key!==req.key);conflicted=other;
+        const changed=await context.request.post(origin+'/api/changes',{headers:{'X-CSRF-Token':session.csrf,Origin:origin},data:{id:crypto.randomUUID(),key:other.key,revision:other.revision,action:'edit',reason:'Bukti baru datang saat antrean berjalan',input:{fund:other.fund,type:other.type,code:other.code,date:other.date,description:other.description+' diperiksa',amount:other.amount}}});assert.equal(changed.status(),200);
+        await page.locator('#bulkStop').click();
+      }await route.fulfill({response});
+    });
+    await page.locator('#bulkSubmit').click();await page.waitForFunction(()=>document.getElementById('bulkNotice').textContent.includes('Penghapusan dijeda')&&!document.getElementById('bulkSubmit').disabled);
+    assert.match(await page.locator('#bulkSummary').textContent(),/1 dihapus/);
+    await page.locator('#bulkSubmit').click();await page.waitForFunction(()=>document.getElementById('bulkNotice').textContent.includes('Penghapusan terhenti')&&!document.getElementById('bulkDiscard').disabled);
+    assert.match(await page.locator('#bulkNotice').textContent(),/Transaksi berubah sejak dibuka/);
+    assert.deepEqual(errors,['Failed to load resource: the server responded with a status of 400 (Bad Request)']);errors.length=0;
+    await page.locator('#bulkDiscard').click();await page.waitForFunction(()=>!document.getElementById('bulkDialog').open);
+    const conflictEnd=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();assert.equal(conflictEnd.balance,conflictStart.balance-(700-conflicted.amount));assert.ok(conflictEnd.transactions.some(tx=>tx.key===conflicted.key&&tx.description.endsWith('diperiksa')));assert.match(await page.locator('#notice').textContent(),/1 transaksi/);
+    await page.unroute('**/api/changes');await page.locator('#historySearch').fill('');
+    // Responsive bounds include real controls, large balances and a long literal description.
+    await page.evaluate(()=>{document.getElementById('notice').hidden=true;document.getElementById('deletedSection').open=false;});
+    const responsive=[];
+    for(const width of [320,390,768,1280,1440]){
+      await page.setViewportSize({width,height:900});
+      const bounds=await page.evaluate(()=>{
+        const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom};};
+        const outside=Array.from(document.querySelectorAll('input:not([type=checkbox]),select,textarea,.sum-card,.card,.history-card')).filter(el=>el.getClientRects().length).filter(el=>{const r=el.getBoundingClientRect();return r.x<0||r.right>innerWidth+1;}).map(el=>el.id||el.className);
+        return {overflow:document.documentElement.scrollWidth>innerWidth,outside,entry:rect('entry'),history:rect('records'),report:rect('report')};
+      });
+      assert.equal(bounds.overflow,false,'Overflow at '+width);assert.deepEqual(bounds.outside,[],'Clipped controls at '+width);
+      if(width>=900){assert.ok(bounds.entry.right<=bounds.history.x);assert.ok(Math.abs(bounds.entry.y-bounds.history.y)<1);}else assert.ok(bounds.entry.bottom<bounds.history.y);
+      responsive.push(width);
+      await page.locator('#selectMode').click();await page.locator('#selectAll').check();await page.locator('#deleteSelected').click();
+      const footer=await page.locator('#bulkSubmit').boundingBox();assert.ok(footer.y>=0&&footer.y+footer.height<=900,'Bulk action outside viewport at '+width);
+      await page.screenshot({path:join(evidence,'bulk-'+width+'.png')});await page.locator('#bulkClose').click();await page.locator('#selectMode').click();
+    }
+    await page.evaluate(()=>{document.getElementById('currentBalance').textContent='Rp999.999.999.999';document.getElementById('totalIncome').textContent='Rp999.999.999.999';document.getElementById('history').querySelector('.description').textContent='DeskripsiSangatPanjang'.repeat(24);});
+    await page.setViewportSize({width:320,height:650});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.locator('#openImport').click();let footer=await page.locator('#importSubmit').boundingBox();assert.ok(footer.y>=0&&footer.y+footer.height<=650);await page.locator('#importClose').click();
+    await page.reload();await page.waitForFunction(()=>document.getElementById('connection').textContent==='Demo aktif');
+    // Fifty is the selection cap; checkpoint-protected rows cannot be selected even by select-all.
+    await page.route('**/api/dashboard?*',async route=>{const response=await route.fetch(),data=await response.json(),tx=data.transactions[0];data.transactions=Array.from({length:52},(_,i)=>({...tx,key:'999:'+(i+2),description:'Pilihan batas '+i,editable:i!==51,changes:[]}));await route.fulfill({response,json:data});});
+    await page.locator('#refreshData').click();await page.waitForFunction(()=>document.getElementById('historyCount').textContent.includes('52 dari 52'));
+    await page.locator('#selectMode').click();await page.locator('#selectAll').check();assert.equal(await page.locator('#history input:checked').count(),50);assert.equal(await page.getByRole('checkbox',{name:'Pilih Pilihan batas 51',exact:true}).isDisabled(),true);
+    await page.getByRole('checkbox',{name:'Pilih Pilihan batas 50',exact:true}).click();assert.equal(await page.locator('#history input:checked').count(),50);assert.match(await page.locator('#notice').textContent(),/Maksimal 50/);
+    await page.locator('#selectAll').uncheck();assert.equal(await page.locator('#history input:checked').count(),0);
+    await page.unroute('**/api/dashboard?*');await page.reload();await page.waitForFunction(()=>document.getElementById('connection').textContent==='Demo aktif');
+    await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:join(evidence,'midnight-desktop.png'),fullPage:true});
+    await page.setViewportSize({width:390,height:844});await page.screenshot({path:join(evidence,'midnight-mobile.png'),fullPage:true});
     assert.deepEqual(errors,[]);
     await page.locator('#logout').click();await page.waitForSelector('#loginPanel:not([hidden])');
     assert.equal((await context.request.get(origin+'/api/dashboard')).status(),401);
     await context.close();
     // The process worker publishes at startup without any logged-in browser.
     assert.ok((await readFile(join(dir,'public.pdf'))).length>1000);
-    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,rememberDevice:true,reopenWithoutLogin:true,deferredPdf:true,manualPdfRefresh:true,csvPreview:true,csvDuplicateWarnings:true,csvRetryAcrossReload:true,csvPhbiSeparated:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
-    console.log('Browser smoke passed: CSV preview, duplicate warnings, retry across reload, pause/resume/cancel, PHBI, mobile/desktop, remembered login, edit/delete/restore, deferred/manual PDF, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
+    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,midnight:true,responsive,bulkFilteredSelection:true,bulkRetryAcrossReload:true,bulkRestore:true,bulkPause:true,bulkConflict:true,bulkCancelAfterResolve:true,dialogFooterVisible:true,login:true,logout:true,rememberDevice:true,reopenWithoutLogin:true,deferredPdf:true,manualPdfRefresh:true,csvPreview:true,csvDuplicateWarnings:true,csvRetryAcrossReload:true,csvPhbiSeparated:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
+    console.log('Browser smoke passed: Midnight at '+responsive.join('/')+'px, bulk selection/cap/locked rows, delete/retry/reload/restore/pause/conflict/cancel, visible dialog actions, CSV, remembered login, PHBI, deferred/manual PDF, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
   } finally {
     await browser?.close();server.kill();await new Promise(resolve=>server.once('exit',resolve));await rm(dir,{recursive:true,force:true});
   }

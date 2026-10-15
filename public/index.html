@@ -7,297 +7,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kas Masjid">
 <title>Kas Masjid</title>
+<meta name="theme-color" content="#16242d">
 <style>
-:root {
-  --green: #1a7a3f;
-  --green-light: #e8f5ee;
-  --green-mid: #c3e6d1;
-  --red: #d63031;
-  --red-light: #fdf0f0;
-  --bg: #f0f4f0;
-  --card: #ffffff;
-  --text: #0f1f14;
-  --muted: #556f5f;
-  --border: #dde8df;
-  --radius: 20px;
-  --radius-sm: 12px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-body {
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
-  color: var(--text);
-  overscroll-behavior: none;
-}
-
-.topbar {
-  background: var(--green);
-  padding: 52px 20px 20px;
-  position: relative;
-  overflow: hidden;
-}
-.topbar::before {
-  content: '';
-  position: absolute;
-  width: 220px; height: 220px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 50%;
-  top: -60px; right: -50px;
-}
-.topbar::after {
-  content: '';
-  position: absolute;
-  width: 140px; height: 140px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 50%;
-  bottom: -30px; left: 10px;
-}
-.topbar-inner { position: relative; z-index: 1; }
-.topbar-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand-icon {
-  width: 40px; height: 40px;
-  background: rgba(255,255,255,0.18);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.brand-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
-.brand h1 { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.4px; }
-.brand p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 1px; font-weight: 500; }
-.conn-pill {
-  display: flex; align-items: center; gap: 5px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 20px; padding: 5px 10px;
-  backdrop-filter: blur(4px);
-}
-.conn-dot { width: 6px; height: 6px; border-radius: 50%; background: #5effa0; }
-.conn-dot.off { background: #ffb347; }
-.conn-label { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 600; }
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-.sum-card {
-  background: rgba(255,255,255,0.12);
-  border-radius: 14px;
-  padding: 11px 10px;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.15);
-}
-.sum-label { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
-.sum-val { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1; }
-.sum-val.out { color: #ffb3ae; }
-.sum-val.negative { color: #ffb3ae; }
-
-.scroll {
-  padding: 16px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
-}
-
-/* Voice card */
-.voice-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
-}
-.voice-inner { display: flex; align-items: center; gap: 14px; }
-.voice-btn {
-  width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  background: var(--green-light); transition: all 0.2s; -webkit-appearance: none;
-  position: relative;
-}
-.voice-btn svg { width: 22px; height: 22px; stroke: var(--green); fill: none; stroke-width: 2; transition: all 0.2s; }
-.voice-btn.listening {
-  background: var(--red-light);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-.voice-btn.listening svg { stroke: var(--red); }
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(214,48,49,0.3); }
-  50% { box-shadow: 0 0 0 12px rgba(214,48,49,0); }
-}
-.voice-info { flex: 1; min-width: 0; }
-.voice-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-.voice-hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
-.voice-result {
-  margin-top: 12px; padding: 10px 14px;
-  background: var(--bg); border-radius: var(--radius-sm);
-  font-size: 13px; color: var(--text); font-weight: 500;
-  display: none; line-height: 1.5;
-}
-.voice-result.show { display: block; }
-.voice-result strong { color: var(--green); }
-
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
-}
-.section-label {
-  font-size: 11px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 0.07em;
-  margin-bottom: 16px;
-}
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group.full { grid-column: 1 / -1; }
-.form-group label { font-size: 12px; color: var(--muted); font-weight: 600; }
-.form-group input, .history-filters input {
-  padding: 12px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  color: var(--text);
-  font-family: inherit;
-  font-weight: 500;
-  background: #fafcfa;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-  -webkit-appearance: none;
-  width: 100%;
-}
-.form-group input::placeholder { color: #bfcfc4; font-weight: 400; }
-.form-group input:focus, .history-filters input:focus {
-  outline: none;
-  border-color: var(--green);
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
-}
-.form-group input[type="number"] { font-variant-numeric: tabular-nums; }
-.form-group select, .history-filters select {
-  padding: 12px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  color: var(--text);
-  font-family: inherit;
-  font-weight: 500;
-  background: #fafcfa;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%237a8f80%27 stroke-width=%272.5%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  cursor: pointer;
-}
-.form-group select:focus, .history-filters select:focus {
-  outline: none;
-  border-color: var(--green);
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(26,122,63,0.1);
-}
-.form-group input.voice-filled { border-color: var(--green); background: var(--green-light); }
-
-.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.toggle-btn {
-  padding: 11px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
-  font-size: 13px; font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-  background: #fafcfa;
-  color: var(--muted);
-  -webkit-appearance: none;
-}
-.toggle-btn.active-in { background: var(--green-light); border-color: var(--green); color: var(--green); }
-.toggle-btn.active-out { background: var(--red-light); border-color: var(--red); color: var(--red); }
-
-.amount-wrap { position: relative; }
-.amount-prefix {
-  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  font-size: 14px; font-weight: 700; color: var(--muted); pointer-events: none;
-}
-.amount-wrap input { padding-left: 38px; }
-
-.btn-row { display: flex; gap: 10px; margin-top: 16px; }
-.btn-primary {
-  flex: 1; padding: 14px;
-  background: var(--green);
-  color: #fff; border: none;
-  border-radius: var(--radius-sm);
-  font-size: 15px; font-weight: 700;
-  cursor: pointer; font-family: inherit;
-  transition: transform 0.1s, opacity 0.15s;
-  -webkit-appearance: none;
-  letter-spacing: -0.2px;
-}
-.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
-.btn-primary:disabled { opacity: 0.4; }
-.btn-reset {
-  padding: 14px 18px;
-  background: var(--bg);
-  color: var(--muted); border: none;
-  border-radius: var(--radius-sm);
-  font-size: 15px; font-weight: 600;
-  cursor: pointer; font-family: inherit;
-  -webkit-appearance: none;
-  transition: opacity 0.15s;
-}
-.btn-reset:active { opacity: 0.7; }
-
-.history-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
-}
-.history-head {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f4f0;
-}
-.history-head .section-label { margin: 0; }
-.badge {
-  font-size: 12px; background: var(--bg); color: var(--muted);
-  padding: 4px 10px; border-radius: 20px; font-weight: 700;
-}
-.empty {
-  padding: 40px 20px; text-align: center;
-  color: #bfcfc4; font-size: 14px; font-weight: 500;
-}
-/* The original green interface and voice form remain the base design. */
-.topbar-inner,.scroll{max-width:780px;margin:auto}.sum-val{font-size:clamp(12px,2.5vw,17px);line-height:1.3;overflow-wrap:anywhere}.sum-card{min-width:0}.form-group{min-width:0}.form-group input{min-width:0}
-.hint{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0}.report-head,.buttons{display:flex;gap:10px;align-items:center;justify-content:space-between}.report-head .section-label{margin:0}.buttons{justify-content:flex-start;flex-wrap:wrap;margin:12px 0}.secondary{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:white;color:var(--green);font:600 12px inherit;text-decoration:none;cursor:pointer;display:inline-block}.secondary:disabled{opacity:.5;cursor:wait}.badge.warning{background:#fff1d8;color:#865509}.badge.error{background:var(--red-light);color:var(--red)}
-.notice{padding:14px;border-radius:var(--radius-sm);background:var(--green-light);color:var(--green);font-size:13px;line-height:1.6;white-space:pre-line;margin-bottom:14px}.notice.error{background:var(--red-light);color:var(--red)}.reconcile{padding:12px;background:#fff8eb;border-radius:var(--radius-sm);font-size:13px;margin-top:12px}.reconcile div{display:flex;justify-content:space-between;gap:12px}.transaction{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)}.description{font-size:14px;font-weight:700;overflow-wrap:anywhere}.meta{font-size:11px;line-height:1.6;color:var(--muted)}.amount{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}.amount.in{color:var(--green)}.amount.out{color:var(--red)}.history-foot{padding:14px 20px}.voice-result{white-space:pre-line}[hidden]{display:none!important}#reportMessage{white-space:pre-line}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--green-mid);outline-offset:3px}button:disabled{cursor:wait}.sum-label{line-height:1.5}
-@media(max-width:400px){.summary-grid{grid-template-columns:1fr 1fr}.sum-card:last-child{grid-column:1/-1}.transaction{grid-template-columns:1fr}.amount{text-align:right}.topbar{padding-top:32px}}
-
-/* Compact layout: the form stays central and less-used report controls fold away. */
-.topbar{padding:24px 16px 16px}.topbar-row{margin-bottom:14px}.scroll{padding:12px}.card,.voice-card{padding:16px;margin-bottom:12px}.section-label{margin-bottom:12px}.header-filters{margin-bottom:12px}.header-filters label{color:#ffffffbd;font-size:11px}.header-filters input,.header-filters select{padding:9px 10px;font-size:12px;background:#fff;min-height:38px}.sum-card{padding:10px}.voice-inner{gap:10px}.voice-btn{width:42px;height:42px}.voice-title{font-size:13px}.voice-hint{font-size:11px}.voice-card{padding:12px 16px}.report-card{padding:12px 16px}.report-card .hint{margin:8px 0}.report-card .buttons{margin:8px 0}.report-card .section-label{font-size:10px}.report-card summary{font-size:11px;color:var(--muted);cursor:pointer}.report-card details{margin-top:8px}.secondary{font-size:12px;font-family:inherit;font-weight:600}.form-group label{font-size:11px}.form-group input,.form-group select{padding-top:10px;padding-bottom:10px;font-size:14px}.btn-row{margin-top:12px}.btn-primary,.btn-reset{padding-top:12px;padding-bottom:12px;font-size:14px}.history-head{padding:14px 16px}.transaction{padding:12px 16px}.history-foot{padding:12px 16px;display:flex;gap:12px;align-items:center}.history-foot .hint{margin:0}.brand p{font-size:10px}.notice{margin-bottom:12px}.report-head{flex-wrap:wrap}.sum-val{font-variant-numeric:tabular-nums}
-</style>
-<style>
-.topbar{padding-top:30px;background:linear-gradient(135deg,#135d35,#208249)}
-.brand p,.sum-label{color:rgba(255,255,255,.9)}input::placeholder{color:#65796e}
-.topbar-inner,.scroll{max-width:820px}.brand h1{font-size:21px}.sum-card{padding:15px 12px}.sum-val{font-size:clamp(14px,3vw,22px)}
-.card,.voice-card,.history-card{border:1px solid var(--border);box-shadow:0 3px 14px #173e2510}
-.account-row{max-width:788px;margin:16px auto 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:0 16px;font-size:12px;color:var(--muted)}
-.account-actions{display:flex;align-items:center;gap:12px}.account-actions a{color:var(--green)}
-.history-filters{display:flex;gap:10px;padding:0 20px 16px}.history-filters input{flex:1;min-width:0}.history-filters select{max-width:150px}
-.row-actions{display:flex;gap:8px;margin-top:8px}.row-actions button{font-size:12px;padding:5px 12px}.danger{color:#b22929;border-color:#efd1d1}.audit{font-size:12px;color:var(--muted);margin-top:8px}.audit p{margin-top:8px;line-height:1.5}.deleted-list{padding:16px 20px;border-top:1px solid var(--border)}
-dialog{width:min(480px,calc(100% - 32px));max-height:90vh;margin:auto;border:1px solid var(--border);border-radius:20px;padding:24px;color:var(--text);box-shadow:0 15px 60px #12332333}dialog::backdrop{background:#10261988}dialog h2{font-size:20px;margin-bottom:8px}dialog .hint{margin-bottom:16px}dialog fieldset{border:0}dialog .buttons{justify-content:flex-end;margin-top:18px}#changeNotice{white-space:pre-line}#changeReason{width:100%;resize:vertical;min-height:75px;font:inherit;padding:12px;border:1px solid var(--border);border-radius:12px}
-.demo-banner{max-width:788px;margin:14px auto 0;padding:12px 16px;border:1px solid #e4b65a;border-radius:12px;background:#fff5dd;color:#6a490b;font-size:13px;line-height:1.5}
-.login-panel{max-width:788px;margin:18px auto 0;padding:24px;background:white;border:1px solid var(--border);border-radius:20px}
-.login-panel h2{font-size:18px;margin-bottom:8px}.login-panel p{font-size:14px;line-height:1.6;color:var(--muted);margin-bottom:16px}
-.login-link{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;background:var(--green);border-radius:12px;color:white;text-decoration:none;font-size:14px;font-weight:700}
-.remember-option{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:14px;cursor:pointer}.remember-option input{width:20px;height:20px;accent-color:var(--green)}.login-panel .remember-hint{font-size:12px}
-.import-row{display:flex;gap:10px;border-top:1px solid var(--border);padding:12px 0}.import-row input{width:20px;height:20px;flex-shrink:0;accent-color:var(--green);margin-top:3px}.import-row label{flex:1;overflow-wrap:anywhere}.import-row strong,.import-row small{display:block}.import-row small{font-size:12px;color:var(--muted);line-height:1.6}.import-error{color:var(--red)!important}#importRows{max-height:42vh;overflow:auto}#importDialog{width:min(650px,calc(100% - 24px))}#importFile{max-width:100%}#importSummary{font-weight:700}
-button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d8ab43;outline-offset:3px}
-button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#notice{white-space:pre-line}
-@media(min-width:720px){.scroll{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.report-card,#notice,.history-card{grid-column:1/-1}.scroll>.card,.voice-card,.history-card{margin-bottom:0}.voice-card{grid-column:2;grid-row:3}.scroll>.card:not(.report-card){grid-column:1;grid-row:3}.summary-grid{gap:14px}.sum-label{font-size:11px}}
+:root{color-scheme:dark;--bg:#16242d;--card:#1e303b;--text:#edf5f6;--muted:#a5b9c3;--border:#354c58;--green:#a9e1c4;--green-light:#233f39;--green-mid:#a9e1c4;--red:#efb4a1;--red-light:#432f30;--radius:22px;--radius-sm:12px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-width:0}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button,a{touch-action:manipulation}button{cursor:pointer}button:disabled,input:disabled,select:disabled,textarea:disabled{opacity:.5;cursor:default}a{color:var(--green);text-underline-offset:3px}a,button,input,select,textarea,summary{outline-offset:4px}:focus-visible{outline:2px solid var(--green)}[hidden]{display:none!important}svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}h1,h2,h3{line-height:1.25}button,a,input,select,textarea{max-width:100%}input,select,textarea{width:100%;min-width:0;border:1px solid var(--border);border-radius:12px;background:#192a34;color:var(--text);padding:11px 12px;min-height:46px;font-size:16px}input::placeholder,textarea::placeholder{color:#8fa6b2}textarea{resize:vertical;min-height:90px}input[type=checkbox]{width:20px;min-height:20px;height:20px;padding:0;accent-color:var(--green);flex:none}input[type=date],input[type=month]{display:block;min-inline-size:0}input::-webkit-date-and-time-value{text-align:left}fieldset{border:0;min-width:0}label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:7px}summary{cursor:pointer;color:var(--muted);padding:12px 0;font-size:13px;min-height:44px}details p{margin:8px 0}.hint{font-size:13px;line-height:1.65;color:var(--muted);margin:10px 0;overflow-wrap:anywhere}.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:14px}
+.topbar,.scroll,.account-row,.demo-banner,.login-panel{max-width:1120px;margin-inline:auto}.topbar{padding:32px 24px 0}.topbar-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:36px}.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-icon{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid var(--border);background:var(--card);border-radius:14px;color:var(--green)}.brand h1{font-size:18px;font-weight:700;letter-spacing:-.4px}.brand p{font-size:11px;color:var(--muted);margin-top:3px}.conn-pill{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);white-space:nowrap}.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}.conn-dot.off{background:var(--red)}.heading-row{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:22px}.eyebrow{color:var(--green);font-size:11px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;margin-bottom:9px}.page-title{font-size:clamp(25px,3.1vw,34px);font-weight:650;letter-spacing:-1.2px}.page-subtitle{font-size:13px;color:var(--muted);margin-top:9px}.header-filters{width:320px;flex-shrink:0}.header-filters .form-grid{gap:12px}.header-filters input,.header-filters select{background:var(--card);font-size:14px}.section-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 22px}.section-nav a{min-height:44px;padding:10px 17px;border-radius:24px;text-decoration:none;font-size:13px;color:var(--muted)}.section-nav a:first-child{background:var(--card);color:var(--green)}.section-nav a:hover{background:var(--card);color:var(--text)}.summary-grid{display:grid;grid-template-columns:1.45fr 1fr 1fr;gap:14px}.sum-card{min-width:0;border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;background:var(--card)}.sum-label{font-size:12px;color:var(--muted);line-height:1.5}.sum-val{font-size:clamp(20px,2.2vw,28px);font-weight:650;letter-spacing:-1px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;margin-top:12px;color:var(--green)}.sum-val.out{color:var(--red)}.balance-card{background:linear-gradient(120deg,#b8ebcb,#8dd6b7);color:#15362c;border-color:transparent;position:relative;isolation:isolate;overflow:hidden}.balance-card:after{content:'';position:absolute;right:-35px;top:-50px;width:160px;height:180px;border:1px solid #15362c20;border-radius:90px;transform:rotate(30deg);z-index:-1}.balance-card .sum-label{color:#315c4a}.balance-card .sum-val{color:#15362c;font-size:clamp(25px,2.8vw,36px)}.sum-caption{font-size:11px;margin-top:6px;color:#315c4a}
+.demo-banner{font-size:12px;color:var(--muted);padding:16px 24px 0}.demo-banner strong{color:var(--green)}.account-row{padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--muted);font-size:11px}.account-actions{display:flex;align-items:center;gap:16px}.account-actions a{font-size:11px}.account-actions button{font-size:12px;min-height:36px;padding:5px 12px}.login-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-block:24px;max-width:620px}.login-panel h2{font-size:23px;margin-bottom:12px}.login-panel>p{color:var(--muted);font-size:14px}.remember-option{display:flex;align-items:center;gap:10px;color:var(--text);font-size:14px;margin-top:24px}.remember-hint{font-size:12px!important;margin:12px 0 20px}.login-link{display:inline-flex;background:var(--green);color:#15362c;min-height:46px;align-items:center;padding:10px 18px;text-decoration:none;border-radius:12px;font-weight:650;font-size:14px}
+.scroll{padding:4px 24px 40px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:20px;align-items:start}.entry-column,.review-column{display:grid;gap:18px;min-width:0}.card,.voice-card,.history-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);min-width:0}.card{padding:24px}.report-head,.history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.section-label{font-size:16px;font-weight:650;letter-spacing:-.3px}.form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.form-group{min-width:0}.form-group.full{grid-column:1/-1}.type-toggle{display:flex;gap:5px;padding:5px;background:#162731;border:1px solid var(--border);border-radius:14px;margin:18px 0}.toggle-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--muted);border-radius:9px;padding:11px 8px;font-size:13px;min-height:44px;font-weight:600}.toggle-btn.active-in{background:var(--green);color:#15362c}.toggle-btn.active-out{background:var(--red);color:#432f30}.amount-wrap{position:relative}.amount-prefix{position:absolute;top:12px;left:14px;color:var(--muted);font-size:15px}.amount-wrap input{padding-left:45px;font-variant-numeric:tabular-nums}.btn-row,.buttons{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}.btn-primary,.btn-reset,.secondary{min-height:44px;padding:10px 16px;border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;line-height:1.5;background:transparent;color:var(--text)}.btn-primary{background:var(--green);border-color:var(--green);color:#15362c}.btn-row .btn-primary{flex:1}.btn-reset{color:var(--muted)}.secondary:hover:not(:disabled),.btn-reset:hover:not(:disabled){background:#ffffff08}.danger{color:var(--red)}.btn-primary.danger{background:var(--red);border-color:var(--red);color:#392421}.badge{display:inline-block;color:var(--green);background:var(--green-light);font-size:10px;font-weight:600;padding:5px 9px;border-radius:8px;overflow-wrap:anywhere}.badge.error,.badge.warning{background:var(--red-light);color:var(--red)}.notice{grid-column:1/-1;padding:16px;border:1px solid #a9e1c440;border-radius:var(--radius-sm);background:var(--green-light);font-size:13px;color:var(--green);white-space:pre-line;overflow-wrap:anywhere}.notice.error{background:var(--red-light);color:var(--red);border-color:#efb4a140}.reconcile{background:var(--red-light);padding:12px;border-radius:12px;color:var(--red);font-size:12px}.reconcile div{display:flex;gap:12px;justify-content:space-between}.report-card .section-label{font-size:14px}#reportMessage{white-space:pre-line}.report-card .buttons{margin:12px 0}.report-card details{border-top:1px solid var(--border);margin-top:16px}.report-card #pdfLink{color:var(--green);width:100%}.voice-card{padding:18px 22px}.voice-inner{display:flex;align-items:center;gap:14px}.voice-btn{height:44px;width:44px;flex:none;border:1px solid var(--border);border-radius:14px;display:grid;place-items:center;background:transparent;color:var(--green)}.voice-btn.listening{color:var(--red);background:var(--red-light)}.voice-title{font-size:13px;font-weight:600}.voice-hint{font-size:11px;color:var(--muted);line-height:1.6;margin-top:3px}.voice-result{display:none;white-space:pre-line;font-size:12px;margin-top:14px;color:var(--muted)}.voice-result.show{display:block}.voice-filled{border-color:var(--green)}
+.history-head{padding:22px 22px 14px}.history-filters{display:grid;grid-template-columns:minmax(0,1fr) 135px;gap:10px;padding:0 22px 12px}.history-filters input,.history-filters select{font-size:13px}.history-tools{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 14px;align-items:center}.history-tools .secondary{font-size:12px;min-height:40px}.selection-tools{padding:14px 22px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#162731;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}.selection-tools label{display:flex;align-items:center;gap:9px;font-size:12px;margin:0}.selection-tools .secondary{font-size:12px}.transaction{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:17px 22px;border-top:1px solid var(--border);min-width:0}.transaction>div{min-width:0}.description{font-size:13px;font-weight:600;overflow-wrap:anywhere}.meta{font-size:11px;color:var(--muted);margin-top:4px}.amount{font-size:13px;font-weight:650;letter-spacing:-.3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;max-width:150px;text-align:right}.amount.in{color:var(--green)}.amount.out{color:var(--red)}.row-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.row-actions .secondary{font-size:11px;min-height:36px;padding:6px 10px}.audit{margin-top:4px}.audit summary{font-size:11px;padding-block:8px;min-height:36px}.audit p{font-size:11px;white-space:pre-line;color:var(--muted);overflow-wrap:anywhere}.select-transaction{display:flex;gap:10px;margin:0;align-items:start;color:var(--text)}.select-transaction input{margin-top:2px}.history-foot{border-top:1px solid var(--border);padding:16px 22px;display:flex;align-items:center;gap:14px}.history-foot .hint{font-size:11px;margin:0}.history-foot .secondary{flex:none;font-size:12px}.deleted-list{padding:0 22px}.deleted-list>.transaction{padding-inline:0}.deleted-list .transaction{grid-template-columns:minmax(0,1fr)}.deleted-list p{font-size:12px;overflow-wrap:anywhere}
+dialog{position:fixed;inset:0;margin:auto;width:min(620px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--border);border-radius:22px;background:var(--card);color:var(--text);box-shadow:0 24px 100px #0007;overflow:hidden}dialog::backdrop{background:#08151dcc;backdrop-filter:blur(4px)}.dialog-shell{display:flex;flex-direction:column;max-height:calc(100dvh - 34px);min-height:0}.dialog-header{padding:22px 24px 16px;border-bottom:1px solid var(--border);flex:none}.dialog-header h2{font-size:21px;letter-spacing:-.6px}.dialog-header .hint{margin-bottom:0}.dialog-content{padding:6px 24px 18px;overflow:auto;min-height:0;overscroll-behavior:contain}.dialog-footer{flex:none;padding:16px 24px;border-top:1px solid var(--border);background:var(--card);margin:0;gap:8px}.dialog-footer .btn-primary{margin-left:auto}.dialog-content .form-grid{margin:14px 0}.dialog-content .form-group{margin-top:12px}.dialog-content .form-grid .form-group{margin-top:0}.import-row{display:flex;gap:12px;border-top:1px solid var(--border);padding:14px 0}.import-row input{margin-top:3px}.import-row label{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--text);margin:0}.import-row strong,.import-row small{display:block}.import-row strong{font-size:13px}.import-row small{font-size:11px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:4px}.import-error{color:var(--red)!important}#importSummary,#bulkSummary{font-weight:650}#changeSummary{white-space:pre-line}.bulk-item{padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;overflow-wrap:anywhere}.bulk-item small{display:block;color:var(--muted);margin-top:3px}.bulk-item.done{color:var(--green)}.bulk-state{min-height:24px;white-space:pre-line}.selection-count{font-size:12px;color:var(--muted)}
+@media(min-width:900px){.history-card #history{max-height:620px;overflow:auto;scrollbar-gutter:stable}}@media(max-width:899px){.heading-row{align-items:start;flex-direction:column;gap:20px}.header-filters{width:100%}.header-filters .form-grid{grid-template-columns:1fr 1fr}.scroll{grid-template-columns:minmax(0,1fr)}.summary-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.balance-card{grid-column:1/-1}.sum-val{font-size:26px}.balance-card .sum-val{font-size:34px}.account-row{flex-wrap:wrap}.review-column{gap:18px}}@media(max-width:480px){html{scroll-padding-top:16px}.topbar{padding:22px 16px 0}.topbar-row{margin-bottom:28px;gap:10px}.brand-icon{width:38px;height:38px;border-radius:12px}.brand{gap:9px}.brand h1{font-size:16px}.brand p{font-size:9px}.conn-pill{font-size:10px;gap:5px}.page-title{font-size:28px}.page-subtitle{font-size:12px}.header-filters input,.header-filters select{font-size:16px}.section-nav{gap:0;margin-bottom:16px}.section-nav a{padding:10px 13px;font-size:12px}.summary-grid{gap:10px}.sum-card{padding:17px 16px}.sum-val{font-size:clamp(18px,5.2vw,24px);letter-spacing:-.7px;margin-top:10px}.sum-label{font-size:10px}.balance-card{padding:22px}.balance-card .sum-label{font-size:12px}.balance-card .sum-val{font-size:clamp(28px,8vw,36px)}.scroll{padding:6px 16px 28px;gap:16px}.card{padding:20px}.demo-banner{padding:14px 16px 0;font-size:11px}.account-row{padding:14px 16px;gap:8px}.account-row>span{font-size:10px}.account-actions{justify-content:space-between;width:100%}.history-head{padding:20px 18px 14px}.history-filters{padding:0 18px 12px;grid-template-columns:minmax(0,1fr)}.history-filters input,.history-filters select{font-size:16px}.history-tools{padding-inline:18px}.transaction{padding:16px 18px;grid-template-columns:minmax(0,1fr)}.amount{text-align:left;max-width:none;grid-column:1;padding-top:2px}.row-actions .secondary{min-height:40px}.history-foot{padding:16px 18px;align-items:start;flex-wrap:wrap}.selection-tools{padding-inline:18px}.selection-tools label{min-height:44px}.form-grid{gap:14px 10px}.form-group label{font-size:11px}.form-grid select{padding-inline:9px}.voice-card{padding:16px 18px}.login-panel{margin:20px 16px;padding:22px}.login-panel h2{font-size:21px}.report-head .secondary{padding-inline:12px}.section-label{font-size:15px}dialog{width:calc(100% - 20px);max-height:calc(100dvh - 20px);border-radius:18px}.dialog-shell{max-height:calc(100dvh - 22px)}.dialog-header{padding:18px 18px 14px}.dialog-content{padding:4px 18px 16px}.dialog-footer{padding:12px 18px}.dialog-footer .btn-primary{margin-left:0;flex:1}.dialog-footer button{font-size:12px;padding:10px 12px}.dialog-content .buttons{align-items:stretch}.dialog-content .buttons a{width:100%}.dialog-header h2{font-size:20px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -319,6 +38,7 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
         <span class="conn-label" id="connection">Memuat</span>
       </div>
     </div>
+  <div class="heading-row"><div><p class="eyebrow">Pembukuan Al-Barokah</p><h2 class="page-title">Kelola kas. Lebih leluasa.</h2><p class="page-subtitle">Catat dengan tenang, pantau dalam satu pandangan.</p></div>
   <div class="header-filters" aria-label="Pilihan dana dan bulan">
     <div class="form-grid">
       <div class="form-group"><label for="fund">Dana</label><select id="fund"><option value="MASJID">Kas masjid</option><option value="PHBI">PHBI</option></select></div>
@@ -326,7 +46,10 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
     </div>
 
   </div>
-    <div class="summary-grid">
+    </div>
+    <nav class="section-nav" aria-label="Navigasi halaman"><a href="#overview">Ringkasan</a><a href="#entry">Catat</a><a href="#records">Riwayat</a><a href="#report">Laporan</a></nav>
+    <div class="summary-grid" id="overview">
+      <div class="sum-card balance-card"><div class="sum-label">Saldo saat ini</div><div class="sum-val" id="currentBalance">—</div><p class="sum-caption">Uang kas yang sudah dikonfirmasi</p></div>
       <div class="sum-card">
         <div class="sum-label">Pemasukan bulan ini</div>
         <div class="sum-val" id="totalIncome">—</div>
@@ -335,10 +58,7 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
         <div class="sum-label">Pengeluaran bulan ini</div>
         <div class="sum-val out" id="totalExpense">—</div>
       </div>
-      <div class="sum-card">
-        <div class="sum-label">Saldo saat ini</div>
-        <div class="sum-val" id="currentBalance">—</div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -349,35 +69,11 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
 <div class="scroll">
   <div id="notice" class="notice" role="status" hidden></div>
 
-  <section class="card report-card" aria-label="Status PDF jamaah">
-    <div class="report-head"><div class="section-label">Laporan PDF jamaah</div><span id="reportState" class="badge">Memuat</span></div>
-    <p id="reportMessage" class="hint">Memeriksa laporan publik.</p>
-    <div id="reconciliation" class="reconcile" hidden></div>
-    <div class="buttons"><a id="openApp" class="secondary" hidden>Buka aplikasi Google</a><a id="pdfLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka PDF</a></div>
-    <details><summary>Opsi laporan</summary>
-      <p id="balanceNote" class="hint"></p><p id="automationNote" class="hint"></p>
-      <div class="buttons"><button id="previewPdf" type="button" class="secondary" disabled>Pratinjau</button><button id="refreshPdf" type="button" class="secondary" disabled>Perbarui PDF</button></div>
-      <a id="previewLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka pratinjau PDF</a>
-    </details>
-  </section>
 
 
-  <!-- Voice Input Card -->
-  <div class="voice-card">
-    <div class="voice-inner">
-      <button class="voice-btn" id="voice-btn" type="button" aria-label="Isi draf transaksi dengan suara">
-        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-      </button>
-      <div class="voice-info">
-        <div class="voice-title">Input Suara</div>
-        <div class="voice-hint" id="voice-hint">Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em></div>
-      </div>
-    </div>
-    <div class="voice-result" id="voice-result"></div>
-  </div>
 
-  <!-- Form Card -->
-  <div class="card">
+  <div class="entry-column">
+  <section class="card" id="entry" aria-label="Catat transaksi">
     <div class="report-head"><div class="section-label">Transaksi Baru</div><button id="openImport" class="secondary" type="button" disabled>Impor CSV</button></div>
     <p id="formFund" class="hint">Dana: Kas masjid</p>
     <form id="transactionForm">
@@ -419,35 +115,63 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
     <p id="pendingNote" class="hint" hidden>Kiriman sebelumnya belum terkonfirmasi. Periksa isinya lalu kirim ulang dengan identitas yang sama.</p>
     <button id="checkPending" type="button" class="secondary" hidden>Periksa kiriman sebelumnya</button>
     </form>
+  </section>
+  <!-- Voice Input Card -->
+  <div class="voice-card">
+    <div class="voice-inner">
+      <button class="voice-btn" id="voice-btn" type="button" aria-label="Isi draf transaksi dengan suara">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div class="voice-info">
+        <div class="voice-title">Input Suara</div>
+        <div class="voice-hint" id="voice-hint">Tekan mikrofon lalu ucapkan transaksi.<br>Contoh: <em>"infaq jumat lima ratus ribu"</em></div>
+      </div>
+    </div>
+    <div class="voice-result" id="voice-result"></div>
   </div>
 
+  </div>
+  <div class="review-column">
   <!-- History -->
-  <div class="history-card">
+  <section class="history-card" id="records" aria-label="Riwayat transaksi">
     <div class="history-head">
       <div class="section-label">Rincian bulan ini</div>
       <span class="badge" id="historyCount">0 data</span>
     </div>
     <div class="history-filters"><input id="historySearch" type="search" aria-label="Cari transaksi" placeholder="Cari keterangan atau pemegang uang"><select id="historyType" aria-label="Saring jenis transaksi"><option value="">Semua jenis</option><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
+<div class="history-tools"><button id="selectMode" class="secondary" type="button" disabled>Pilih banyak</button><span id="selectionCount" class="selection-count" role="status" hidden></span></div>
+    <div id="selectionTools" class="selection-tools" hidden><label><input id="selectAll" type="checkbox">Pilih semua hasil (maks. 50)</label><button id="deleteSelected" class="secondary danger" type="button" disabled>Hapus terpilih</button></div>
 <div id="history"><div class="empty">Memuat transaksi…</div></div>
     <details id="deletedSection" class="deleted-list" hidden><summary id="deletedCount">Transaksi dihapus</summary><div id="deletedHistory"></div></details>
     <div class="history-foot"><button id="refreshData" type="button" class="secondary" disabled>Muat ulang</button><span class="hint">Perubahan tersimpan dengan alasan dan riwayat.</span></div>
+  </section>
+  <section class="card report-card" id="report" aria-label="Status PDF jamaah">
+    <div class="report-head"><div class="section-label">Laporan PDF jamaah</div><span id="reportState" class="badge">Memuat</span></div>
+    <p id="reportMessage" class="hint">Memeriksa laporan publik.</p>
+    <div id="reconciliation" class="reconcile" hidden></div>
+    <div class="buttons"><a id="openApp" class="secondary" hidden>Buka aplikasi Google</a><a id="pdfLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka PDF</a></div>
+    <details><summary>Opsi laporan</summary>
+      <p id="balanceNote" class="hint"></p><p id="automationNote" class="hint"></p>
+      <div class="buttons"><button id="previewPdf" type="button" class="secondary" disabled>Pratinjau</button><button id="refreshPdf" type="button" class="secondary" disabled>Perbarui PDF</button></div>
+      <a id="previewLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka pratinjau PDF</a>
+    </details>
+  </section>
   </div>
 </div>
 
 <dialog id="importDialog" aria-labelledby="importTitle">
-  <h2 id="importTitle">Impor transaksi</h2>
+  <div class="dialog-shell"><div class="dialog-header"><h2 id="importTitle">Impor transaksi</h2><p class="hint">Pindahkan catatan dari Excel atau Google Sheets.</p></div><div class="dialog-content">
   <p class="hint">Isi template di Excel atau Google Sheets, lalu simpan sebagai CSV UTF-8. Maksimal 50 transaksi / 64 KB per file.</p>
   <p class="hint">Tanggal: DD/MM/YYYY atau YYYY-MM-DD. Dana: MASJID / PHBI. Jenis: Pemasukan / Pengeluaran. Bendahara: K1 / K2 / K3. Jumlah: Rupiah bulat, misalnya 50000.</p>
   <div class="buttons"><a class="secondary" href="/api/import/template" download="template-impor-kas.csv">Unduh template CSV</a><label for="importFile">Pilih file CSV</label><input id="importFile" type="file" accept=".csv,text/csv"></div>
   <p id="importSummary" class="hint">Pilih file untuk melihat pratinjau.</p><div id="importRows"></div>
   <p class="hint">Periksa pilihan sebelum menyimpan. Baris yang mirip transaksi lain tidak dicentang otomatis. Centang hanya jika memang transaksi berbeda.</p>
   <p id="importNotice" class="hint" role="status" aria-live="polite"></p>
-  <div class="buttons"><button id="importClose" class="secondary" type="button">Tutup</button><button id="importDiscard" class="secondary danger" type="button" hidden>Batalkan sisa impor</button><button id="importStop" class="secondary" type="button" hidden>Jeda setelah transaksi ini</button><button id="importSubmit" class="btn-primary" type="button" disabled>Impor transaksi terpilih</button></div>
+  </div><div class="buttons dialog-footer"><button id="importClose" class="secondary" type="button">Tutup</button><button id="importDiscard" class="secondary danger" type="button" hidden>Batalkan sisa impor</button><button id="importStop" class="secondary" type="button" hidden>Jeda setelah transaksi ini</button><button id="importSubmit" class="btn-primary" type="button" disabled>Impor transaksi terpilih</button></div></div>
 </dialog>
 
 <dialog id="changeDialog" aria-labelledby="changeTitle">
-  <h2 id="changeTitle">Edit transaksi</h2><p id="changeSummary" class="hint"></p>
-  <form id="changeForm">
+  <form id="changeForm" class="dialog-shell"><div class="dialog-header"><h2 id="changeTitle">Edit transaksi</h2></div><div class="dialog-content"><p id="changeSummary" class="hint"></p>
     <fieldset id="changeFields"><div class="form-grid">
       <div class="form-group"><label for="changeDate">Tanggal</label><input id="changeDate" type="date" required></div>
       <div class="form-group"><label for="changeCode">Pemegang uang</label><select id="changeCode"><option>K1</option><option>K2</option><option>K3</option></select></div>
@@ -458,10 +182,16 @@ button{min-height:42px}button:disabled{cursor:wait}.voice-btn{min-height:56px}#n
     <div class="form-group"><label for="changeReason">Alasan perubahan</label><textarea id="changeReason" required minlength="3" maxlength="300" placeholder="Contoh: nominal pada bukti berbeda"></textarea></div>
     <p id="changeNotice" class="hint" role="status"></p>
     <button id="changeCheck" type="button" class="secondary" hidden>Periksa perubahan sebelumnya</button>
-    <div class="buttons"><button id="changeCancel" type="button" class="secondary">Batal</button><button id="changeSubmit" type="submit" class="btn-primary">Simpan perubahan</button></div>
+    </div><div class="buttons dialog-footer"><button id="changeCancel" type="button" class="secondary">Batal</button><button id="changeSubmit" type="submit" class="btn-primary">Simpan perubahan</button></div>
   </form>
 </dialog>
 
+<dialog id="bulkDialog" aria-labelledby="bulkTitle">
+  <form id="bulkForm" class="dialog-shell"><div class="dialog-header"><h2 id="bulkTitle">Hapus transaksi terpilih</h2><p class="hint">Keluar dari saldo dan laporan. Setiap transaksi tetap dapat dipulihkan.</p></div>
+    <div class="dialog-content"><p id="bulkSummary" class="hint"></p><div id="bulkRows"></div><div class="form-group"><label for="bulkReason">Alasan penghapusan</label><textarea id="bulkReason" required minlength="3" maxlength="300" placeholder="Contoh: catatan ganda dari buku kas"></textarea></div><p id="bulkNotice" class="hint bulk-state" role="status" aria-live="polite">Periksa kembali pilihan sebelum melanjutkan.</p></div>
+    <div class="buttons dialog-footer"><button id="bulkClose" class="secondary" type="button">Batal</button><button id="bulkDiscard" class="secondary" type="button" hidden>Batalkan sisa</button><button id="bulkStop" class="secondary" type="button" hidden>Jeda</button><button id="bulkSubmit" class="btn-primary danger" type="submit">Hapus terpilih</button></div>
+  </form>
+</dialog>
 <script>let recognition = null;
 let isListening = false;
 // Map kata angka bahasa Indonesia ke nilai numerik
@@ -696,6 +426,9 @@ function toggleVoice() {
     let type = 'in', dashboard = null, pending = null, pendingChange = null, editing = null, busy = false, loadVersion = 0;
     let CHANGE_KEY = 'kas-masjid-change-pending-v1';
     let IMPORT_KEY = 'kas-masjid-import-pending-v1', importBatch = null, importSaving = false, importStopRequested = false;
+    let BULK_KEY='kas-masjid-bulk-delete-v1',bulkBatch=null,bulkSaving=false,bulkStopRequested=false,selecting=false;
+    const selectedKeys=new Set();
+    const bulkPending=()=>!!bulkBatch?.started && bulkBatch.rows.some(row=>!row.done);
     let connected = false, csrf = '', demo = false;
 
     async function api(method, ...args) {
@@ -739,11 +472,12 @@ function toggleVoice() {
     function setBusy(value) {
       busy = value;
       ['fund','month','date','code','description','amount','incomeType','expenseType','refreshData','refreshPdf','previewPdf','submitButton','checkPending','resetForm','voice-btn','openImport'].forEach(id => {
-        $(id).disabled = value || !connected || !dashboard || (!!pendingChange && !['refreshData','checkPending'].includes(id));
+        $(id).disabled = value || !connected || !dashboard || ((!!pendingChange || bulkPending()) && !['refreshData','checkPending'].includes(id));
       });
-      document.querySelectorAll('.row-actions button').forEach(button=>{button.disabled=value || !!pending || !!pendingChange || button.dataset.locked==='true';});
+      document.querySelectorAll('.row-actions button').forEach(button=>{button.disabled=value || !connected || !dashboard || !!pending || !!pendingChange || bulkPending() || button.dataset.locked==='true';});
       $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
-      $('openImport').disabled=value || !connected || !dashboard || !!pending || !!pendingChange;
+      $('openImport').disabled=value || !connected || !dashboard || !!pending || !!pendingChange || bulkPending();
+      updateSelection();
       const remaining=importBatch?.rows.filter(row=>row.selected && !row.done).length || 0;
       $('openImport').textContent=importBatch?.started && remaining ? 'Lanjutkan impor ('+remaining+')' : 'Impor CSV';
     }
@@ -787,8 +521,9 @@ function toggleVoice() {
     }
     function renderHistory() {
       if (!dashboard) return;
-      const query=$('historySearch').value.trim().toLowerCase(),kind=$('historyType').value;
-      const transactions=dashboard.transactions.filter(tx=>(!kind || tx.type===kind) && [tx.description,tx.code,displayDate(tx.date)].join(' ').toLowerCase().includes(query));
+      const transactions=filteredTransactions();
+      const eligible=new Set(transactions.filter(tx=>tx.editable).map(tx=>tx.key));
+      for(const key of selectedKeys)if(!eligible.has(key))selectedKeys.delete(key);
       $('historyCount').textContent = transactions.length + ' dari ' + dashboard.transactions.length + ' transaksi';
       $('history').replaceChildren();
       transactions.forEach(tx => {
@@ -796,7 +531,14 @@ function toggleVoice() {
         row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
         meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
         amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
-        info.append(description,meta); addActions(info,tx,false); row.append(info,amount); $('history').append(row);
+        info.append(description,meta); addActions(info,tx,false);
+        if(selecting){
+          const label=document.createElement('div'),check=document.createElement('input');label.className='select-transaction';check.type='checkbox';check.checked=selectedKeys.has(tx.key);check.disabled=busy || !tx.editable || bulkPending();check.dataset.key=tx.key;check.setAttribute('aria-label','Pilih '+tx.description);
+          if(!tx.editable)check.title='Sudah termasuk hitung fisik terakhir.';
+          check.addEventListener('change',()=>{if(check.checked && selectedKeys.size>=50){check.checked=false;notice('Maksimal 50 transaksi sekali hapus.',true);return;}check.checked?selectedKeys.add(tx.key):selectedKeys.delete(tx.key);updateSelection();});
+          label.append(check,info);row.append(label,amount);
+        }else row.append(info,amount);
+        $('history').append(row);
       });
       if (!transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = dashboard.transactions.length ? 'Tidak ada transaksi yang cocok.' : 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
       const deleted=dashboard.deletedTransactions || [];
@@ -822,7 +564,7 @@ function toggleVoice() {
       }
     }
     function openChange(action,tx,restoring=false) {
-      if ((busy || pending || pendingChange) && !restoring) {notice('Selesaikan kiriman yang belum terkonfirmasi dahulu.',true);return;}
+      if ((busy || pending || pendingChange || bulkPending()) && !restoring) {notice('Selesaikan kiriman yang belum terkonfirmasi dahulu.',true);return;}
       editing={action,tx};$('changeTitle').textContent={edit:'Edit transaksi',delete:'Hapus transaksi',restore:'Pulihkan transaksi'}[action];
       $('changeSummary').textContent=displayDate(tx.date)+' · '+tx.description+' · '+rupiah(tx.amount)+(action==='delete' ? '\nTransaksi akan dikeluarkan dari saldo dan laporan. Catatan tetap dapat dipulihkan.' : '');
       const formData=restoring && action==='edit' ? pendingChange.input : tx;
@@ -873,7 +615,7 @@ function toggleVoice() {
     });
     $('changeCancel').addEventListener('click',()=>{if (!pendingChange && !busy){$('changeDialog').close();editing=null;}});
     $('changeDialog').addEventListener('cancel',event=>{if (pendingChange || busy) event.preventDefault();});
-    ['historySearch','historyType'].forEach(id=>$(id).addEventListener('input',renderHistory));
+    ['historySearch','historyType'].forEach(id=>$(id).addEventListener('input',()=>{selectedKeys.clear();renderHistory();}));
     async function loadDashboard() {
       const version = ++loadVersion;
       try {
@@ -916,7 +658,7 @@ function toggleVoice() {
     }
     $('transactionForm').addEventListener('submit', async event => {
       event.preventDefault();
-      if (busy || pendingChange || !dashboard || !connected) return;
+      if (busy || pendingChange || bulkPending() || !dashboard || !connected) return;
       try {
         const payload = readInput();
         if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
@@ -952,6 +694,7 @@ function toggleVoice() {
     $('expenseType').addEventListener('click',() => chooseType('out'));
     ['fund','month'].forEach(id => $(id).addEventListener('change',async () => {
       if (pending && id === 'fund') { $('fund').value = pending.fund; notice('Selesaikan kiriman yang belum terkonfirmasi sebelum mengganti dana.',true); return; }
+      selectedKeys.clear();selecting=false;
       if (id === 'fund') $('date').value = '';
       setBusy(true); await loadDashboard(); setBusy(false);
     }));
@@ -1006,7 +749,7 @@ function toggleVoice() {
       });updateImportControls();
     }
     $('openImport').addEventListener('click',()=>{
-      if(busy || pending || pendingChange || !dashboard)return;
+      if(busy || pending || pendingChange || bulkPending() || !dashboard)return;
       if(importBatch?.started && !importBatch.rows.some(row=>row.selected && !row.done))importBatch=null;
       $('importNotice').textContent=importBatch?.started ? 'Impor sebelumnya belum selesai. Lanjutkan dengan kiriman yang sama, atau batalkan sisanya setelah pemeriksaan.' : '';
       renderImport();$('importDialog').showModal();
@@ -1056,6 +799,71 @@ function toggleVoice() {
     });
     $('importClose').addEventListener('click',()=>{if(!busy)$('importDialog').close();});
     $('importDialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+
+    function filteredTransactions(){
+      const query=$('historySearch').value.trim().toLowerCase(),kind=$('historyType').value;
+      return (dashboard?.transactions || []).filter(tx=>(!kind || tx.type===kind) && [tx.description,tx.code,displayDate(tx.date)].join(' ').toLowerCase().includes(query));
+    }
+    function updateSelection(){
+      const blocked=busy || !connected || !dashboard || !!pending || !!pendingChange || !!(importBatch?.started && importBatch.rows.some(row=>row.selected && !row.done));
+      $('selectMode').disabled=blocked;$('selectMode').textContent=bulkPending() ? 'Lanjutkan penghapusan' : selecting ? 'Selesai memilih' : 'Pilih banyak';
+      $('selectionTools').hidden=!selecting || bulkPending();$('selectionCount').hidden=!selecting || bulkPending();$('selectionCount').textContent=selectedKeys.size+' dipilih';
+      const eligible=filteredTransactions().filter(tx=>tx.editable),chosen=eligible.filter(tx=>selectedKeys.has(tx.key)).length;
+      $('selectAll').checked=chosen>0 && chosen===Math.min(50,eligible.length);$('selectAll').indeterminate=chosen>0 && !$('selectAll').checked;$('selectAll').disabled=blocked || !eligible.length;
+      $('deleteSelected').disabled=blocked || !chosen;$('deleteSelected').textContent='Hapus '+chosen+' terpilih';
+      document.querySelectorAll('.select-transaction input').forEach(check=>{check.checked=selectedKeys.has(check.dataset.key);check.disabled=blocked || bulkPending() || !eligible.some(tx=>tx.key===check.dataset.key);});
+    }
+    function persistBulk(){
+      if(bulkPending())localStorage.setItem(BULK_KEY,JSON.stringify(bulkBatch));else localStorage.removeItem(BULK_KEY);
+    }
+    function renderBulk(){
+      const rows=bulkBatch?.rows || [],done=rows.filter(row=>row.done).length,remaining=rows.length-done;
+      $('bulkSummary').textContent=rows.length+' dipilih · '+done+' dihapus · '+remaining+' tersisa';$('bulkRows').replaceChildren();
+      rows.forEach(row=>{const item=document.createElement('div'),meta=document.createElement('small');item.className='bulk-item'+(row.done?' done':'');item.textContent=row.tx.description;meta.textContent=displayDate(row.tx.date)+' · '+row.tx.code+' · '+rupiah(row.tx.amount)+(row.done?' · Dihapus':'');item.append(meta);$('bulkRows').append(item);});
+      $('bulkReason').disabled=busy || !!bulkBatch?.started;$('bulkClose').disabled=busy;$('bulkClose').textContent=bulkBatch?.started?'Tutup':'Batal';
+      $('bulkSubmit').disabled=busy || !connected || !remaining;$('bulkSubmit').textContent=bulkBatch?.started?'Lanjutkan '+remaining+' transaksi':'Hapus '+remaining+' transaksi';
+      $('bulkDiscard').hidden=!bulkPending();$('bulkDiscard').disabled=busy;$('bulkStop').hidden=!bulkSaving;$('bulkStop').disabled=bulkStopRequested;
+    }
+    $('selectMode').addEventListener('click',()=>{
+      if(bulkPending()){$('bulkReason').value=bulkBatch.reason;renderBulk();$('bulkDialog').showModal();return;}
+      selecting=!selecting;selectedKeys.clear();renderHistory();
+    });
+    $('selectAll').addEventListener('change',()=>{selectedKeys.clear();if($('selectAll').checked)filteredTransactions().filter(tx=>tx.editable).slice(0,50).forEach(tx=>selectedKeys.add(tx.key));updateSelection();});
+    $('deleteSelected').addEventListener('click',()=>{
+      const rows=filteredTransactions().filter(tx=>tx.editable && selectedKeys.has(tx.key));if(busy || !rows.length || rows.length>50)return;
+      bulkBatch={fund:dashboard.fund,month:dashboard.month,started:false,reason:'',rows:rows.map(tx=>({tx,id:crypto.randomUUID(),done:false,attempted:false}))};
+      $('bulkReason').value='';$('bulkNotice').textContent='Periksa kembali pilihan. Penghapusan dilakukan satu per satu dan dapat dipulihkan.';renderBulk();$('bulkDialog').showModal();
+    });
+    $('bulkForm').addEventListener('submit',async event=>{
+      event.preventDefault();if(busy || !bulkBatch || !connected)return;
+      try{
+        if(!bulkBatch.started){const reason=$('bulkReason').value.trim();if(reason.length<3 || reason.length>300)throw Error('Isi alasan 3–300 karakter.');bulkBatch.reason=reason;bulkBatch.started=true;}
+        // Persist the original IDs and revisions before writing; a lost response must retry the same request.
+        persistBulk();bulkSaving=true;bulkStopRequested=false;setBusy(true);renderBulk();
+        for(const row of bulkBatch.rows){
+          if(row.done)continue;if(bulkStopRequested)break;row.attempted=true;persistBulk();$('bulkNotice').textContent='Menghapus… '+bulkBatch.rows.filter(item=>item.done).length+' dari '+bulkBatch.rows.length+' terkonfirmasi.';
+          const result=await api('changeTransaction',{id:row.id,key:row.tx.key,revision:row.tx.revision,action:'delete',reason:bulkBatch.reason});
+          if(!result.changed || result.id!==row.id)throw Error('Penghapusan belum terkonfirmasi.');row.done=true;persistBulk();renderBulk();
+        }
+        const done=bulkBatch.rows.filter(row=>row.done).length;
+        $('bulkNotice').textContent=bulkPending()?'Penghapusan dijeda. '+done+' transaksi dihapus. Lanjutkan atau batalkan sisanya.':'Selesai: '+done+' transaksi dihapus. Gunakan Transaksi dihapus untuk memulihkan.';
+        selectedKeys.clear();selecting=false;
+      }catch(error){$('bulkNotice').textContent='Penghapusan terhenti: '+error.message+' Hasil yang terkonfirmasi tetap tersimpan. Lanjutkan dengan identitas yang sama atau batalkan sisa setelah pemeriksaan.';}
+      finally{bulkSaving=false;await loadDashboard();setBusy(false);renderBulk();}
+    });
+    $('bulkStop').addEventListener('click',()=>{bulkStopRequested=true;renderBulk();});
+    $('bulkDiscard').addEventListener('click',async()=>{
+      if(busy || !bulkPending())return;
+      try{
+        setBusy(true);renderBulk();$('bulkNotice').textContent='Memeriksa status terakhir sebelum membatalkan sisa…';
+        for(const row of bulkBatch.rows.filter(row=>row.attempted && !row.done)){const result=await api('resolveChange',row.id);if(result.id!==row.id)throw Error('Status penghapusan belum dapat dipastikan.');row.done=result.changed;}
+        const done=bulkBatch.rows.filter(row=>row.done).length;localStorage.removeItem(BULK_KEY);bulkBatch=null;selecting=false;selectedKeys.clear();$('bulkDialog').close();notice('Sisa penghapusan dibatalkan. '+done+' transaksi yang sudah dihapus tetap dapat dipulihkan.');await loadDashboard();
+      }catch(error){$('bulkNotice').textContent='Sisa belum dibatalkan: '+error.message;}
+      finally{setBusy(false);renderBulk();}
+    });
+    $('bulkClose').addEventListener('click',()=>{if(!busy)$('bulkDialog').close();});
+    $('bulkDialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+
     $('rememberDevice').addEventListener('change',()=>{
       $('loginLink').href='/auth/login'+($('rememberDevice').checked ? '?remember=1' : '');
     });
@@ -1078,8 +886,11 @@ function toggleVoice() {
         if (connected) {
           if (demo) CHANGE_KEY='kas-masjid-demo-change-pending-v1';
           if (demo) IMPORT_KEY='kas-masjid-demo-import-pending-v1';
+          if (demo) BULK_KEY='kas-masjid-demo-bulk-delete-v1';
           const saved=JSON.parse(localStorage.getItem(CHANGE_KEY) || 'null');
           if (saved?.fund) {$('fund').value=saved.fund;$('month').value=saved.month || '';}
+          const deleted=JSON.parse(localStorage.getItem(BULK_KEY) || 'null');
+          if(deleted?.started && Array.isArray(deleted.rows) && deleted.rows.length>0 && deleted.rows.length<=50 && deleted.rows.every(row=>row.tx?.key && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(row.id))){bulkBatch=deleted;$('fund').value=deleted.fund;$('month').value=deleted.month || '';}
           restorePending();await loadDashboard();
           if (saved && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(saved.id)) {
             pendingChange=saved;
@@ -1089,8 +900,9 @@ function toggleVoice() {
           const imported=JSON.parse(localStorage.getItem(IMPORT_KEY) || 'null');
           if(imported?.started && Array.isArray(imported.rows) && imported.rows.length<=50 && imported.rows.every(row=>row.input && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(row.input.id))){
             importBatch=imported;setBusy(false);renderImport();
-            if(!pending && !pendingChange){$('importNotice').textContent='Impor sebelumnya belum selesai. Lanjutkan memakai kiriman yang sama.';$('importDialog').showModal();}
+            if(!pending && !pendingChange && !bulkPending()){$('importNotice').textContent='Impor sebelumnya belum selesai. Lanjutkan memakai kiriman yang sama.';$('importDialog').showModal();}
           }
+          if(bulkPending() && !pending && !pendingChange){$('bulkReason').value=bulkBatch.reason;$('bulkNotice').textContent='Penghapusan sebelumnya belum selesai. Lanjutkan memakai identitas yang sama atau batalkan sisanya.';renderBulk();$('bulkDialog').showModal();}
         }
         else {
           $('connection').textContent='Belum masuk';$('conn-dot').className='conn-dot off';

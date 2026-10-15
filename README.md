@@ -1,6 +1,6 @@
 # Kas Masjid Al-Barokah
 
-Aplikasi administrasi bendahara dengan backend Node.js + TypeScript dan antarmuka hijau dari aplikasi lama. UI dan API dilayani pada origin yang sama. Google Sheet asli tetap sumber pembukuan; PDF publik diperbarui pada File ID lama sehingga tautan dan QR tetap sama.
+Aplikasi administrasi bendahara dengan backend Node.js + TypeScript dan antarmuka Midnight yang responsif untuk HP dan desktop. UI dan API dilayani pada origin yang sama. Google Sheet asli tetap sumber pembukuan; PDF publik diperbarui pada File ID lama sehingga tautan dan QR tetap sama.
 
 Aplikasi online: **https://kas-masjid-albarokah.vercel.app**. Masuk memakai akun Google pemilik. Konfigurasi hosting memakai Vercel Hobby, Redis Free, dan QStash Free; detail kuota serta pemulihan ada pada [panduan deployment](docs/DEPLOYMENT.md).
 
@@ -58,6 +58,12 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - Checkpoint baru memeriksa saldo buku terhadap uang fisik. Selisih menahan PDF; backend tidak mengubah baseline atau membuat penyesuaian otomatis.
 - Tanggal kalender dibaca/ditulis sebagai serial Sheets tanpa pergeseran zona waktu. Pengaturan zona waktu workbook lama dipertahankan; batas tanggal hari ini pada aplikasi memakai Asia/Jakarta.
 - Saat aktif, server memeriksa pembukuan dan memperbarui PDF sekitar lima menit, baik dari simpan aplikasi maupun edit manual di Sheet. Tombol **Perbarui PDF** tersedia jika perlu segera. Pada hosting gratis, QStash memanggil backend Vercel dan Redis menyimpan status, token, sesi, serta lock bersama. Signature yang sama melewati ekspor ulang. Browser dan komputer pengguna boleh ditutup.
+
+## Hapus beberapa transaksi
+
+Pada **Rincian bulan ini**, klik **Pilih banyak**. Centang transaksi atau **Pilih semua hasil (maks. 50)**, lalu **Hapus terpilih**. Pilihan mengikuti dana, bulan, pencarian, dan jenis yang terlihat; mengganti filter mengosongkan pilihan. Transaksi yang termasuk hitung fisik terakhir tetap terkunci. Periksa daftar dan isi alasan sebelum konfirmasi. Setiap catatan dapat dikembalikan melalui **Transaksi dihapus → Pulihkan**.
+
+Penghapusan diproses satu per satu dengan UUID dan versi baris masing-masing. Hasil yang sudah terkonfirmasi tetap berlaku saat dijeda atau terhenti. Jika koneksi putus atau aplikasi dimuat ulang, pilih **Lanjutkan penghapusan** untuk meneruskan kiriman yang sama. **Batalkan sisa** memeriksa status terakhir sebelum melepas antrean; hasil yang sudah terhapus tidak otomatis dipulihkan. Jika transaksi berubah di Sheet saat mengantre, proses berhenti agar versi terbaru tidak tertimpa. Antrean yang belum selesai disimpan di browser perangkat ini; lanjutkan atau batalkan sebelum menghapus data browser maupun mencatat transaksi lain.
 
 ## Impor CSV
 
