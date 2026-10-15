@@ -82,13 +82,53 @@ async function run() {
     await page.setViewportSize({width:1280,height:900});await page.screenshot({path:join(evidence,'desktop.png'),fullPage:true});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     assert.deepEqual(errors,[]);
+    // CSV import previews without writing, excludes matches, and resumes the original UUID after a lost response and reload.
+    await page.unroute('**/api/transactions');
+    await page.locator('#openImport').click();
+    const csv='Tanggal;Dana;Jenis;Bendahara;Keterangan;Jumlah\n'+corrected.transactions.find(tx=>tx.description==='=Literal browser test').date+';MASJID;in;K1;=Literal browser test;125001\n2026-10-10;MASJID;Pemasukan;K1;=CSV <img src=x>;100\n2026-10-10;PHBI;Pemasukan;K2;Impor PHBI;200\n2026-10-10;MASJID;Pemasukan;K1;Salah;25,50';
+    await page.locator('#importFile').setInputFiles({name:'contoh-impor.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+    await page.waitForFunction(()=>document.getElementById('importSummary').textContent.includes('2 dipilih')).catch(async error=>{console.error('Import preview:',await page.locator('#importNotice').textContent(),await page.locator('#importSummary').textContent(),await page.locator('#importRows').textContent());throw error;});
+    assert.equal(await page.locator('#import-row-0').isChecked(),false);assert.equal(await page.locator('#import-row-3').isDisabled(),true);
+    assert.equal(await page.locator('#importRows img').count(),0);
+    assert.equal((await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json()).balance,1325001);
+    const importIds=[];let lostImport=true;
+    await page.route('**/api/transactions',async route=>{importIds.push(route.request().postDataJSON().id);const response=await route.fetch();if(lostImport){lostImport=false;await route.abort('failed');}else await route.fulfill({response});});
+    await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor terhenti')&&!document.getElementById('importSubmit').disabled);
+    await page.reload();await page.waitForFunction(()=>document.getElementById('importDialog').open && document.getElementById('importNotice').textContent.includes('sebelumnya'));
+    await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor selesai: 2'));
+    assert.equal(importIds.length,3);assert.equal(importIds[0],importIds[1]);assert.notEqual(importIds[1],importIds[2]);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('kas-masjid-demo-import-pending-v1')),null);
+    await page.locator('#importClose').click();await page.waitForFunction(()=>document.getElementById('currentBalance').textContent==='Rp1.325.101');
+    await page.setViewportSize({width:390,height:844});await page.locator('#openImport').click();
+    await page.locator('#importFile').setInputFiles({name:'ulang.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+    await page.waitForFunction(()=>document.getElementById('importSummary').textContent.includes('0 dipilih'));
+    assert.equal(await page.locator('#importSubmit').isDisabled(),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.screenshot({path:join(evidence,'import-mobile.png'),fullPage:true});await page.locator('#importClose').click();
+    await page.locator('#fund').selectOption('PHBI');await page.waitForFunction(()=>document.getElementById('currentBalance').textContent==='Rp500.200');
+    await page.locator('#openImport').click();lostImport=true;
+    const cancelCsv='Tanggal;Dana;Jenis;Bendahara;Keterangan;Jumlah\n2026-10-10;MASJID;in;K1;Impor terkonfirmasi sebelum batal;10\n2026-10-10;MASJID;in;K1;Sisa yang dibatalkan;20';
+    await page.locator('#importFile').setInputFiles({name:'batal.csv',mimeType:'text/csv',buffer:Buffer.from(cancelCsv)});
+    await page.waitForFunction(()=>document.getElementById('importSummary').textContent.includes('2 dipilih'));
+    await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor terhenti')&&!document.getElementById('importDiscard').disabled);
+    await page.locator('#importDiscard').click();await page.waitForFunction(()=>!document.getElementById('importDialog').open);
+    assert.match(await page.locator('#notice').textContent(),/1 transaksi/);
+    const cancelled=await (await context.request.get(origin+'/api/dashboard?fund=MASJID&month=2026-10')).json();assert.equal(cancelled.balance,1325111);assert.equal(cancelled.transactions.some(tx=>tx.description==='Sisa yang dibatalkan'),false);
+    await page.unroute('**/api/transactions');let pauseOnce=true;
+    await page.route('**/api/transactions',async route=>{const response=await route.fetch();if(pauseOnce){pauseOnce=false;await page.locator('#importStop').click();}await route.fulfill({response});});
+    await page.locator('#openImport').click();
+    await page.locator('#importFile').setInputFiles({name:'jeda.csv',mimeType:'text/csv',buffer:Buffer.from(cancelCsv.replace('Impor terkonfirmasi sebelum batal','Impor jeda pertama').replace('Sisa yang dibatalkan','Impor jeda kedua'))});
+    await page.waitForFunction(()=>document.getElementById('importSummary').textContent.includes('2 dipilih'));
+    await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor dijeda')&&!document.getElementById('importSubmit').disabled);
+    assert.match(await page.locator('#importSummary').textContent(),/1 tersimpan/);
+    await page.locator('#importSubmit').click();await page.waitForFunction(()=>document.getElementById('importNotice').textContent.includes('Impor selesai: 2'));await page.locator('#importClose').click();
+    assert.deepEqual(errors,[]);
     await page.locator('#logout').click();await page.waitForSelector('#loginPanel:not([hidden])');
     assert.equal((await context.request.get(origin+'/api/dashboard')).status(),401);
     await context.close();
     // The process worker publishes at startup without any logged-in browser.
     assert.ok((await readFile(join(dir,'public.pdf'))).length>1000);
-    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,rememberDevice:true,reopenWithoutLogin:true,deferredPdf:true,manualPdfRefresh:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
-    console.log('Browser smoke passed: mobile, desktop, remembered login/reopen/logout, deferred and manual PDF, UUID retry across reload, edit/delete/restore, history search, PHBI, literal text, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
+    await writeFile(join(evidence,'browser-checks.json'),JSON.stringify({mobile:true,desktop:true,login:true,logout:true,rememberDevice:true,reopenWithoutLogin:true,deferredPdf:true,manualPdfRefresh:true,csvPreview:true,csvDuplicateWarnings:true,csvRetryAcrossReload:true,csvPhbiSeparated:true,csrfCoveredByHttpTests:true,lostResponseUuidRetry:true,changeRetryAcrossReload:true,editDeleteRestore:true,historySearch:true,phbiSeparated:true,literalText:true,previewPages:audit.pageCount,paginationPages:longAudit.pageCount,pageErrors:errors,workerWithoutBrowser:true},null,2));
+    console.log('Browser smoke passed: CSV preview, duplicate warnings, retry across reload, pause/resume/cancel, PHBI, mobile/desktop, remembered login, edit/delete/restore, deferred/manual PDF, 3-page preview, '+longAudit.pageCount+'-page pagination, worker without browser.');
   } finally {
     await browser?.close();server.kill();await new Promise(resolve=>server.once('exit',resolve));await rm(dir,{recursive:true,force:true});
   }

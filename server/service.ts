@@ -3,6 +3,7 @@ import {findRequest,signature,todayJakarta} from './accounting.js';
 import {inspectPdf} from './pdf.js';
 import * as m from './model.js';
 import {changeReceipt,validatedChange,transactionView,deletedViews} from './changes.js';
+import {parseImportCsv,previewImportRows} from './import.js';
 import type {Adapter,Config,Fund,Input,Source,Status} from './types.js';
 
 interface Publication {hash?: string; updatedAt?: string; status: Status}
@@ -48,6 +49,10 @@ export class CashService {
         pdfUrl:this.cfg.demo ? '/api/pdf/public' : `https://drive.google.com/file/d/${this.cfg.pdfId}/view`,
         automatic:this.cfg.automatic,demo:this.cfg.demo,reportStartDate:source.report.startDate,reportOpening:source.report.opening};
     });
+  }
+  previewImport(csv: unknown) {
+    const rows=parseImportCsv(csv);
+    return this.queue.run(async()=>({rows:previewImportRows(rows,await this.adapter.source(),todayJakarta())}));
   }
   saveTransaction(input: unknown) {
     return this.queue.run(async () => {

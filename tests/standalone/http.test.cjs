@@ -17,7 +17,7 @@ async function fixture(t,live=false,loginQuery='') {
 }
 test('Every data, preview and write endpoint rejects anonymous requests; owner mutations enforce CSRF and Origin',async t=>{
   const {origin,cookie}=await fixture(t);
-  for(const [path,method] of [['/api/dashboard','GET'],['/api/transactions/x','GET'],['/api/transactions','POST'],['/api/changes','POST'],['/api/changes/x','GET'],['/api/pdf/preview','POST'],['/api/pdf/refresh','POST'],['/api/pdf/public','GET']]) assert.equal((await fetch(origin+path,{method})).status,401,path);
+  for(const [path,method] of [['/api/dashboard','GET'],['/api/transactions/x','GET'],['/api/transactions','POST'],['/api/changes','POST'],['/api/changes/x','GET'],['/api/pdf/preview','POST'],['/api/pdf/refresh','POST'],['/api/pdf/public','GET'],['/api/import/template','GET'],['/api/import/preview','POST']]) assert.equal((await fetch(origin+path,{method})).status,401,path);
   const session=await (await fetch(origin+'/api/session',{headers:{Cookie:cookie}})).json();assert.equal(session.authenticated,true);
   const tx={id:crypto.randomUUID(),fund:'MASJID',type:'in',code:'K1',date:'2026-10-09',description:'=Literal text',amount:123};
   const request=headers=>fetch(origin+'/api/transactions',{method:'POST',headers:{Cookie:cookie,'Content-Type':'application/json',...headers},body:JSON.stringify(tx)});
@@ -29,6 +29,18 @@ test('Every data, preview and write endpoint rejects anonymous requests; owner m
   assert.equal((await fetch(origin+'/api/dashboard',{headers:{Cookie:cookie}})).status,200);
   const logout=await fetch(origin+'/auth/logout',{method:'POST',headers:{Cookie:cookie,Origin:origin,'X-CSRF-Token':session.csrf}});assert.equal(logout.status,200);
   assert.equal((await fetch(origin+'/api/dashboard',{headers:{Cookie:cookie}})).status,401);
+});
+
+test('CSV template contains headers only; preview requires CSRF and supports the bounded file size without writes',async t=>{
+  const {origin,cookie,adapter}=await fixture(t),before=JSON.stringify(await adapter.source());
+  const template=await fetch(origin+'/api/import/template',{headers:{Cookie:cookie}});assert.equal(template.status,200);assert.match(template.headers.get('content-disposition'),/attachment/);
+  const header=(await template.text()).trim().replace(/^\ufeff/,'');assert.equal(header,'Tanggal;Dana;Jenis;Bendahara;Keterangan;Jumlah');
+  const session=await fetch(origin+'/api/session',{headers:{Cookie:cookie}}).then(r=>r.json());
+  const csv=header+'\n'+Array(50).fill('2026-10-09;MASJID;Pemasukan;K1;'+'X'.repeat(450)+';1').join('\n');assert.ok(Buffer.byteLength(csv)>16384);
+  const call=headers=>fetch(origin+'/api/import/preview',{method:'POST',headers:{Cookie:cookie,'Content-Type':'application/json',...headers},body:JSON.stringify({csv})});
+  assert.equal((await call({Origin:origin})).status,403);assert.equal((await call({Origin:'https://attacker.test','X-CSRF-Token':session.csrf})).status,403);
+  const result=await call({Origin:origin,'X-CSRF-Token':session.csrf});assert.equal(result.status,200);assert.equal((await result.json()).rows.length,50);
+  assert.equal(JSON.stringify(await adapter.source()),before);
 });
 test('OAuth uses offline access and PKCE; invalid state is rejected before token exchange',async t=>{
   const {origin,cookie,login}=await fixture(t,true),url=new URL(login.headers.get('location'));

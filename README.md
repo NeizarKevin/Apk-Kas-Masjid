@@ -59,6 +59,14 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - Tanggal kalender dibaca/ditulis sebagai serial Sheets tanpa pergeseran zona waktu. Pengaturan zona waktu workbook lama dipertahankan; batas tanggal hari ini pada aplikasi memakai Asia/Jakarta.
 - Saat aktif, server memeriksa pembukuan dan memperbarui PDF sekitar lima menit, baik dari simpan aplikasi maupun edit manual di Sheet. Tombol **Perbarui PDF** tersedia jika perlu segera. Pada hosting gratis, QStash memanggil backend Vercel dan Redis menyimpan status, token, sesi, serta lock bersama. Signature yang sama melewati ekspor ulang. Browser dan komputer pengguna boleh ditutup.
 
+## Impor CSV
+
+Klik **Impor CSV** pada kartu Transaksi Baru, lalu **Unduh template CSV**. Template hanya berisi header: `Tanggal;Dana;Jenis;Bendahara;Keterangan;Jumlah`. Isi di Excel/Google Sheets dan simpan sebagai **CSV UTF-8**. File `.xlsx`, foto, dan PDF belum diterima. Tanggal menerima `DD/MM/YYYY` atau `YYYY-MM-DD`; dana `MASJID`/`PHBI`; jenis `Pemasukan`/`Pengeluaran`; bendahara `K1`/`K2`/`K3`; jumlah Rupiah bulat seperti `50000` atau `50.000`. Pemisah koma dan titik koma didukung; isi kolom yang mengandung pemisah harus dikutip sesuai CSV.
+
+Maksimal 50 transaksi dan 64 KB per file. Pratinjau memeriksa aturan pembukuan yang sama tanpa menulis ke Sheet. Baris invalid tidak dapat dipilih. Baris dengan tanggal/dana/jenis/bendahara/keterangan/nominal identik terhadap jurnal aktif atau baris sebelumnya ditandai dan tidak dipilih otomatis; transaksi nyata yang memang sama boleh dipilih secara eksplisit.
+
+Impor menyimpan transaksi terpilih satu per satu melalui endpoint simpan yang sudah terverifikasi, dengan progres, jeda, dan UUID per baris. Impor bukan transaksi atomik satu file: transaksi yang sudah terkonfirmasi tetap ada jika proses berhenti. Daftar yang belum selesai disimpan privat di browser agar reload atau respons hilang dapat dilanjutkan dengan UUID yang sama. Gunakan **Lanjutkan impor**, jangan memulai kiriman pengganti. **Batalkan sisa impor** memeriksa status kiriman yang belum terkonfirmasi terlebih dahulu; transaksi yang sudah tersimpan tidak dihapus. PDF mengikuti jadwal biasa.
+
 ## PDF dan keamanan data
 
 Adapter memakai tiga tab serta gaya workbook laporan lama, menulis lewat Sheets API, lalu membaca ulang ringkasan, saldo bulanan, rincian, dan subtotal. Ekspor native Google Sheets memakai OAuth server; aplikasi dan pekerja PDF tidak memanggil endpoint, runtime, atau trigger Apps Script.
