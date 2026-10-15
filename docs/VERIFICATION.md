@@ -4,7 +4,7 @@ Dibangun dari remote `main` commit `48d3f02258d1a6526c66f5b0bb82b46e746bb541`, b
 
 ## Cakupan
 
-- Build TypeScript dan 97 tes otomatis, termasuk regresi 44 tes lama. Regresi zona waktu memastikan nomor tanggal kalender Sheet tetap sama dengan pengaturan workbook lama.
+- Build TypeScript dan 99 tes otomatis, termasuk regresi 44 tes lama. Regresi zona waktu memastikan nomor tanggal kalender Sheet tetap sama dengan pengaturan workbook lama.
 - Adapter: jurnal tunggal, write A:F, formula sebagai teks, PHBI null, metadata, UUID, checkpoint, template, target ID lama, checksum, dan izin.
 - Layanan: retry bersamaan, restart, respons hilang sesudah commit, koreksi tanggal lama, simpan/koreksi tanpa ekspor PDF, kegagalan dan pemulihan pekerja PDF, status menunggu sesudah restart, sumber berubah, signature, dan PHBI terpisah.
 - Koreksi: edit/hapus/pulihkan pada baris yang sama, note cadangan, alasan dan riwayat, UUID perubahan setelah respons putus, konflik versi, larangan perpindahan dana, proteksi checkpoint, dan kompatibilitas parser Apps Script lama. Browser juga menguji pencarian serta retry perubahan setelah reload.
@@ -31,6 +31,8 @@ Jadwal QStash setelah cutover berhasil mengirim HTTP 200 pada 14 Oktober 2026 pu
 Enam tes tambahan mencakup enkripsi record yang terikat nama, manipulasi ciphertext, TTL sesi, dua instance memperebutkan lock, penolakan write saat Redis gagal/deadline lewat, lease yang dipertahankan saat respons write hilang, sesi lintas instance, logout bersama, endpoint jadwal dengan secret, konfigurasi cloud yang menolak mode tidak aman, serta respons OAuth sesudah lock dilepas. Regresi OAuth juga memastikan grant baru tidak mewarisi metadata kedaluwarsa token Testing sebelumnya.
 
 ## Batas pengujian
+
+Audit menyeluruh 15 Oktober 2026 memperbaiki konflik baris dihapus yang diisi manual, pencocokan nominal PDF sebagai angka utuh, pemulihan koreksi setelah gagal baca dashboard, akses login saat sesi habis di dialog, penanganan logout saat koneksi putus, serta label bulan pilihan. Uji pemulihan pada Chromium/WebKit, pemeriksaan dependensi, dan pembacaan sumber/PDF asli berhasil. Lihat [temuan, bukti, dan batas audit](AUDIT.md).
 
 Evaluasi suara lama menemukan nominal gabungan terpotong (`satu juta lima ratus ribu` menjadi 500.000), skala desimal salah (`1,5 juta` menjadi 15 juta), keterangan kehilangan angka barang, dan hasil pengenalan langsung mengganti form. Parser baru diuji dengan gabungan angka/kata, desimal berskala, ribu/juta/miliar, jumlah barang, tanggal kalender Jakarta, tahun terucap, tanggal invalid/masa depan, nama donor vs pemegang, dana/jenis/kode bertentangan, serta penolakan nominal ambigu/negatif/pecahan/tidak aman. Parser mandiri memakai teks dari HTML produksi, bukan parser Apps Script arsip.
 

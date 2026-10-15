@@ -31,6 +31,12 @@ export function buildSource(book: GoogleObject, cfg: Config): Source {
   const fundMetadata = marked[0].developerMetadata.filter((meta: GoogleObject) => meta.metadataKey === 'KAS_DANA');
   if (fundMetadata.length > 1 || fundMetadata.some((meta: GoogleObject) => meta.metadataValue !== 'MASJID')) throw new Error('Metadata dana jurnal tidak sesuai.');
   if (phbi.rows[0]?.slice(0,6).map(m.cashHeader_).join('|') !== 'tanggal|kode|keterangan|pemasukan|pengeluaran|sumber') throw new Error('Header RAW PHBI berubah.');
+  for (const grid of [journal,phbi]) grid.notes.slice(1).forEach((notes,index)=>{
+    const row=index+1;
+    if (m.cashMeta_(notes[0])?.deleted && (grid.rows[row].some(value=>!m.emptyCashCell_(value)) || grid.cells[row].some(cell=>cell.userEnteredValue?.formulaValue))) {
+      throw new Error(`Baris transaksi dihapus telah diisi kembali: ${grid.title}!A${row+1}:F${row+1}. Cocokkan isi dan catatan identitas di Sheet sebelum melanjutkan.`);
+    }
+  });
   const transactions = m.cashReadLedger_([journal],cfg.baseline.date,'Asia/Jakarta').transactions as Transaction[];
   const phbiTransactions = m.cashPhbiRows_(phbi,'Asia/Jakarta') as Transaction[];
   const checkpoints = m.cashCheckpoints_(sync.rows,'Asia/Jakarta') as Record<'MASJID' | 'PHBI',Baseline>;

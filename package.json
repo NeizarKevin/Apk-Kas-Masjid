@@ -15,7 +15,8 @@
     "test:browser": "npm run build && node tests/standalone/browser-smoke.cjs",
     "setup:google": "node scripts/setup-google.cjs",
     "test:layout": "npm run build && node tests/standalone/responsive.cjs",
-    "test:voice": "npm run build && node tests/standalone/voice-browser.cjs"
+    "test:voice": "npm run build && node tests/standalone/voice-browser.cjs",
+    "test:recovery": "npm run build && node tests/standalone/recovery-browser.cjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.0.11",

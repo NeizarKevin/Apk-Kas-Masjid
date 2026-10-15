@@ -56,6 +56,7 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - Login berlaku 12 jam; centang **Ingat saya selama 7 hari** hanya di perangkat pribadi agar tidak perlu login setiap membuka ikon home screen. Pilihan disimpan dalam sesi OAuth, bukan dipercaya dari query callback. Keluar langsung mencabut sesi, termasuk sesi 7 hari.
 - Simpan dikonfirmasi dengan baca ulang sebelum `saved:true`, tanpa menunggu ekspor atau publikasi PDF. Edit/hapus/pulihkan memakai alur yang sama. Status PDF menampilkan laporan yang menunggu pembaruan; kegagalan PDF ditampilkan terpisah dan tidak menggandakan transaksi.
 - **Edit, Hapus, dan Pulihkan** tersedia pada rincian transaksi. Perubahan harus disertai alasan, memakai pemeriksaan versi baris, dan mempunyai UUID sendiri untuk kirim ulang yang aman. Riwayat tersimpan dalam note baris Sheet yang sama; tidak menambah database pembukuan kedua. Hapus mengosongkan A:F serta menyimpan cadangan privat pada note, tanpa menghapus atau menggeser baris. Tombstone tetap menahan UUID dan posisi baris agar transaksi yang dihapus tidak muncul kembali akibat retry.
+- Jangan mengisi ulang baris yang dihapus langsung di Sheet sambil meninggalkan note cadangannya. Aplikasi menahan operasi jika isi manual bertentangan dengan penanda dihapus, lalu menunjukkan lokasi baris untuk dicocokkan. Jika koneksi gagal saat membuka koreksi tertunda, gunakan **Muat ulang**; jika sesi habis, masuk kembali untuk melanjutkan UUID yang sama.
 - Transaksi yang sudah termasuk hitung fisik terbaru dikunci dari koreksi aplikasi. Cocokkan langsung di Sheet agar angka hitungan fisik tidak berubah diam-diam. Dana transaksi tidak dipindah melalui edit. Gunakan pencarian dan penyaring jenis transaksi untuk menemukan rincian bulan yang dipilih.
 - Checkpoint baru memeriksa saldo buku terhadap uang fisik. Selisih menahan PDF; backend tidak mengubah baseline atau membuat penyesuaian otomatis.
 - Tanggal kalender dibaca/ditulis sebagai serial Sheets tanpa pergeseran zona waktu. Pengaturan zona waktu workbook lama dipertahankan; batas tanggal hari ini pada aplikasi memakai Asia/Jakarta.
@@ -111,3 +112,5 @@ Nilai dan notes ditulis bersama lewat [Sheets batchUpdate](https://developers.go
 | `tests/standalone/` | Tes backend dan browser baru |
 
 Server melayani UI baru dari `public/`. Membuka HTML lama atau menerbitkan HTML saja tidak menjalankan backend. Secret, token, ID privat, baseline, handoff, dan snapshot asli tidak boleh masuk repo publik.
+
+Audit terbaru dan cara mengulang pengujian: [docs/AUDIT.md](docs/AUDIT.md). Uji pemulihan koneksi/sesi tersedia melalui `npm run test:recovery`.

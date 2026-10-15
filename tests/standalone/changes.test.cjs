@@ -67,6 +67,25 @@ test('Tombstones reserve rows and stay compatible with the original Apps Script 
   const old=gas.cashReadLedger_([source.journal],'2026-10-08','Asia/Jakarta');assert.equal(old.transactions.some(tx=>tx.description==='Contoh biaya kebersihan'),false);
   assert.equal(old.transactions.length,source.transactions.length);
 });
+
+test('Manual reuse of a deleted row, including a blank formula, blocks reads and publication before any restore can overwrite it',async t=>{
+  for(const fund of ['MASJID','PHBI']){
+    const {cfg,adapter,service,request,published}=await fixture(t,true);
+    await service.saveTransaction({id:crypto.randomUUID(),fund,type:'in',code:'K1',date:'2026-10-10',description:'Catatan sebelum dihapus',amount:123});
+    const tx=(await service.getDashboard(fund,'2026-10')).transactions.find(tx=>tx.description==='Catatan sebelum dihapus');
+    await service.changeTransaction(request(tx,'delete'));
+    const original=(await adapter.source()).book;
+    for(const formula of [false,true]){
+      const book=structuredClone(original),row=book.sheets.find(sheet=>sheet.properties.sheetId==tx.key.split(':')[0]).data[0].rowData[Number(tx.key.split(':')[1])-1];
+      if(formula)row.values[2]={...row.values[2],userEnteredValue:{formulaValue:'=""'},effectiveValue:{stringValue:''}};
+      else ['2026-10-10','K1','Catatan manual baru',456,'',''].forEach((value,i)=>{row.values[i].userEnteredValue=typeof value==='number'?{numberValue:value}:{stringValue:value};});
+      await fs.writeFile(join(cfg.stateDir,'demo-sheet.json'),JSON.stringify(book));
+      await assert.rejects(adapter.source(),/Baris transaksi dihapus.*diisi kembali/);
+      assert.equal((await service.refreshPublicPdf()).state,'ERROR');assert.equal(published.length,0);
+      assert.deepEqual(JSON.parse(await fs.readFile(join(cfg.stateDir,'demo-sheet.json'),'utf8')),book);
+    }
+  }
+});
 test('PHBI corrections remain separate and audit text never enters the public report signature',async t=>{
   const {service,adapter,request}=await fixture(t);await service.saveTransaction({id:crypto.randomUUID(),fund:'PHBI',type:'in',code:'K1',date:'2026-10-09',description:'Contoh PHBI',amount:100});
   const tx=(await service.getDashboard('PHBI','2026-10')).transactions[0];await service.changeTransaction(request(tx,'edit',{input:{fund:'PHBI',type:'in',code:'K1',date:tx.date,description:tx.description,amount:250}}));

@@ -61,11 +61,11 @@ select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(
     <div class="summary-grid" id="overview">
       <div class="sum-card balance-card"><div class="sum-label">Saldo saat ini</div><div class="sum-val" id="currentBalance">—</div><p class="sum-caption">Uang kas yang sudah dikonfirmasi</p></div>
       <div class="sum-card">
-        <div class="sum-label">Pemasukan bulan ini</div>
+        <div class="sum-label" id="incomePeriod">Pemasukan bulan ini</div>
         <div class="sum-val" id="totalIncome">—</div>
       </div>
       <div class="sum-card">
-        <div class="sum-label">Pengeluaran bulan ini</div>
+        <div class="sum-label" id="expensePeriod">Pengeluaran bulan ini</div>
         <div class="sum-val out" id="totalExpense">—</div>
       </div>
 
@@ -140,7 +140,7 @@ select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(
   <!-- History -->
   <section class="history-card" id="records" aria-label="Riwayat transaksi">
     <div class="history-head">
-      <div class="section-label">Rincian bulan ini</div>
+      <div class="section-label" id="historyPeriod">Rincian bulan ini</div>
       <span class="badge" id="historyCount">0 data</span>
     </div>
     <div class="history-filters"><input id="historySearch" type="search" aria-label="Cari transaksi" placeholder="Cari keterangan atau pemegang uang"><select id="historyType" aria-label="Saring jenis transaksi"><option value="">Semua jenis</option><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
@@ -405,7 +405,12 @@ async function applyVoice(){
       const [url, verb] = routes[method];
       const response = await fetch(url, {method:verb,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:verb === 'POST' ? JSON.stringify(args[0] || {}) : undefined,signal:AbortSignal.timeout(180000)});
       const result = await response.json();
-      if (response.status === 401) {connected=false; $('loginPanel').hidden=false; $('accountRow').hidden=true; setBusy(false);}
+      if (response.status === 401) {
+        connected=false;dashboard=null;csrf='';$('loginPanel').hidden=false;$('accountRow').hidden=true;
+        $('connection').textContent='Belum masuk';$('conn-dot').className='conn-dot off';
+        document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
+        notice('Sesi berakhir. Masuk kembali; kiriman yang belum terkonfirmasi tetap disimpan pada perangkat ini.',true);setBusy(false);
+      }
       if (!response.ok) throw new Error(result.error || 'Permintaan gagal. Coba kembali.');
       return result;
     }
@@ -461,6 +466,8 @@ async function applyVoice(){
     function render(data) {
       dashboard = data;
       $('month').value = data.month;
+      const period=monthNames[Number(data.month.slice(5,7))-1]+' '+data.month.slice(0,4);
+      $('incomePeriod').textContent='Pemasukan '+period;$('expensePeriod').textContent='Pengeluaran '+period;$('historyPeriod').textContent='Rincian '+period;
       $('formFund').textContent = 'Dana: ' + (data.fund === 'PHBI' ? 'PHBI' : 'Kas masjid');
       $('totalIncome').textContent = rupiah(data.income);
       $('totalExpense').textContent = rupiah(data.expense);
@@ -583,9 +590,13 @@ async function applyVoice(){
         const data = await api('getDashboard', $('fund').value, $('month').value);
         if (version !== loadVersion) return;
         render(data);
+        if (pendingChange && !$('changeDialog').open) {
+          const saved=pendingChange,target=saved.view || data.transactions.concat(data.deletedTransactions || []).find(tx=>tx.key===saved.key) || saved.input;
+          if (target) openChange(saved.action,target,true);
+        }
       } catch (error) {
         if (version !== loadVersion) return;
-        $('connection').textContent = 'Belum terhubung'; $('conn-dot').className = 'conn-dot off'; notice(error.message, true);
+        $('connection').textContent = connected ? 'Belum terhubung' : 'Belum masuk'; $('conn-dot').className = 'conn-dot off'; notice(error.message, true);
         // The displayed figures are stale; require a successful reload before writing.
         dashboard = null; setBusy(false);
       }
@@ -833,8 +844,11 @@ async function applyVoice(){
       $('loginLink').href='/auth/login'+($('rememberDevice').checked ? '?remember=1' : '');
     });
     $('logout').addEventListener('click',async () => {
-      const response=await fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin'});
-      if (response.ok) location.reload(); else notice('Keluar belum berhasil. Muat ulang dan coba kembali.',true);
+      try {
+        const response=await fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin',signal:AbortSignal.timeout(10000)});
+        if (!response.ok) throw new Error('Logout failed');
+        location.reload();
+      } catch {notice('Keluar belum berhasil. Periksa koneksi, lalu coba kembali.',true);}
     });
     async function boot() {
       setBusy(false);
@@ -853,15 +867,10 @@ async function applyVoice(){
           if (demo) IMPORT_KEY='kas-masjid-demo-import-pending-v1';
           if (demo) BULK_KEY='kas-masjid-demo-bulk-delete-v1';
           const saved=JSON.parse(localStorage.getItem(CHANGE_KEY) || 'null');
-          if (saved?.fund) {$('fund').value=saved.fund;$('month').value=saved.month || '';}
+          if (saved && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(saved.id)) {pendingChange=saved;$('fund').value=saved.fund;$('month').value=saved.month || '';}
           const deleted=JSON.parse(localStorage.getItem(BULK_KEY) || 'null');
           if(deleted?.started && Array.isArray(deleted.rows) && deleted.rows.length>0 && deleted.rows.length<=50 && deleted.rows.every(row=>row.tx?.key && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(row.id))){bulkBatch=deleted;$('fund').value=deleted.fund;$('month').value=deleted.month || '';}
           restorePending();await loadDashboard();
-          if (saved && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(saved.id)) {
-            pendingChange=saved;
-            const target=saved.view || dashboard.transactions.concat(dashboard.deletedTransactions || []).find(tx=>tx.key===saved.key) || saved.input;
-            if (target) openChange(saved.action,target,true);
-          }
           const imported=JSON.parse(localStorage.getItem(IMPORT_KEY) || 'null');
           if(imported?.started && Array.isArray(imported.rows) && imported.rows.length<=50 && imported.rows.every(row=>row.input && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(row.input.id))){
             importBatch=imported;setBusy(false);renderImport();

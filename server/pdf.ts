@@ -35,8 +35,9 @@ export async function inspectPdf(bytes: Buffer, report: Report) {
     }
     const actual = normalized(text);
     const amounts = [report.opening,report.income,report.expense,report.ending,...report.incoming.concat(report.outgoing).map(tx => tx.amount)];
-    const expected = ['LAPORAN ARUS KAS','RINCIAN PENERIMAAN KAS','RINCIAN PENGELUARAN KAS',m.cashDateLabel_(report.startDate),m.cashDateLabel_(report.latest),...report.months.map(month => month.label),...report.incoming.concat(report.outgoing).map(tx => tx.description),...amounts.map(value => Math.abs(value).toLocaleString('id-ID'))];
-    if (expected.some(value => !actual.includes(normalized(value)))) throw new Error('Isi PDF tidak lengkap atau tidak sama dengan laporan.');
+    const printedAmounts=new Set(text.normalize('NFKC').match(/(?<![\d.,])\d+(?:\.\d{3})*(?![\d.,])/g) || []);
+    const expected = ['LAPORAN ARUS KAS','RINCIAN PENERIMAAN KAS','RINCIAN PENGELUARAN KAS',m.cashDateLabel_(report.startDate),m.cashDateLabel_(report.latest),...report.months.map(month => month.label),...report.incoming.concat(report.outgoing).map(tx => tx.description)];
+    if (expected.some(value => !actual.includes(normalized(value))) || amounts.some(value=>!printedAmounts.has(Math.abs(value).toLocaleString('id-ID')))) throw new Error('Isi PDF tidak lengkap atau tidak sama dengan laporan.');
     return {pageCount:document.numPages,pages};
   } finally {await loading.destroy();}
 }
