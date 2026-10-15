@@ -10,7 +10,7 @@ Gunakan Node.js **24.x**. Dari direktori repo:
 
 ```sh
 npm ci
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run demo
 ```
 
@@ -19,6 +19,7 @@ Buka **http://localhost:3000**, lalu **Buka demo aplikasi**. Demo memakai saldo 
 ```sh
 npm test             # build + regresi lama + tes backend
 npm run test:browser # browser HP/desktop + respons hilang + PDF
+npm run test:layout  # WebKit/Chromium, lebar kontrol, tanggal, dialog
 ```
 
 PDF dan screenshot tes berada di `test-results/` dan diabaikan Git. Tes memakai data sintetis dan mock Google; ini tidak membuktikan kredensial, ekspor Google, atau penulisan produksi sudah aktif.

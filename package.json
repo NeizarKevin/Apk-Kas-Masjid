@@ -13,7 +13,8 @@
     "test": "npm run build && node --test tests/*.test.cjs tests/standalone/*.test.cjs",
     "test:legacy": "node --test tests/*.test.cjs",
     "test:browser": "npm run build && node tests/standalone/browser-smoke.cjs",
-    "setup:google": "node scripts/setup-google.cjs"
+    "setup:google": "node scripts/setup-google.cjs",
+    "test:layout": "npm run build && node tests/standalone/responsive.cjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.0.11",
