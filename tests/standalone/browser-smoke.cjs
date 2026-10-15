@@ -47,6 +47,7 @@ async function run() {
       if(drop){drop=false;await route.abort('failed');}else await route.fulfill({response});
     });
     await page.locator('#submitButton').click();await page.waitForFunction(()=>document.getElementById('submitButton').textContent==='Kirim ulang transaksi',{},{timeout:120000});
+    assert.equal(await page.locator('#voice-btn').isDisabled(),true);
     await page.locator('#submitButton').click();await page.waitForFunction(()=>document.getElementById('submitButton').textContent==='Simpan transaksi'&&!document.getElementById('submitButton').disabled,{},{timeout:120000});
     assert.equal(ids.length,2);assert.equal(ids[0],ids[1]);assert.match(await page.locator('#notice').textContent(),/Tidak ada pencatatan ganda/);
     assert.equal(await page.locator('#currentBalance').textContent(),'Rp1.300.001');

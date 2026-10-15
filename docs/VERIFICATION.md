@@ -4,7 +4,7 @@ Dibangun dari remote `main` commit `48d3f02258d1a6526c66f5b0bb82b46e746bb541`, b
 
 ## Cakupan
 
-- Build TypeScript dan 92 tes otomatis, termasuk regresi 44 tes lama. Regresi zona waktu memastikan nomor tanggal kalender Sheet tetap sama dengan pengaturan workbook lama.
+- Build TypeScript dan 97 tes otomatis, termasuk regresi 44 tes lama. Regresi zona waktu memastikan nomor tanggal kalender Sheet tetap sama dengan pengaturan workbook lama.
 - Adapter: jurnal tunggal, write A:F, formula sebagai teks, PHBI null, metadata, UUID, checkpoint, template, target ID lama, checksum, dan izin.
 - Layanan: retry bersamaan, restart, respons hilang sesudah commit, koreksi tanggal lama, simpan/koreksi tanpa ekspor PDF, kegagalan dan pemulihan pekerja PDF, status menunggu sesudah restart, sumber berubah, signature, dan PHBI terpisah.
 - Koreksi: edit/hapus/pulihkan pada baris yang sama, note cadangan, alasan dan riwayat, UUID perubahan setelah respons putus, konflik versi, larangan perpindahan dana, proteksi checkpoint, dan kompatibilitas parser Apps Script lama. Browser juga menguji pencarian serta retry perubahan setelah reload.
@@ -31,6 +31,12 @@ Jadwal QStash setelah cutover berhasil mengirim HTTP 200 pada 14 Oktober 2026 pu
 Enam tes tambahan mencakup enkripsi record yang terikat nama, manipulasi ciphertext, TTL sesi, dua instance memperebutkan lock, penolakan write saat Redis gagal/deadline lewat, lease yang dipertahankan saat respons write hilang, sesi lintas instance, logout bersama, endpoint jadwal dengan secret, konfigurasi cloud yang menolak mode tidak aman, serta respons OAuth sesudah lock dilepas. Regresi OAuth juga memastikan grant baru tidak mewarisi metadata kedaluwarsa token Testing sebelumnya.
 
 ## Batas pengujian
+
+Evaluasi suara lama menemukan nominal gabungan terpotong (`satu juta lima ratus ribu` menjadi 500.000), skala desimal salah (`1,5 juta` menjadi 15 juta), keterangan kehilangan angka barang, dan hasil pengenalan langsung mengganti form. Parser baru diuji dengan gabungan angka/kata, desimal berskala, ribu/juta/miliar, jumlah barang, tanggal kalender Jakarta, tahun terucap, tanggal invalid/masa depan, nama donor vs pemegang, dana/jenis/kode bertentangan, serta penolakan nominal ambigu/negatif/pecahan/tidak aman. Parser mandiri memakai teks dari HTML produksi, bukan parser Apps Script arsip.
+
+Uji browser suara pada WebKit dan Chromium menggunakan SpeechRecognition tiruan: interim/final, pratinjau tanpa write, persetujuan draf terpisah, simpan/baca ulang, pemisahan PHBI, pemeriksaan ulang saat form berubah, jumlah tak terbaca mengosongkan jumlah lama, fallback teks/dikte, izin/koneksi/no-speech, start gagal, timeout awal/rekam, penghentian saat halaman disembunyikan, callback sesi lama diabaikan, teks literal, tanggal invalid, dan batas layout 320 px. Regresi browser utama juga memeriksa input suara dinonaktifkan saat kiriman uang belum terkonfirmasi. Tidak ada audio sungguhan atau transaksi produksi dipakai pada tes ini; pengenalan mikrofon, izin sistem, dan akurasi transkripsi iPhone fisik tetap perlu dicoba pemilik.
+
+Kegagalan baca dashboard ketika draf memilih dana lain menonaktifkan pencatatan hingga data segar dimuat. Tombol Muat ulang tetap tersedia untuk pemulihan, dan perubahan konteks meminta pratinjau ulang sebelum draf diterapkan. Skenario putus/muat ulang ini diuji pada kedua mesin browser.
 
 Antarmuka Midnight diperiksa pada Chromium dengan lebar 320, 390, 768, 1280, dan 1440 piksel: posisi form/riwayat, batas kontrol, angka besar dan keterangan panjang, serta tombol dialog tetap berada dalam viewport termasuk layar 320 × 650. Susunan desktop memakai dua kolom; HP satu kolom tanpa penempatan grid paksa yang mendahulukan riwayat. Dialog memiliki satu area isi yang bergulir dan footer tindakan tetap terlihat.
 

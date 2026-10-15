@@ -20,6 +20,7 @@ Buka **http://localhost:3000**, lalu **Buka demo aplikasi**. Demo memakai saldo 
 npm test             # build + regresi lama + tes backend
 npm run test:browser # browser HP/desktop + respons hilang + PDF
 npm run test:layout  # WebKit/Chromium, lebar kontrol, tanggal, dialog
+npm run test:voice   # alur suara dengan peristiwa SpeechRecognition tiruan
 ```
 
 PDF dan screenshot tes berada di `test-results/` dan diabaikan Git. Tes memakai data sintetis dan mock Google; ini tidak membuktikan kredensial, ekspor Google, atau penulisan produksi sudah aktif.
@@ -59,6 +60,16 @@ Baseline memakai JSON `{ "date": "YYYY-MM-DD", "amount": 1000000, "holders": { "
 - Checkpoint baru memeriksa saldo buku terhadap uang fisik. Selisih menahan PDF; backend tidak mengubah baseline atau membuat penyesuaian otomatis.
 - Tanggal kalender dibaca/ditulis sebagai serial Sheets tanpa pergeseran zona waktu. Pengaturan zona waktu workbook lama dipertahankan; batas tanggal hari ini pada aplikasi memakai Asia/Jakarta.
 - Saat aktif, server memeriksa pembukuan dan memperbarui PDF sekitar lima menit, baik dari simpan aplikasi maupun edit manual di Sheet. Tombol **Perbarui PDF** tersedia jika perlu segera. Pada hosting gratis, QStash memanggil backend Vercel dan Redis menyimpan status, token, sesi, serta lock bersama. Signature yang sama melewati ekspor ulang. Browser dan komputer pengguna boleh ditutup.
+
+## Input suara
+
+Buka **Isi dengan suara** pada Transaksi Baru, lalu **Mulai**. Ucapkan satu transaksi dan tunggu hasilnya, atau tekan **Hentikan**. Teks sementara tidak mengubah form. Periksa nominal, dana, jenis, tanggal, bendahara, dan keterangan pada pratinjau; perbaiki kolom **Ucapan / hasil dikte**, lalu **Periksa teks** jika perlu. **Gunakan draf** mengganti isian form, kemudian **Simpan transaksi** tetap harus ditekan secara terpisah.
+
+Contoh: “Infaq Jumat satu juta lima ratus ribu kemarin bendahara Kevin” atau “Pengeluaran PHBI konsumsi 250 ribu bendahara Wawan”. Nominal menerima angka lengkap, `1.250.000`, `1,5 juta`, `2 jt 350 rb`, dan gabungan kata hingga miliar. Angka jumlah barang dipertahankan dalam keterangan. Ucapkan nominal akhir untuk satu transaksi; ucapan dengan beberapa nominal atau format ambigu perlu diperjelas, bukan dihitung otomatis. Pecahan Rupiah, nominal negatif/tidak aman, tanggal invalid/masa depan, serta metadata yang bertentangan ditahan. Nominal yang tidak terbaca mengosongkan jumlah saat draf diterapkan agar nilai lama tidak terpakai.
+
+K1/K2/K3 dan “ka satu/kode dua” dikenali. Nama pemegang dapat disebut di awal kalimat atau bersama “bendahara/pemegang uang”; nama donor dalam keterangan tidak otomatis menjadi bendahara. Dana, jenis, tanggal, dan bendahara yang tidak disebut mengikuti form dan ditandai dalam pratinjau. “Kemarin” mengikuti kalender Jakarta dari server. Perubahan form setelah pratinjau meminta pemeriksaan ulang. Memilih dana lain lewat draf memuat dashboard dana tersebut sebelum menerapkan isian.
+
+Jika suara browser tidak tersedia, gunakan mikrofon keyboard iPhone pada kolom ucapan, atau ketik/tempel teks lalu **Periksa teks**. [Safari memakai layanan pengenalan Siri](https://webkit.org/blog/11648/new-webkit-features-in-safari-14-1/) dan akses dapat bergantung pada pengaturan perangkat/izin browser. Audio dapat diproses penyedia browser; aplikasi tidak merekam atau menyimpan audio di server. Fitur ini tidak menjanjikan pengenalan offline atau akurasi transkripsi sempurna. Perekaman berhenti saat aplikasi ditinggalkan, dan kegagalan/timeout memberi petunjuk untuk mencoba kembali. Kiriman yang belum terkonfirmasi harus diselesaikan sebelum memakai suara.
 
 ## Hapus beberapa transaksi
 
