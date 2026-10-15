@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kas Masjid">
+<title>Kas Masjid</title>
+<meta name="theme-color" content="#16242d">
+<style>
+:root{color-scheme:dark;--bg:#16242d;--card:#1e303b;--text:#edf5f6;--muted:#a5b9c3;--border:#354c58;--green:#a9e1c4;--green-light:#233f39;--green-mid:#a9e1c4;--red:#efb4a1;--red-light:#432f30;--radius:22px;--radius-sm:12px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-width:0}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button,a{touch-action:manipulation}button{cursor:pointer}button:disabled,input:disabled,select:disabled,textarea:disabled{opacity:.5;cursor:default}a{color:var(--green);text-underline-offset:3px}a,button,input,select,textarea,summary{outline-offset:4px}:focus-visible{outline:2px solid var(--green)}[hidden]{display:none!important}svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}h1,h2,h3{line-height:1.25}button,a,input,select,textarea{max-width:100%}input,select,textarea{width:100%;min-width:0;border:1px solid var(--border);border-radius:12px;background:#192a34;color:var(--text);padding:11px 12px;min-height:46px;font-size:16px}input::placeholder,textarea::placeholder{color:#8fa6b2}textarea{resize:vertical;min-height:90px}input[type=checkbox]{width:20px;min-height:20px;height:20px;padding:0;accent-color:var(--green);flex:none}input[type=date],input[type=month]{display:block;min-inline-size:0}input::-webkit-date-and-time-value{text-align:left}fieldset{border:0;min-width:0}label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:7px}summary{cursor:pointer;color:var(--muted);padding:12px 0;font-size:13px;min-height:44px}details p{margin:8px 0}.hint{font-size:13px;line-height:1.65;color:var(--muted);margin:10px 0;overflow-wrap:anywhere}.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:14px}
+.topbar,.scroll,.account-row,.demo-banner,.login-panel{max-width:1120px;margin-inline:auto}.topbar{padding:32px 24px 0}.topbar-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:36px}.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-icon{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid var(--border);background:var(--card);border-radius:14px;color:var(--green)}.brand h1{font-size:18px;font-weight:700;letter-spacing:-.4px}.brand p{font-size:11px;color:var(--muted);margin-top:3px}.conn-pill{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);white-space:nowrap}.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}.conn-dot.off{background:var(--red)}.heading-row{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:22px}.eyebrow{color:var(--green);font-size:11px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;margin-bottom:9px}.page-title{font-size:clamp(25px,3.1vw,34px);font-weight:650;letter-spacing:-1.2px}.page-subtitle{font-size:13px;color:var(--muted);margin-top:9px}.header-filters{width:320px;flex-shrink:0}.header-filters .form-grid{gap:12px}.header-filters input,.header-filters select{background-color:var(--card);font-size:14px}.section-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 22px}.section-nav a{min-height:44px;padding:10px 17px;border-radius:24px;text-decoration:none;font-size:13px;color:var(--muted)}.section-nav a:first-child{background:var(--card);color:var(--green)}.section-nav a:hover{background:var(--card);color:var(--text)}.summary-grid{display:grid;grid-template-columns:1.45fr 1fr 1fr;gap:14px}.sum-card{min-width:0;border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;background:var(--card)}.sum-label{font-size:12px;color:var(--muted);line-height:1.5}.sum-val{font-size:clamp(20px,2.2vw,28px);font-weight:650;letter-spacing:-1px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;margin-top:12px;color:var(--green)}.sum-val.out{color:var(--red)}.balance-card{background:linear-gradient(120deg,#b8ebcb,#8dd6b7);color:#15362c;border-color:transparent;position:relative;isolation:isolate;overflow:hidden}.balance-card:after{content:'';position:absolute;right:-35px;top:-50px;width:160px;height:180px;border:1px solid #15362c20;border-radius:90px;transform:rotate(30deg);z-index:-1}.balance-card .sum-label{color:#315c4a}.balance-card .sum-val{color:#15362c;font-size:clamp(25px,2.8vw,36px)}.sum-caption{font-size:11px;margin-top:6px;color:#315c4a}
+.demo-banner{font-size:12px;color:var(--muted);padding:16px 24px 0}.demo-banner strong{color:var(--green)}.account-row{padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--muted);font-size:11px}.account-actions{display:flex;align-items:center;gap:16px}.account-actions a{font-size:11px}.account-actions button{font-size:12px;min-height:36px;padding:5px 12px}.login-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-block:24px;max-width:620px}.login-panel h2{font-size:23px;margin-bottom:12px}.login-panel>p{color:var(--muted);font-size:14px}.remember-option{display:flex;align-items:center;gap:10px;color:var(--text);font-size:14px;margin-top:24px}.remember-hint{font-size:12px!important;margin:12px 0 20px}.login-link{display:inline-flex;background:var(--green);color:#15362c;min-height:46px;align-items:center;padding:10px 18px;text-decoration:none;border-radius:12px;font-weight:650;font-size:14px}
+.scroll{padding:4px 24px 40px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:20px;align-items:start}.entry-column,.review-column{display:grid;gap:18px;min-width:0}.card,.voice-card,.history-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);min-width:0}.card{padding:24px}.report-head,.history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.section-label{font-size:16px;font-weight:650;letter-spacing:-.3px}.form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.form-group{min-width:0}.form-group.full{grid-column:1/-1}.type-toggle{display:flex;gap:5px;padding:5px;background:#162731;border:1px solid var(--border);border-radius:14px;margin:18px 0}.toggle-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--muted);border-radius:9px;padding:11px 8px;font-size:13px;min-height:44px;font-weight:600}.toggle-btn.active-in{background:var(--green);color:#15362c}.toggle-btn.active-out{background:var(--red);color:#432f30}.amount-wrap{position:relative}.amount-prefix{position:absolute;top:12px;left:14px;color:var(--muted);font-size:15px}.amount-wrap input{padding-left:45px;font-variant-numeric:tabular-nums}.btn-row,.buttons{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}.btn-primary,.btn-reset,.secondary{min-height:44px;padding:10px 16px;border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;line-height:1.5;background:transparent;color:var(--text)}.btn-primary{background:var(--green);border-color:var(--green);color:#15362c}.btn-row .btn-primary{flex:1}.btn-reset{color:var(--muted)}.secondary:hover:not(:disabled),.btn-reset:hover:not(:disabled){background:#ffffff08}.danger{color:var(--red)}.btn-primary.danger{background:var(--red);border-color:var(--red);color:#392421}.badge{display:inline-block;color:var(--green);background:var(--green-light);font-size:10px;font-weight:600;padding:5px 9px;border-radius:8px;overflow-wrap:anywhere}.badge.error,.badge.warning{background:var(--red-light);color:var(--red)}.notice{grid-column:1/-1;padding:16px;border:1px solid #a9e1c440;border-radius:var(--radius-sm);background:var(--green-light);font-size:13px;color:var(--green);white-space:pre-line;overflow-wrap:anywhere}.notice.error{background:var(--red-light);color:var(--red);border-color:#efb4a140}.reconcile{background:var(--red-light);padding:12px;border-radius:12px;color:var(--red);font-size:12px}.reconcile div{display:flex;gap:12px;justify-content:space-between}.report-card .section-label{font-size:14px}#reportMessage{white-space:pre-line}.report-card .buttons{margin:12px 0}.report-card details{border-top:1px solid var(--border);margin-top:16px}.report-card #pdfLink{color:var(--green);width:100%}.voice-card{padding:18px 22px}.voice-inner{display:flex;align-items:center;gap:14px}.voice-btn{height:44px;width:44px;flex:none;border:1px solid var(--border);border-radius:14px;display:grid;place-items:center;background:transparent;color:var(--green)}.voice-btn.listening{color:var(--red);background:var(--red-light)}.voice-title{font-size:13px;font-weight:600}.voice-hint{font-size:11px;color:var(--muted);line-height:1.6;margin-top:3px}.voice-result{display:none;white-space:pre-line;font-size:12px;margin-top:14px;color:var(--muted)}.voice-result.show{display:block}.voice-filled{border-color:var(--green)}
+.history-head{padding:22px 22px 14px}.history-filters{display:grid;grid-template-columns:minmax(0,1fr) 135px;gap:10px;padding:0 22px 12px}.history-filters input,.history-filters select{font-size:13px}.history-tools{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 14px;align-items:center}.history-tools .secondary{font-size:12px;min-height:40px}.selection-tools{padding:14px 22px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#162731;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}.selection-tools label{display:flex;align-items:center;gap:9px;font-size:12px;margin:0}.selection-tools .secondary{font-size:12px}.transaction{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:17px 22px;border-top:1px solid var(--border);min-width:0}.transaction>div{min-width:0}.description{font-size:13px;font-weight:600;overflow-wrap:anywhere}.meta{font-size:11px;color:var(--muted);margin-top:4px}.amount{font-size:13px;font-weight:650;letter-spacing:-.3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;max-width:150px;text-align:right}.amount.in{color:var(--green)}.amount.out{color:var(--red)}.row-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.row-actions .secondary{font-size:11px;min-height:36px;padding:6px 10px}.audit{margin-top:4px}.audit summary{font-size:11px;padding-block:8px;min-height:36px}.audit p{font-size:11px;white-space:pre-line;color:var(--muted);overflow-wrap:anywhere}.select-transaction{display:flex;gap:10px;margin:0;align-items:start;color:var(--text)}.select-transaction input{margin-top:2px}.history-foot{border-top:1px solid var(--border);padding:16px 22px;display:flex;align-items:center;gap:14px}.history-foot .hint{font-size:11px;margin:0}.history-foot .secondary{flex:none;font-size:12px}.deleted-list{padding:0 22px}.deleted-list>.transaction{padding-inline:0}.deleted-list .transaction{grid-template-columns:minmax(0,1fr)}.deleted-list p{font-size:12px;overflow-wrap:anywhere}
+dialog{position:fixed;inset:0;margin:auto;width:min(620px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--border);border-radius:22px;background:var(--card);color:var(--text);box-shadow:0 24px 100px #0007;overflow:hidden}dialog::backdrop{background:#08151dcc;backdrop-filter:blur(4px)}.dialog-shell{display:flex;flex-direction:column;max-height:calc(100dvh - 34px);min-height:0}.dialog-header{padding:22px 24px 16px;border-bottom:1px solid var(--border);flex:none}.dialog-header h2{font-size:21px;letter-spacing:-.6px}.dialog-header .hint{margin-bottom:0}.dialog-content{padding:6px 24px 18px;overflow:auto;min-height:0;overscroll-behavior:contain}.dialog-footer{flex:none;padding:16px 24px;border-top:1px solid var(--border);background:var(--card);margin:0;gap:8px}.dialog-footer .btn-primary{margin-left:auto}.dialog-content .form-grid{margin:14px 0}.dialog-content .form-group{margin-top:12px}.dialog-content .form-grid .form-group{margin-top:0}.import-row{display:flex;gap:12px;border-top:1px solid var(--border);padding:14px 0}.import-row input{margin-top:3px}.import-row label{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--text);margin:0}.import-row strong,.import-row small{display:block}.import-row strong{font-size:13px}.import-row small{font-size:11px;font-weight:400;color:var(--muted);line-height:1.7;margin-top:4px}.import-error{color:var(--red)!important}#importSummary,#bulkSummary{font-weight:650}#changeSummary{white-space:pre-line}.bulk-item{padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;overflow-wrap:anywhere}.bulk-item small{display:block;color:var(--muted);margin-top:3px}.bulk-item.done{color:var(--green)}.bulk-state{min-height:24px;white-space:pre-line}.selection-count{font-size:12px;color:var(--muted)}
+/* iOS date/month controls miscalculate percentage widths with input padding (WebKit 301648). */
+.date-control{display:flex;align-items:center;min-width:0;min-height:46px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#192a34}
+.header-filters .date-control{background:var(--card)}
+.date-control input{appearance:none;-webkit-appearance:none;flex:1 1 0;width:0;min-width:0;min-inline-size:0;max-width:100%;height:24px;min-height:24px;padding:0;border:0;border-radius:0;background:transparent}
+.date-control:focus-within{outline:2px solid var(--green);outline-offset:3px}.date-control input:focus-visible{outline:none}
+
+@media(min-width:900px){.history-card #history{max-height:620px;overflow:auto;scrollbar-gutter:stable}}@media(max-width:899px){.heading-row{align-items:start;flex-direction:column;gap:20px}.header-filters{width:100%}.header-filters .form-grid{grid-template-columns:1fr 1fr}.scroll{grid-template-columns:minmax(0,1fr)}.summary-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.balance-card{grid-column:1/-1}.sum-val{font-size:26px}.balance-card .sum-val{font-size:34px}.account-row{flex-wrap:wrap}.review-column{gap:18px}}@media(max-width:480px){html{scroll-padding-top:16px}.topbar{padding:22px 16px 0}.topbar-row{margin-bottom:28px;gap:10px}.brand-icon{width:38px;height:38px;border-radius:12px}.brand{gap:9px}.brand h1{font-size:16px}.brand p{font-size:9px}.conn-pill{font-size:10px;gap:5px}.page-title{font-size:28px}.page-subtitle{font-size:12px}.header-filters input,.header-filters select{font-size:16px}.section-nav{gap:0;margin-bottom:16px}.section-nav a{padding:10px 13px;font-size:12px}.summary-grid{gap:10px}.sum-card{padding:17px 16px}.sum-val{font-size:clamp(18px,5.2vw,24px);letter-spacing:-.7px;margin-top:10px}.sum-label{font-size:10px}.balance-card{padding:22px}.balance-card .sum-label{font-size:12px}.balance-card .sum-val{font-size:clamp(28px,8vw,36px)}.scroll{padding:6px 16px 28px;gap:16px}.card{padding:20px}.demo-banner{padding:14px 16px 0;font-size:11px}.account-row{padding:14px 16px;gap:8px}.account-row>span{font-size:10px}.account-actions{justify-content:space-between;width:100%}.history-head{padding:20px 18px 14px}.history-filters{padding:0 18px 12px;grid-template-columns:minmax(0,1fr)}.history-filters input,.history-filters select{font-size:16px}.history-tools{padding-inline:18px}.transaction{padding:16px 18px;grid-template-columns:minmax(0,1fr)}.amount{text-align:left;max-width:none;grid-column:1;padding-top:2px}.row-actions .secondary{min-height:40px}.history-foot{padding:16px 18px;align-items:start;flex-wrap:wrap}.selection-tools{padding-inline:18px}.selection-tools label{min-height:44px}.form-grid{gap:14px 10px}.form-group label{font-size:11px}.form-grid select{padding-inline:9px}.voice-card{padding:16px 18px}.login-panel{margin:20px 16px;padding:22px}.login-panel h2{font-size:21px}.report-head .secondary{padding-inline:12px}.section-label{font-size:15px}dialog{width:calc(100% - 20px);max-height:calc(100dvh - 20px);border-radius:18px}.dialog-shell{max-height:calc(100dvh - 22px)}.dialog-header{padding:18px 18px 14px}.dialog-content{padding:4px 18px 16px}.dialog-footer{padding:12px 18px}.dialog-footer .btn-primary{margin-left:0;flex:1}.dialog-footer button{font-size:12px;padding:10px 12px}.dialog-content .buttons{align-items:stretch}.dialog-content .buttons a{width:100%}.dialog-header h2{font-size:20px}}@media(max-width:600px){.form-grid,.header-filters .form-grid{grid-template-columns:minmax(0,1fr)}}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) center,calc(100% - 13px) center;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}.form-grid select{padding-right:34px}
+.card>.voice-card{padding:14px 16px;margin:16px 0;background:#192a34;border-radius:14px}.voice-card>summary{padding:0;min-height:24px;font-size:13px;color:var(--green);font-weight:600}.voice-card .voice-inner{margin-top:14px;align-items:start}.voice-card .voice-btn{width:auto;padding:10px 12px;display:inline-flex;align-items:center;gap:8px;font-size:12px}.voice-card .voice-btn svg{flex:none}.voice-card .voice-hint{margin:0}.voice-card .voice-example{font-size:11px}.voice-card .voice-result{border:1px solid var(--border);background:var(--card);padding:12px;border-radius:12px;color:var(--text);line-height:1.8;font-size:12px;overflow-wrap:anywhere}#voiceNotice{white-space:pre-line}.voice-card .buttons>*{flex:1;padding-inline:10px}
+.voice-card button{appearance:none;-webkit-appearance:none}.voice-card .buttons{align-items:stretch}#voiceNotice.voice-warning{color:var(--red)}@media(max-width:360px){.voice-card .buttons{display:grid;grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <h1>Kas Masjid</h1>
+          <p>Masjid Al-Barokah Taskombang</p>
+        </div>
+      </div>
+      <div class="conn-pill">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span class="conn-label" id="connection">Memuat</span>
+      </div>
+    </div>
+  <div class="heading-row"><div><p class="eyebrow">Pembukuan Al-Barokah</p><h2 class="page-title">Kelola kas. Lebih leluasa.</h2><p class="page-subtitle">Catat dengan tenang, pantau dalam satu pandangan.</p></div>
+  <div class="header-filters" aria-label="Pilihan dana dan bulan">
+    <div class="form-grid">
+      <div class="form-group"><label for="fund">Dana</label><select id="fund"><option value="MASJID">Kas masjid</option><option value="PHBI">PHBI</option></select></div>
+      <div class="form-group"><label for="month">Bulan rincian</label><div class="date-control"><input id="month" type="month"></div></div>
+    </div>
+
+  </div>
+    </div>
+    <nav class="section-nav" aria-label="Navigasi halaman"><a href="#overview">Ringkasan</a><a href="#entry">Catat</a><a href="#records">Riwayat</a><a href="#report">Laporan</a></nav>
+    <div class="summary-grid" id="overview">
+      <div class="sum-card balance-card"><div class="sum-label">Saldo saat ini</div><div class="sum-val" id="currentBalance">—</div><p class="sum-caption">Uang kas yang sudah dikonfirmasi</p></div>
+      <div class="sum-card">
+        <div class="sum-label" id="incomePeriod">Pemasukan bulan ini</div>
+        <div class="sum-val" id="totalIncome">—</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label" id="expensePeriod">Pengeluaran bulan ini</div>
+        <div class="sum-val out" id="totalExpense">—</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="demoBanner" class="demo-banner" hidden><strong>Mode demo — data contoh.</strong> Transaksi dan PDF di sini digunakan untuk pengujian aplikasi.</div>
+<section id="loginPanel" class="login-panel" hidden><h2>Pembukuan kas, dalam satu tempat</h2><p id="loginText">Masuk dengan akun pemilik untuk melanjutkan.</p><label class="remember-option"><input id="rememberDevice" type="checkbox" aria-describedby="rememberHint">Ingat saya selama 7 hari</label><p id="rememberHint" class="remember-hint">Centang hanya di perangkat pribadi. Saat dibuka dari ikon home screen, tidak perlu login setiap mencatat. Tanpa centang, sesi berlaku 12 jam.</p><a id="loginLink" class="login-link" href="/auth/login">Masuk dengan Google</a><p style="margin:16px 0 0"><a href="/privacy">Privasi dan penggunaan data Google</a></p></section>
+<div id="accountRow" class="account-row" hidden><span>Sesi pemilik · K1/K2/K3 adalah pemegang uang</span><div class="account-actions"><a id="reconnectGoogle" href="/auth/login?reconnect=1">Hubungkan ulang Google</a><button id="logout" class="secondary" type="button">Keluar</button></div></div>
+<div class="scroll">
+  <div id="notice" class="notice" role="status" hidden></div>
+
+
+
+
+  <div class="entry-column">
+  <section class="card" id="entry" aria-label="Catat transaksi">
+    <div class="report-head"><div class="section-label">Transaksi Baru</div><button id="openImport" class="secondary" type="button" disabled>Impor CSV</button></div>
+    <p id="formFund" class="hint">Dana: Kas masjid</p>
+    <details class="voice-card" id="voicePanel"><summary>Isi dengan suara</summary>
+      <div class="voice-inner"><button class="voice-btn" id="voice-btn" type="button" aria-label="Mulai input suara" aria-pressed="false" disabled><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span id="voiceButtonText">Mulai</span></button><p class="voice-hint" id="voice-hint">Ucapkan satu transaksi. Hasil diperiksa dahulu, lalu dipindahkan ke form.</p></div>
+      <p class="hint voice-example">Contoh: “Infaq Jumat satu juta lima ratus ribu kemarin, bendahara Kevin.”<br>Untuk PHBI: “Pengeluaran PHBI konsumsi 250 ribu, bendahara Wawan.”</p>
+      <label for="voiceTranscript">Ucapan / hasil dikte</label><textarea id="voiceTranscript" rows="3" maxlength="1000" placeholder="Tekan Mulai, ketik, atau gunakan mikrofon keyboard iPhone di kolom ini." disabled></textarea>
+      <p class="hint voice-example">Perbaiki teks jika perlu. Bisa gunakan dikte keyboard. Audio diproses penyedia browser.</p>
+      <div class="buttons"><button id="voiceParse" type="button" class="secondary" disabled>Periksa teks</button><button id="voiceApply" type="button" class="btn-primary" disabled>Gunakan draf</button></div>
+      <div class="voice-result" id="voice-result" role="status"></div><p id="voiceNotice" class="hint" role="status" aria-live="polite"></p>
+    </details>
+    <form id="transactionForm">
+    <div class="type-toggle">
+      <button class="toggle-btn active-in" id="incomeType" type="button" aria-pressed="true">↑ Pemasukan</button>
+      <button class="toggle-btn" id="expenseType" type="button" aria-pressed="false">↓ Pengeluaran</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="date">Tanggal</label>
+        <div class="date-control"><input type="date" id="date" required/></div>
+      </div>
+      <div class="form-group">
+        <label for="code">Bendahara</label>
+        <select id="code" required>
+
+          <option value="K1">K1 · Kevin</option>
+          <option value="K2">K2 · Arum / Ming Ming</option>
+          <option value="K3">K3 · Wawan</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label for="description">Keterangan</label>
+        <input type="text" id="description" maxlength="500" required placeholder="mis. Infaq Jumat"/>
+      </div>
+      <div class="form-group full">
+        <label id="amount-label" for="amount">Jumlah Pemasukan (Rp)</label>
+        <div class="amount-wrap">
+          <span class="amount-prefix">Rp</span>
+          <input type="text" id="amount" required placeholder="637.600" inputmode="numeric" autocomplete="off"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-reset" type="button" id="resetForm">Reset</button>
+      <button class="btn-primary" id="submitButton" type="submit" disabled>Simpan transaksi</button>
+    </div>
+    <p id="pendingNote" class="hint" hidden>Kiriman sebelumnya belum terkonfirmasi. Periksa isinya lalu kirim ulang dengan identitas yang sama.</p>
+    <button id="checkPending" type="button" class="secondary" hidden>Periksa kiriman sebelumnya</button>
+    </form>
+  </section>
+
+  </div>
+  <div class="review-column">
+  <!-- History -->
+  <section class="history-card" id="records" aria-label="Riwayat transaksi">
+    <div class="history-head">
+      <div class="section-label" id="historyPeriod">Rincian bulan ini</div>
+      <span class="badge" id="historyCount">0 data</span>
+    </div>
+    <div class="history-filters"><input id="historySearch" type="search" aria-label="Cari transaksi" placeholder="Cari keterangan atau pemegang uang"><select id="historyType" aria-label="Saring jenis transaksi"><option value="">Semua jenis</option><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
+<div class="history-tools"><button id="selectMode" class="secondary" type="button" disabled>Pilih banyak</button><span id="selectionCount" class="selection-count" role="status" hidden></span></div>
+    <div id="selectionTools" class="selection-tools" hidden><label><input id="selectAll" type="checkbox">Pilih semua hasil (maks. 50)</label><button id="deleteSelected" class="secondary danger" type="button" disabled>Hapus terpilih</button></div>
+<div id="history"><div class="empty">Memuat transaksi…</div></div>
+    <details id="deletedSection" class="deleted-list" hidden><summary id="deletedCount">Transaksi dihapus</summary><div id="deletedHistory"></div></details>
+    <div class="history-foot"><button id="refreshData" type="button" class="secondary" disabled>Muat ulang</button><span class="hint">Perubahan tersimpan dengan alasan dan riwayat.</span></div>
+  </section>
+  <section class="card report-card" id="report" aria-label="Status PDF jamaah">
+    <div class="report-head"><div class="section-label">Laporan PDF jamaah</div><span id="reportState" class="badge">Memuat</span></div>
+    <p id="reportMessage" class="hint">Memeriksa laporan publik.</p>
+    <div id="reconciliation" class="reconcile" hidden></div>
+    <div class="buttons"><a id="openApp" class="secondary" hidden>Buka aplikasi Google</a><a id="pdfLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka PDF</a></div>
+    <details><summary>Opsi laporan</summary>
+      <p id="balanceNote" class="hint"></p><p id="automationNote" class="hint"></p>
+      <div class="buttons"><button id="previewPdf" type="button" class="secondary" disabled>Pratinjau</button><button id="refreshPdf" type="button" class="secondary" disabled>Perbarui PDF</button></div>
+      <a id="previewLink" class="secondary" target="_blank" rel="noopener noreferrer" hidden>Buka pratinjau PDF</a>
+    </details>
+  </section>
+  </div>
+</div>
+
+<dialog id="importDialog" aria-labelledby="importTitle">
+  <div class="dialog-shell"><div class="dialog-header"><h2 id="importTitle">Impor transaksi</h2><p class="hint">Pindahkan catatan dari Excel atau Google Sheets.</p></div><div class="dialog-content">
+  <p class="hint">Isi template di Excel atau Google Sheets, lalu simpan sebagai CSV UTF-8. Maksimal 50 transaksi / 64 KB per file.</p>
+  <p class="hint">Tanggal: DD/MM/YYYY atau YYYY-MM-DD. Dana: MASJID / PHBI. Jenis: Pemasukan / Pengeluaran. Bendahara: K1 / K2 / K3. Jumlah: Rupiah bulat, misalnya 50000.</p>
+  <div class="buttons"><a class="secondary" href="/api/import/template" download="template-impor-kas.csv">Unduh template CSV</a><label for="importFile">Pilih file CSV</label><input id="importFile" type="file" accept=".csv,text/csv"></div>
+  <p id="importSummary" class="hint">Pilih file untuk melihat pratinjau.</p><div id="importRows"></div>
+  <p class="hint">Periksa pilihan sebelum menyimpan. Baris yang mirip transaksi lain tidak dicentang otomatis. Centang hanya jika memang transaksi berbeda.</p>
+  <p id="importNotice" class="hint" role="status" aria-live="polite"></p>
+  </div><div class="buttons dialog-footer"><button id="importClose" class="secondary" type="button">Tutup</button><button id="importDiscard" class="secondary danger" type="button" hidden>Batalkan sisa impor</button><button id="importStop" class="secondary" type="button" hidden>Jeda setelah transaksi ini</button><button id="importSubmit" class="btn-primary" type="button" disabled>Impor transaksi terpilih</button></div></div>
+</dialog>
+
+<dialog id="changeDialog" aria-labelledby="changeTitle">
+  <form id="changeForm" class="dialog-shell"><div class="dialog-header"><h2 id="changeTitle">Edit transaksi</h2></div><div class="dialog-content"><p id="changeSummary" class="hint"></p>
+    <fieldset id="changeFields"><div class="form-grid">
+      <div class="form-group"><label for="changeDate">Tanggal</label><div class="date-control"><input id="changeDate" type="date" required></div></div>
+      <div class="form-group"><label for="changeCode">Pemegang uang</label><select id="changeCode"><option>K1</option><option>K2</option><option>K3</option></select></div>
+      <div class="form-group full"><label for="changeType">Jenis transaksi</label><select id="changeType"><option value="in">Pemasukan</option><option value="out">Pengeluaran</option></select></div>
+      <div class="form-group full"><label for="changeDescription">Keterangan</label><input id="changeDescription" required maxlength="500"></div>
+      <div class="form-group full"><label for="changeAmount">Jumlah (Rp)</label><input id="changeAmount" required inputmode="numeric"></div>
+    </div></fieldset>
+    <div class="form-group"><label for="changeReason">Alasan perubahan</label><textarea id="changeReason" required minlength="3" maxlength="300" placeholder="Contoh: nominal pada bukti berbeda"></textarea></div>
+    <p id="changeNotice" class="hint" role="status"></p>
+    <button id="changeCheck" type="button" class="secondary" hidden>Periksa perubahan sebelumnya</button>
+    </div><div class="buttons dialog-footer"><button id="changeCancel" type="button" class="secondary">Batal</button><button id="changeSubmit" type="submit" class="btn-primary">Simpan perubahan</button></div>
+  </form>
+</dialog>
+
+<dialog id="bulkDialog" aria-labelledby="bulkTitle">
+  <form id="bulkForm" class="dialog-shell"><div class="dialog-header"><h2 id="bulkTitle">Hapus transaksi terpilih</h2><p class="hint">Keluar dari saldo dan laporan. Setiap transaksi tetap dapat dipulihkan.</p></div>
+    <div class="dialog-content"><p id="bulkSummary" class="hint"></p><div id="bulkRows"></div><div class="form-group"><label for="bulkReason">Alasan penghapusan</label><textarea id="bulkReason" required minlength="3" maxlength="300" placeholder="Contoh: catatan ganda dari buku kas"></textarea></div><p id="bulkNotice" class="hint bulk-state" role="status" aria-live="polite">Periksa kembali pilihan sebelum melanjutkan.</p></div>
+    <div class="buttons dialog-footer"><button id="bulkClose" class="secondary" type="button">Batal</button><button id="bulkDiscard" class="secondary" type="button" hidden>Batalkan sisa</button><button id="bulkStop" class="secondary" type="button" hidden>Jeda</button><button id="bulkSubmit" class="btn-primary danger" type="submit">Hapus terpilih</button></div>
+  </form>
+</dialog>
+<script>let recognition=null,voicePhase='idle',voiceTimer=null,voiceDraft=null;
+const VOICE_NUM={nol:0,satu:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9,sepuluh:10,sebelas:11};
+const VOICE_SCALE={ribu:1000,rb:1000,juta:1000000,jt:1000000,miliar:1000000000};
+const VOICE_MONTH={januari:1,jan:1,februari:2,feb:2,maret:3,mar:3,april:4,apr:4,mei:5,juni:6,jun:6,juli:7,jul:7,agustus:8,agu:8,september:9,sep:9,oktober:10,okt:10,november:11,nov:11,desember:12,des:12};
+function voiceNumeric(text){
+  if(/^\d{1,3}(?:\.\d{3})+(?:,00)?$/.test(text))return Number(text.replace(/,00$/,'').replace(/\./g,''));
+  if(/^\d+(?:[.,]\d{1,2})?$/.test(text))return Number(text.replace(',','.'));
+  return NaN;
+}
+function voiceSmall(parts){
+  if(!parts.length)return NaN;
+  if(parts.at(-1)==='setengah')return (parts.length===1?0:voiceSmall(parts.slice(0,-1)))+.5;
+  const atom=word=>Object.hasOwn(VOICE_NUM,word)?VOICE_NUM[word]:voiceNumeric(word);
+  if(parts.length===1)return atom(parts[0]);
+  let i=0,total=0;
+  if(parts[1]==='ratus'){const n=atom(parts[0]);if(!(n>=1&&n<=9))return NaN;total=n*100;i=2;}
+  if(i===parts.length)return total;
+  const n=atom(parts[i]);if(!Number.isFinite(n))return NaN;i++;
+  if(parts[i]==='puluh'||parts[i]==='belas'){
+    if(!(n>=1&&n<=9))return NaN;
+    const unit=parts[i++];total+=unit==='puluh'?n*10:10+n;
+    if(i<parts.length){const tail=atom(parts[i++]);if(unit!=='puluh'||!(tail>=0&&tail<=9))return NaN;total+=tail;}
+  }else total+=n;
+  return i===parts.length?total:NaN;
+}
+function voiceMoney(words,explicitRupiah=false){
+  const parts=words.toLowerCase().replace(/\bseratus\b/g,'satu ratus').replace(/\bseribu\b/g,'satu ribu').replace(/\bsejuta\b/g,'satu juta').replace(/\bdan\b/g,' ').trim().split(/\s+/);
+  let total=0,lastScale=Infinity,start=0;
+  for(let i=0;i<parts.length;i++)if(VOICE_SCALE[parts[i]]){
+    const scale=VOICE_SCALE[parts[i]],n=voiceSmall(parts.slice(start,i));
+    if(scale>=lastScale||!Number.isFinite(n)||n<=0)return NaN;
+    total+=n*scale;lastScale=scale;start=i+1;
+  }
+  if(start<parts.length){const rest=voiceSmall(parts.slice(start));if(!Number.isFinite(rest)||(!explicitRupiah&&lastScale>1000&&lastScale!==Infinity&&rest>0&&rest<1000))return NaN;total+=rest;}
+  return Number.isSafeInteger(total)&&total>0?total:NaN;
+}
+function parseVoiceText(text,today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())){
+  const issues=[],warnings=[],dates=[],codes=[],funds=[];
+  let remaining=String(text).trim(),tipe=null;
+  const erase=(pattern,handle)=>{remaining=remaining.replace(pattern,(...args)=>{handle?.(...args);return ' '.repeat(args[0].length);});};
+  const validDate=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+  const date=(day,month,year)=>{const value=year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');if(!validDate(value))issues.push('Tanggal tidak valid. Perbaiki teks tanggal.');else dates.push(value);};
+  erase(/\b(?:hari ini|kemarin|besok)\b/gi,match=>{const d=new Date(today+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+(match.toLowerCase()==='kemarin'?-1:match.toLowerCase()==='besok'?1:0));dates.push(d.toISOString().slice(0,10));});
+  erase(/\b(?:tanggal\s+)?(\d{4})-(\d{2})-(\d{2})\b/gi,(_,y,m,d)=>date(d,m,y));
+  erase(/\b(?:tanggal\s+)?(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b/gi,(_,d,m,y)=>date(d,m,y));
+  const units='satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan';
+  const day='(?:tiga puluh(?: satu)?|dua puluh(?: (?:'+units+'))?|(?:'+units+') belas|sebelas|sepuluh|'+units+'|\\d{1,2})';
+  const year='(?:\\d{4}|dua\\s+ribu(?:\\s+(?:'+units+'|sepuluh|sebelas|puluh|belas)){0,3})';
+  erase(new RegExp('\\b(?:tanggal\\s+)?('+day+')\\s+('+Object.keys(VOICE_MONTH).join('|')+')(?:\\s+('+year+'))?\\b','gi'),(_,d,m,y)=>date(voiceSmall(d.toLowerCase().split(/\s+/)),VOICE_MONTH[m.toLowerCase()],y?(/^\d{4}$/.test(y)?y:voiceMoney(y)):today.slice(0,4)));
+  erase(new RegExp('\\btanggal\\s+('+day+')\\b','gi'),(_,d)=>date(voiceSmall(d.toLowerCase().split(/\s+/)),today.slice(5,7),today.slice(0,4)));
+  if(/\btanggal\b/i.test(remaining))issues.push('Tanggal belum dikenali. Gunakan tanggal lengkap, misalnya 10 Oktober 2026.');
+  const codeNumber={satu:1,dua:2,tiga:3};
+  erase(/\b(?:k|ka|kode)\s*[-]?\s*(satu|dua|tiga|[123])\b/gi,(_,n)=>codes.push('K'+(codeNumber[n.toLowerCase()]||n)));
+  erase(/(?:\b(?:bendahara|pemegang(?:\s+uang)?|kode)\s+|^\s*)(kevin|arum|ming\s*ming|wawan)\b/gi,(_,name)=>codes.push(/kevin/i.test(name)?'K1':/wawan/i.test(name)?'K3':'K2'));
+  erase(/\b(?:dana\s+(?:kas\s+)?masjid|kas\s+masjid|(?:(?:dana|kas)\s+)?(?:phbi|p\s+h\s+b\s+i))\b/gi,name=>funds.push(/masjid/i.test(name)?'MASJID':'PHBI'));
+  const explicit=Array.from(remaining.matchAll(/\b(pemasukan|pengeluaran|uang masuk|uang keluar)\b/gi),m=>/pengeluaran|keluar/i.test(m[0])?'out':'in');
+  if(new Set(explicit).size>1)issues.push('Ada dua jenis transaksi. Sisakan pemasukan atau pengeluaran.');
+  if(explicit.length)tipe=explicit[0];
+  else if(/\b(keluar|bayar|dibayar|beli|pembelian|biaya|belanja)\b/i.test(remaining))tipe='out';
+  else if(/\b(masuk|terima|diterima|infaq|infak|sedekah|donasi|zakat|sumbangan|iuran)\b/i.test(remaining))tipe='in';
+  erase(/\b(?:pemasukan|pengeluaran|uang masuk|uang keluar|catatkan|catat|tolong)\b/gi);
+  const pick=(values,label)=>{const distinct=[...new Set(values)];if(distinct.length>1)issues.push(label+' lebih dari satu. Perjelas teks.');return distinct.length===1?distinct[0]:null;};
+  const tanggal=pick(dates,'Tanggal'),kode=pick(codes,'Bendahara'),dana=pick(funds,'Dana');
+  if(tanggal&&tanggal>today)issues.push('Tanggal di masa depan belum boleh dicatat.');
+  const moneyWord=new Set([...Object.keys(VOICE_NUM),...Object.keys(VOICE_SCALE),'puluh','belas','ratus','seratus','seribu','sejuta','setengah']);
+  const tokens=Array.from(remaining.matchAll(/\d+(?:[.,]\d+)*|[a-z]+/gi),m=>({word:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
+  const numeric=token=>/^\d/.test(token?.word||'')||moneyWord.has(token?.word);
+  const candidates=[];
+  for(let i=0;i<tokens.length;i++){
+    if(!numeric(tokens[i]))continue;
+    const start=i;
+    while(i+1<tokens.length){const next=tokens[i+1];if(!/^[\s,]*$/.test(remaining.slice(tokens[i].end,next.start)))break;if(numeric(next)){i++;continue;}if(next.word==='dan'&&numeric(tokens[i+2])){i+=2;continue;}break;}
+    const group=tokens.slice(start,i+1),from=group[0].start,to=group.at(-1).end,before=remaining.slice(0,from),after=remaining.slice(to);
+    const anchor=before.match(/\b(?:sebesar|senilai|nominal|jumlah|rp\.?)\s*$/i),suffix=after.match(/^\s*rupiah\b/i),scale=group.some(t=>VOICE_SCALE[t.word]||['seribu','sejuta'].includes(t.word));
+    if(!anchor&&!suffix&&!scale&&!/^[\s.,!?]*$/.test(after))continue;
+    const negative=/-\s*$/.test(before)||/\bminus\s*$/i.test(before);
+    const value=negative?NaN:voiceMoney(group.map(t=>t.word).join(' '),!!suffix);
+    candidates.push({from:anchor?from-anchor[0].length:from,to:to+(suffix?.[0].length||0),value,strong:!!anchor||!!suffix||scale});
+  }
+  const strong=candidates.filter(c=>c.strong),amounts=strong.length?strong:candidates;
+  let jumlah=null;
+  if(amounts.length>1)issues.push('Ada beberapa nominal. Gunakan satu transaksi per ucapan.');
+  else if(amounts.length===1){
+    const selected=amounts[0];
+    if(!Number.isSafeInteger(selected.value)||selected.value<=0)issues.push('Nominal belum jelas atau bukan Rupiah bulat. Tulis angka lengkap, misalnya 1500000.');
+    else{jumlah=selected.value;remaining=remaining.slice(0,selected.from)+' '.repeat(selected.to-selected.from)+remaining.slice(selected.to);}
+  }
+  let keterangan=remaining.replace(/^[\s,.;:!?-]+|[\s,.;:!?-]+$/g,'').replace(/\s+/g,' ').trim();
+  keterangan=keterangan.charAt(0).toUpperCase()+keterangan.slice(1);
+  if(!jumlah)warnings.push('Nominal belum terbaca. Isi manual atau perbaiki teks.');
+  if(!tipe)warnings.push('Jenis belum disebut; periksa pilihan jenis di draf.');
+  if(!keterangan)warnings.push('Keterangan belum terbaca; lengkapi di form.');
+  return {tipe,keterangan,jumlah,tanggal,kode,dana,issues,warnings};
+}
+
+function initRecognition(){
+  const Constructor=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Constructor)return null;
+  const r=new Constructor();let finalResult=false;
+  r.lang='id-ID';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;
+  r.onstart=()=>{
+    if(recognition!==r)return;voicePhase='listening';voiceMessage('Mendengarkan… Ucapkan satu transaksi, lalu tunggu atau tekan Hentikan.');
+    clearTimeout(voiceTimer);voiceTimer=setTimeout(()=>cancelVoice('Waktu perekaman selesai. Periksa teks atau coba lagi.'),45000);setBusy(busy);
+  };
+  r.onresult=event=>{
+    if(recognition!==r)return;
+    const results=Array.from(event.results),text=results.map(result=>result[0]?.transcript||'').join(' ').trim();
+    $('voiceTranscript').value=text;voiceDraft=null;finalResult=results.length>0&&results.every(result=>result.isFinal);
+    if(finalResult){previewVoice();toggleVoice();}else voiceMessage('Mendengarkan… Teks sementara muncul di bawah.');
+  };
+  r.onerror=event=>{
+    if(recognition!==r)return;
+    const messages={
+      'not-allowed':'Mikrofon belum diizinkan. Periksa izin mikrofon situs di browser, atau gunakan dikte keyboard di kolom ucapan.',
+      'service-not-allowed':'Layanan suara belum diizinkan. Pada Safari, periksa pengaturan Siri dan Dikte. Anda juga bisa memakai dikte keyboard.',
+      'audio-capture':'Mikrofon tidak tersedia. Tutup aplikasi lain yang memakai mikrofon, atau gunakan dikte keyboard.',
+      'no-speech':'Belum ada suara terdeteksi. Coba bicara lebih dekat, atau isi kolom ucapan.',
+      'network':'Layanan suara belum terhubung. Coba lagi saat koneksi stabil, atau gunakan dikte keyboard.',
+      'language-not-supported':'Pengenalan bahasa Indonesia belum tersedia di browser ini. Gunakan dikte keyboard atau ketik ucapan.',
+      'aborted':'Perekaman dihentikan. Teks yang sudah terbaca tetap dapat diperiksa.'
+    };
+    cancelVoice(messages[event.error]||'Input suara belum berhasil. Coba lagi atau gunakan dikte keyboard.');
+  };
+  r.onend=()=>{if(recognition!==r)return;finishVoice();if(finalResult)previewVoice();else voiceMessage($('voiceTranscript').value.trim()?'Perekaman selesai. Periksa teks lalu tekan Periksa teks.':'Perekaman selesai tanpa ucapan. Coba lagi atau gunakan dikte keyboard.');};
+  return r;
+}
+function voiceBlocked(){return busy||!connected||!dashboard||!!pending||!!pendingChange||bulkPending()||!!(importBatch?.started&&importBatch.rows.some(row=>row.selected&&!row.done));}
+function voiceMessage(message,error=false){$('voiceNotice').textContent=message;$('voiceNotice').classList.toggle('voice-warning',error);}
+function updateVoiceControls(){
+  const active=voicePhase!=='idle',blocked=voiceBlocked();
+  $('voice-btn').disabled=active?false:blocked;$('voice-btn').classList.toggle('listening',active);$('voice-btn').setAttribute('aria-pressed',String(active));$('voice-btn').setAttribute('aria-label',active?'Hentikan input suara':'Mulai input suara');$('voiceButtonText').textContent=active?'Hentikan':'Mulai';
+  $('voiceTranscript').disabled=blocked||active;$('voiceParse').disabled=blocked||active||!$('voiceTranscript').value.trim();$('voiceApply').disabled=blocked||active||!voiceDraft||voiceDraft.issues.length>0;
+}
+function finishVoice(message){clearTimeout(voiceTimer);recognition=null;voicePhase='idle';if(message)voiceMessage(message);setBusy(busy);}
+function cancelVoice(message){const r=recognition;finishVoice(message);try{r?.abort();}catch{}}
+function voiceBase(){return {fund:$('fund').value,type,date:$('date').value||dashboard.today,code:$('code').value,description:$('description').value,amount:$('amount').value};}
+function previewVoice(){
+  if(!dashboard)return;
+  const text=$('voiceTranscript').value.trim();if(!text){voiceDraft=null;$('voice-result').className='voice-result';updateVoiceControls();return;}
+  const parsed=parseVoiceText(text,dashboard.today),base=voiceBase();
+  const input={fund:parsed.dana||base.fund,type:parsed.tipe||base.type,date:parsed.tanggal||base.date,code:parsed.kode||base.code,description:parsed.keterangan,amount:parsed.jumlah};
+  const issues=[...parsed.issues];
+  if(text.length>1000)issues.push('Ucapan terlalu panjang. Gunakan satu transaksi, maksimal 1.000 karakter.');
+  if(input.description.length>500)issues.push('Keterangan terlalu panjang, maksimal 500 karakter.');
+  if(input.fund===dashboard.fund&&input.date<dashboard.checkpoint.date)issues.push('Tanggal sebelum hitung fisik terakhir. Periksa tanggal di form.');
+  voiceDraft={base,input,issues};
+  $('voice-result').className='voice-result show';$('voice-result').textContent=
+    'Dana: '+(input.fund==='PHBI'?'PHBI':'Kas masjid')+(parsed.dana?'':' (mengikuti form)')+'\n'+
+    'Jenis: '+(input.type==='in'?'Pemasukan':'Pengeluaran')+(parsed.tipe?'':' (mengikuti form)')+'\n'+
+    'Bendahara: '+input.code+(parsed.kode?'':' (mengikuti form)')+'\nTanggal: '+displayDate(input.date)+(parsed.tanggal?'':' (mengikuti form)')+'\n'+
+    'Keterangan: '+(input.description||'Belum terbaca')+'\nJumlah: '+(input.amount?rupiah(input.amount):'Belum terbaca — isi manual');
+  voiceMessage(issues.length?issues.join('\n'):parsed.warnings.join('\n')||'Periksa hasil. Gunakan draf mengganti isian form; penyimpanan tetap lewat Simpan transaksi.',issues.length>0);updateVoiceControls();
+}
+function toggleVoice(){
+  if(recognition){
+    voicePhase='stopping';voiceMessage('Mengakhiri perekaman…');clearTimeout(voiceTimer);voiceTimer=setTimeout(()=>cancelVoice('Perekaman dihentikan. Periksa teks yang sudah terbaca.'),5000);
+    try{recognition.stop();}catch{cancelVoice('Perekaman dihentikan. Periksa teks yang sudah terbaca.');}updateVoiceControls();return;
+  }
+  if(voiceBlocked())return;
+  if(!(window.SpeechRecognition||window.webkitSpeechRecognition)){voiceMessage('Pengenalan suara browser belum tersedia. Tekan kolom ucapan, gunakan mikrofon keyboard iPhone, lalu Periksa teks.');$('voiceTranscript').focus();return;}
+  try{
+    voiceDraft=null;$('voiceTranscript').value='';$('voice-result').className='voice-result';recognition=initRecognition();voicePhase='starting';voiceMessage('Menyiapkan mikrofon… Izinkan akses jika browser meminta.');
+    voiceTimer=setTimeout(()=>cancelVoice('Mikrofon belum mulai. Periksa izin browser atau gunakan dikte keyboard.'),15000);setBusy(busy);recognition.start();
+  }catch{cancelVoice('Mikrofon belum dapat dimulai. Coba lagi atau gunakan dikte keyboard.');}
+}
+async function applyVoice(){
+  if(voiceBlocked()||voicePhase!=='idle'||!voiceDraft||voiceDraft.issues.length)return;
+  if(JSON.stringify(voiceDraft.base)!==JSON.stringify(voiceBase())){previewVoice();voiceMessage('Form berubah sejak pratinjau dibuat. Periksa hasil terbaru, lalu tekan Gunakan draf lagi.');return;}
+  const input={...voiceDraft.input};
+  try{
+    setBusy(true);
+    if(input.fund!==dashboard.fund){$('fund').value=input.fund;selectedKeys.clear();selecting=false;await loadDashboard();if(!dashboard||dashboard.fund!==input.fund)throw Error('Dana belum dapat dimuat. Muat ulang dan periksa draf kembali.');}
+    if(input.date<dashboard.checkpoint.date||input.date>dashboard.today)throw Error('Tanggal di luar periode yang boleh dicatat untuk dana ini. Perbaiki tanggal ucapan.');
+    chooseType(input.type);$('date').value=input.date;$('code').value=input.code;$('description').value=input.description;$('amount').value=input.amount||'';
+    voiceDraft=null;voiceMessage('Draf sudah diisi. Periksa dana, jenis, tanggal, bendahara, dan nominal di form, lalu Simpan transaksi.');$('transactionForm').scrollIntoView({block:'start',behavior:'smooth'});
+  }catch(error){voiceMessage(error.message);}
+  finally{setBusy(false);}
+}
+
+
+    'use strict';
+    const $ = id => document.getElementById(id);
+    let STORAGE_KEY = 'kas-masjid-pending-v1';
+    const rupiah = value => (Number(value) < 0 ? '−' : '') + 'Rp' + Math.abs(Number(value)).toLocaleString('id-ID');
+    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    let type = 'in', dashboard = null, pending = null, pendingChange = null, editing = null, busy = false, loadVersion = 0;
+    let CHANGE_KEY = 'kas-masjid-change-pending-v1';
+    let IMPORT_KEY = 'kas-masjid-import-pending-v1', importBatch = null, importSaving = false, importStopRequested = false;
+    let BULK_KEY='kas-masjid-bulk-delete-v1',bulkBatch=null,bulkSaving=false,bulkStopRequested=false,selecting=false;
+    const selectedKeys=new Set();
+    const bulkPending=()=>!!bulkBatch?.started && bulkBatch.rows.some(row=>!row.done);
+    let connected = false, csrf = '', demo = false;
+
+    async function api(method, ...args) {
+      if (!connected) throw new Error('Masuk dengan akun Google pemilik terlebih dahulu.');
+      const routes = {
+        getDashboard: ['/api/dashboard?' + new URLSearchParams({fund:args[0] || 'MASJID',month:args[1] || ''}), 'GET'],
+        saveTransaction: ['/api/transactions', 'POST'],
+        previewImport: ['/api/import/preview','POST'],
+        resolvePendingRequest: ['/api/transactions/' + encodeURIComponent(args[0]), 'GET'],
+        changeTransaction: ['/api/changes','POST'],
+        resolveChange: ['/api/changes/' + encodeURIComponent(args[0]),'GET'],
+        previewPublicPdf: ['/api/pdf/preview', 'POST'],
+        refreshPublicPdf: ['/api/pdf/refresh', 'POST']
+      };
+      const [url, verb] = routes[method];
+      const response = await fetch(url, {method:verb,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:verb === 'POST' ? JSON.stringify(args[0] || {}) : undefined,signal:AbortSignal.timeout(180000)});
+      const result = await response.json();
+      if (response.status === 401) {
+        connected=false;dashboard=null;csrf='';$('loginPanel').hidden=false;$('accountRow').hidden=true;
+        $('connection').textContent='Belum masuk';$('conn-dot').className='conn-dot off';
+        document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
+        notice('Sesi berakhir. Masuk kembali; kiriman yang belum terkonfirmasi tetap disimpan pada perangkat ini.',true);setBusy(false);
+      }
+      if (!response.ok) throw new Error(result.error || 'Permintaan gagal. Coba kembali.');
+      return result;
+    }
+    function validPdfUrl(value) {
+      return /^https:\/\/drive\.google\.com\//.test(value || '') || (demo && /^\/api\/pdf\/(preview|public)$/.test(value || ''));
+    }
+    function displayDate(iso) {
+      const [y,m,d] = iso.split('-'); return d + ' ' + monthNames[Number(m)-1] + ' ' + y;
+    }
+    function notice(message, error = false) {
+      $('notice').textContent = message;
+      $('notice').className = 'notice' + (error ? ' error' : '');
+      $('notice').hidden = !message;
+    }
+    function chooseType(value) {
+      type = value;
+      $('incomeType').className = 'toggle-btn' + (value === 'in' ? ' active-in' : '');
+      $('expenseType').className = 'toggle-btn' + (value === 'out' ? ' active-out' : '');
+      $('amount-label').textContent = value === 'in' ? 'Jumlah Pemasukan (Rp)' : 'Jumlah Pengeluaran (Rp)';
+      $('incomeType').setAttribute('aria-pressed', value === 'in');
+      $('expenseType').setAttribute('aria-pressed', value === 'out');
+    }
+    function setBusy(value) {
+      busy = value;
+      ['fund','month','date','code','description','amount','incomeType','expenseType','refreshPdf','previewPdf','submitButton','checkPending','resetForm','voice-btn','openImport'].forEach(id => {
+        $(id).disabled = value || !connected || !dashboard || ((!!pendingChange || bulkPending()) && !['refreshData','checkPending'].includes(id)) || (voicePhase!=='idle' && id!=='voice-btn');
+      });
+      $('refreshData').disabled=value || !connected || voicePhase!=='idle';
+      document.querySelectorAll('.row-actions button').forEach(button=>{button.disabled=value || !connected || !dashboard || !!pending || !!pendingChange || bulkPending() || voicePhase!=='idle' || button.dataset.locked==='true';});
+      $('submitButton').textContent = value ? 'Memproses…' : pending ? 'Kirim ulang transaksi' : 'Simpan transaksi';
+      $('openImport').disabled=value || !connected || !dashboard || !!pending || !!pendingChange || bulkPending() || voicePhase!=='idle';
+      updateSelection();
+      const remaining=importBatch?.rows.filter(row=>row.selected && !row.done).length || 0;
+      $('openImport').textContent=importBatch?.started && remaining ? 'Lanjutkan impor ('+remaining+')' : 'Impor CSV';
+      updateVoiceControls();
+    }
+    function renderReport(status) {
+      const names = {PUBLISHED:'Diperbarui',UNCHANGED:'Sudah sesuai',BLOCKED:'Ditahan',ERROR:'Perlu diperiksa',SETUP:'Belum aktif',READY:'Belum diperbarui'};
+      $('reportState').textContent = names[status.state] || 'Memeriksa';
+      $('reportState').className = 'badge' + (status.state === 'ERROR' ? ' error' : ['BLOCKED','SETUP'].includes(status.state) ? ' warning' : '');
+      $('reportMessage').textContent = status.message;
+      $('reconciliation').replaceChildren();
+      $('reconciliation').hidden = !status.reconciliation || status.reconciliation.ok;
+      if (status.reconciliation && !status.reconciliation.ok) {
+        const r = status.reconciliation;
+        const caption = document.createElement('p'); caption.textContent = 'Pencocokan per ' + displayDate(r.date); $('reconciliation').append(caption);
+        [['Saldo buku',r.book],['Uang fisik',r.actual],['Selisih',r.difference]].forEach(([label,value]) => {
+          const row = document.createElement('div'), text = document.createElement('span'), amount = document.createElement('strong');
+          text.textContent = label; amount.textContent = rupiah(value); row.append(text,amount); $('reconciliation').append(row);
+        });
+      }
+    }
+    function render(data) {
+      dashboard = data;
+      $('month').value = data.month;
+      const period=monthNames[Number(data.month.slice(5,7))-1]+' '+data.month.slice(0,4);
+      $('incomePeriod').textContent='Pemasukan '+period;$('expensePeriod').textContent='Pengeluaran '+period;$('historyPeriod').textContent='Rincian '+period;
+      $('formFund').textContent = 'Dana: ' + (data.fund === 'PHBI' ? 'PHBI' : 'Kas masjid');
+      $('totalIncome').textContent = rupiah(data.income);
+      $('totalExpense').textContent = rupiah(data.expense);
+      $('currentBalance').textContent = rupiah(data.balance);
+      const unknown = Object.values(data.checkpoint.holders).some(value => value === null);
+      $('balanceNote').textContent = 'Dari hasil hitung fisik ' + displayDate(data.checkpoint.date) + ', ditambah arus kas setelah sinkronisasi.' +
+        (unknown ? ' Saldo awal bendahara lain belum dihitung; angka ini hanya mencakup uang yang sudah dikonfirmasi.' : '');
+      if (!pending) { if (!$('date').value) $('date').value = data.today; }
+      $('date').max = data.today; $('date').min = data.checkpoint.date;
+      renderReport(data.report);
+      $('automationNote').textContent = data.automatic ? 'Simpan tidak menunggu pembuatan PDF. Server memperbarui PDF sekitar setiap 5 menit, meski aplikasi ditutup. Gunakan Perbarui PDF jika perlu segera.' : 'Publikasi otomatis belum diaktifkan. Gunakan pratinjau untuk memeriksa laporan.';
+      $('pdfLink').hidden = !data.pdfUrl;
+      if (validPdfUrl(data.pdfUrl)) $('pdfLink').href = data.pdfUrl;
+      else { $('pdfLink').hidden = true; $('pdfLink').removeAttribute('href'); }
+      renderHistory();
+      $('connection').textContent = demo ? 'Demo aktif' : 'Terhubung';
+      $('conn-dot').className = 'conn-dot';
+      setBusy(busy);
+    }
+    function renderHistory() {
+      if (!dashboard) return;
+      const transactions=filteredTransactions();
+      const eligible=new Set(transactions.filter(tx=>tx.editable).map(tx=>tx.key));
+      for(const key of selectedKeys)if(!eligible.has(key))selectedKeys.delete(key);
+      $('historyCount').textContent = transactions.length + ' dari ' + dashboard.transactions.length + ' transaksi';
+      $('history').replaceChildren();
+      transactions.forEach(tx => {
+        const row = document.createElement('div'), info = document.createElement('div'), description = document.createElement('div'), meta = document.createElement('div'), amount = document.createElement('div');
+        row.className = 'transaction'; description.className = 'description'; description.textContent = tx.description;
+        meta.className = 'meta'; meta.textContent = displayDate(tx.date) + ' · ' + tx.code;
+        amount.className = 'amount ' + tx.type; amount.textContent = (tx.type === 'in' ? '+ ' : '− ') + rupiah(tx.amount);
+        info.append(description,meta); addActions(info,tx,false);
+        if(selecting){
+          const label=document.createElement('div'),check=document.createElement('input');label.className='select-transaction';check.type='checkbox';check.checked=selectedKeys.has(tx.key);check.disabled=busy || !tx.editable || bulkPending();check.dataset.key=tx.key;check.setAttribute('aria-label','Pilih '+tx.description);
+          if(!tx.editable)check.title='Sudah termasuk hitung fisik terakhir.';
+          check.addEventListener('change',()=>{if(check.checked && selectedKeys.size>=50){check.checked=false;notice('Maksimal 50 transaksi sekali hapus.',true);return;}check.checked?selectedKeys.add(tx.key):selectedKeys.delete(tx.key);updateSelection();});
+          label.append(check,info);row.append(label,amount);
+        }else row.append(info,amount);
+        $('history').append(row);
+      });
+      if (!transactions.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = dashboard.transactions.length ? 'Tidak ada transaksi yang cocok.' : 'Belum ada transaksi pada bulan ini.'; $('history').append(empty); }
+      const deleted=dashboard.deletedTransactions || [];
+      $('deletedSection').hidden=!deleted.length;$('deletedCount').textContent='Transaksi dihapus ('+deleted.length+')';$('deletedHistory').replaceChildren();
+      deleted.forEach(tx=>{
+        const row=document.createElement('div'),label=document.createElement('p');row.className='transaction';
+        label.textContent=displayDate(tx.date)+' · '+tx.description+' · '+rupiah(tx.amount);row.append(label);addActions(row,tx,true);$('deletedHistory').append(row);
+      });
+      setBusy(busy);
+    }
+    function addActions(parent,tx,deleted) {
+      const actions=document.createElement('div');actions.className='row-actions';
+      (deleted ? [['restore','Pulihkan']] : [['edit','Edit'],['delete','Hapus']]).forEach(([action,label])=>{
+        const button=document.createElement('button');button.type='button';button.className='secondary'+(action==='delete' ? ' danger' : '');button.textContent=label;button.dataset.locked=String(!tx.editable);button.setAttribute('aria-label',label+' '+tx.description);
+        if (!tx.editable) button.title='Sudah termasuk hitung fisik terakhir; koreksi langsung di Sheet.';
+        button.addEventListener('click',()=>openChange(action,tx));actions.append(button);
+      });parent.append(actions);
+      if (tx.changes?.length) {
+        const detail=document.createElement('details'),summary=document.createElement('summary');detail.className='audit';summary.textContent='Riwayat perubahan ('+tx.changes.length+')';detail.append(summary);
+        tx.changes.slice().reverse().forEach(event=>{
+          const text=document.createElement('p');text.textContent=({edit:'Diedit',delete:'Dihapus',restore:'Dipulihkan'}[event.action] || 'Diubah')+' · '+new Date(event.at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})+'\n'+event.reason;detail.append(text);
+        });parent.append(detail);
+      }
+    }
+    function openChange(action,tx,restoring=false) {
+      if ((busy || voicePhase!=='idle' || pending || pendingChange || bulkPending()) && !restoring) {notice('Selesaikan kiriman atau input suara terlebih dahulu.',true);return;}
+      editing={action,tx};$('changeTitle').textContent={edit:'Edit transaksi',delete:'Hapus transaksi',restore:'Pulihkan transaksi'}[action];
+      $('changeSummary').textContent=displayDate(tx.date)+' · '+tx.description+' · '+rupiah(tx.amount)+(action==='delete' ? '\nTransaksi akan dikeluarkan dari saldo dan laporan. Catatan tetap dapat dipulihkan.' : '');
+      const formData=restoring && action==='edit' ? pendingChange.input : tx;
+      $('changeDate').value=formData.date;$('changeDate').min=dashboard.checkpoint.date;$('changeDate').max=dashboard.today;$('changeCode').value=formData.code;$('changeType').value=formData.type;$('changeDescription').value=formData.description;$('changeAmount').value=formData.amount;
+      $('changeFields').hidden=action!=='edit';$('changeFields').disabled=action!=='edit';$('changeReason').value=restoring ? pendingChange.reason : '';
+      $('changeNotice').textContent=restoring ? 'Perubahan sebelumnya belum terkonfirmasi. Kirim ulang atau periksa statusnya.' : '';
+      setChangeBusy(false);if (!$('changeDialog').open) $('changeDialog').showModal();
+    }
+    function setChangeBusy(value) {
+      ['changeDate','changeCode','changeType','changeDescription','changeAmount','changeReason'].forEach(id=>{$(id).disabled=value || !!pendingChange;});
+      $('changeCancel').disabled=value || !!pendingChange;$('changeCheck').hidden=!pendingChange;$('changeCheck').disabled=value;$('changeSubmit').disabled=value;
+      $('changeSubmit').textContent=value ? 'Memproses…' : pendingChange ? 'Kirim ulang perubahan' : {edit:'Simpan perubahan',delete:'Hapus transaksi',restore:'Pulihkan transaksi'}[editing?.action || 'edit'];
+    }
+    function persistChange(value) {
+      if (value) {
+        value={...value,fund:dashboard.fund,month:dashboard.month,view:{fund:editing.tx.fund,type:editing.tx.type,code:editing.tx.code,date:editing.tx.date,description:editing.tx.description,amount:editing.tx.amount,key:editing.tx.key,revision:editing.tx.revision,editable:editing.tx.editable}};
+        localStorage.setItem(CHANGE_KEY,JSON.stringify(value));
+      } else localStorage.removeItem(CHANGE_KEY);
+      pendingChange=value;setBusy(busy);
+    }
+    $('changeForm').addEventListener('submit',async event=>{
+      event.preventDefault();if (busy || !editing) return;
+      try {
+        if (!pendingChange) {
+          const request={id:crypto.randomUUID(),key:editing.tx.key,revision:editing.tx.revision,action:editing.action,reason:$('changeReason').value.trim()};
+          if (editing.action==='edit') {
+            const raw=$('changeAmount').value.trim();if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw)) throw new Error('Gunakan jumlah Rupiah bulat.');
+            request.input={fund:dashboard.fund,type:$('changeType').value,code:$('changeCode').value,date:$('changeDate').value,description:$('changeDescription').value.trim(),amount:Number(raw.replace(/\./g,''))};
+          }
+          persistChange(request);
+        }
+        setBusy(true);setChangeBusy(true);$('changeNotice').textContent='Menyimpan dan memverifikasi perubahan di Sheet…';
+        const result=await api('changeTransaction',pendingChange);
+        if (!result.changed || result.id!==pendingChange.id) throw new Error('Perubahan belum terkonfirmasi.');
+        persistChange(null);$('changeDialog').close();editing=null;
+        notice('Perubahan berhasil tersimpan. '+result.report.message,result.report.state==='ERROR');await loadDashboard();
+      } catch(error) {$('changeNotice').textContent=error.message+(pendingChange ? '\nGunakan kirim ulang dengan identitas yang sama, atau periksa status sebelum memperbaiki draf.' : '');}
+      finally {setBusy(false);setChangeBusy(false);}
+    });
+    $('changeCheck').addEventListener('click',async()=>{
+      if (!pendingChange || busy) return;setBusy(true);setChangeBusy(true);
+      try {
+        const result=await api('resolveChange',pendingChange.id);if (result.id!==pendingChange.id) throw new Error('Identitas perubahan belum dapat dipastikan.');
+        persistChange(null);$('changeDialog').close();editing=null;
+        notice(result.changed ? 'Perubahan sebelumnya sudah tersimpan.' : 'Perubahan belum tersimpan. Muat ulang lalu buka transaksi terbaru untuk mencoba kembali.');await loadDashboard();
+      } catch(error) {$('changeNotice').textContent=error.message;}
+      finally {setBusy(false);setChangeBusy(false);}
+    });
+    $('changeCancel').addEventListener('click',()=>{if (!pendingChange && !busy){$('changeDialog').close();editing=null;}});
+    $('changeDialog').addEventListener('cancel',event=>{if (pendingChange || busy) event.preventDefault();});
+    ['historySearch','historyType'].forEach(id=>$(id).addEventListener('input',()=>{selectedKeys.clear();renderHistory();}));
+    async function loadDashboard() {
+      const version = ++loadVersion;
+      try {
+        const data = await api('getDashboard', $('fund').value, $('month').value);
+        if (version !== loadVersion) return;
+        render(data);
+        if (pendingChange && !$('changeDialog').open) {
+          const saved=pendingChange,target=saved.view || data.transactions.concat(data.deletedTransactions || []).find(tx=>tx.key===saved.key) || saved.input;
+          if (target) openChange(saved.action,target,true);
+        }
+      } catch (error) {
+        if (version !== loadVersion) return;
+        $('connection').textContent = connected ? 'Belum terhubung' : 'Belum masuk'; $('conn-dot').className = 'conn-dot off'; notice(error.message, true);
+        // The displayed figures are stale; require a successful reload before writing.
+        dashboard = null; setBusy(false);
+      }
+    }
+    function readInput() {
+      const raw = $('amount').value.trim();
+      if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)$/.test(raw)) throw new Error('Gunakan Rupiah bulat, misalnya 637.600.');
+      const amount = Number(raw.replace(/\./g,''));
+      if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Nominal harus lebih dari nol.');
+      return {fund:$('fund').value,type,code:$('code').value,date:$('date').value,description:$('description').value.trim(),amount};
+    }
+    function samePayload(a,b) { return ['fund','type','code','date','description','amount'].every(key => a[key] === b[key]); }
+    function persistPending(value) {
+      // Keep only an unacknowledged request; transaction history always comes from the server.
+      if (value) localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      else localStorage.removeItem(STORAGE_KEY);
+      pending = value;
+      $('pendingNote').hidden = !value;
+      $('checkPending').hidden = !value;
+    }
+    function restorePending() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (stored && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(stored.id)) {
+          pending = stored; $('fund').value = stored.fund; chooseType(stored.type); $('code').value = stored.code;
+          $('date').value = stored.date; $('description').value = stored.description; $('amount').value = stored.amount;
+          $('pendingNote').hidden = false;
+          $('checkPending').hidden = false;
+        }
+      } catch (error) { notice('Kiriman sebelumnya tidak dapat dibaca. Periksa riwayat Sheet sebelum mengirim kembali.', true); }
+    }
+    $('transactionForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || voicePhase!=='idle' || pendingChange || bulkPending() || !dashboard || !connected) return;
+      try {
+        const payload = readInput();
+        if (pending && !samePayload(pending,payload)) throw new Error('Ada kiriman yang belum terkonfirmasi. Kembalikan isinya seperti semula dan kirim ulang sebelum mencatat transaksi lain.');
+        if (!pending) persistPending({...payload,id:crypto.randomUUID()});
+        setBusy(true); notice('Menyimpan dan memverifikasi transaksi di Sheet…');
+        const result = await api('saveTransaction',pending);
+        if (!result.saved || result.id !== pending.id) throw new Error('Penyimpanan belum terkonfirmasi. Gunakan kirim ulang.');
+        const fund = pending.fund;
+        persistPending(null); $('description').value = ''; $('amount').value = '';
+        renderReport(result.report);
+        let text = result.duplicate ? 'Transaksi ini sudah tersimpan. Tidak ada pencatatan ganda.' : demo ? 'Transaksi demo berhasil tersimpan.' : 'Transaksi berhasil tersimpan di Sheet.';
+        text += '\n' + (fund === 'PHBI' ? 'PHBI dicatat terpisah dari laporan kas masjid. ' : '') + result.report.message;
+        if (result.warning) text += '\n' + result.warning;
+        notice(text, result.report.state === 'ERROR');
+        await loadDashboard();
+      } catch (error) { notice(error.message + (pending ? '\nKiriman disimpan untuk dikirim ulang dengan identitas yang sama.' : ''), true); }
+      finally { setBusy(false); }
+    });
+    $('incomeType').addEventListener('click',() => chooseType('in'));
+    $('checkPending').addEventListener('click', async () => {
+      if (!pending || busy) return;
+      setBusy(true);
+      try {
+        const result = await api('resolvePendingRequest',pending.id);
+        if (result.id !== pending.id) throw new Error('Identitas kiriman belum dapat dipastikan.');
+        persistPending(null);
+        if (result.saved) { $('description').value = ''; $('amount').value = ''; }
+        notice(result.saved ? 'Kiriman sebelumnya sudah tersimpan. Tidak perlu dikirim lagi.' : 'Kiriman belum tersimpan. Isinya sekarang dapat diperbaiki sebelum dikirim.');
+        await loadDashboard();
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('expenseType').addEventListener('click',() => chooseType('out'));
+    ['fund','month'].forEach(id => $(id).addEventListener('change',async () => {
+      if (pending && id === 'fund') { $('fund').value = pending.fund; notice('Selesaikan kiriman yang belum terkonfirmasi sebelum mengganti dana.',true); return; }
+      selectedKeys.clear();selecting=false;
+      if (id === 'fund') $('date').value = '';
+      setBusy(true); await loadDashboard(); setBusy(false);
+    }));
+    $('refreshData').addEventListener('click',async () => { setBusy(true); await loadDashboard(); setBusy(false); });
+    $('previewPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Menyiapkan pratinjau…'); $('previewLink').hidden = true;
+      try {
+        const result = await api('previewPublicPdf');
+        if (!result.ready) { renderReport(result.report); notice(result.report.message); return; }
+        if (!validPdfUrl(result.pdfUrl)) throw new Error('Tautan pratinjau belum dapat diverifikasi.');
+        $('previewLink').href = result.pdfUrl; $('previewLink').hidden = false;
+        notice('Pratinjau privat siap. Periksa seluruh halaman sebelum memperbarui laporan jamaah.');
+      } catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('refreshPdf').addEventListener('click',async () => {
+      setBusy(true); notice('Memeriksa dan memperbarui laporan…');
+      try { const result = await api('refreshPublicPdf'); renderReport(result); notice(result.message,result.state === 'ERROR'); await loadDashboard(); }
+      catch (error) { notice(error.message,true); }
+      finally { setBusy(false); }
+    });
+    $('resetForm').addEventListener('click', () => {
+      if (pending) { notice('Periksa kiriman sebelumnya sebelum mereset form.', true); return; }
+      $('code').value = 'K1'; $('description').value = ''; $('amount').value = '';
+      if (dashboard) $('date').value = dashboard.today;
+      $('voice-result').className = 'voice-result';voiceDraft=null;$('voiceTranscript').value='';voiceMessage('');chooseType('in');updateVoiceControls();
+    });
+    $('voice-btn').addEventListener('click',toggleVoice);
+    $('voiceParse').addEventListener('click',previewVoice);
+    $('voiceApply').addEventListener('click',applyVoice);
+    $('voiceTranscript').addEventListener('input',()=>{voiceDraft=null;$('voice-result').className='voice-result';voiceMessage('Teks berubah. Tekan Periksa teks untuk memperbarui draf.');updateVoiceControls();});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&recognition)cancelVoice('Perekaman dihentikan saat aplikasi ditinggalkan. Periksa teks sebelum melanjutkan.');});
+    function persistImport() {
+      if (importBatch?.started && importBatch.rows.some(row=>row.selected && !row.done)) localStorage.setItem(IMPORT_KEY,JSON.stringify(importBatch));
+      else localStorage.removeItem(IMPORT_KEY);
+    }
+    function updateImportControls() {
+      const rows=importBatch?.rows || [],selected=rows.filter(row=>row.selected && row.input),remaining=selected.filter(row=>!row.done);
+      $('importSummary').textContent=importBatch ? importBatch.name+' · '+selected.length+' dipilih · '+selected.filter(row=>row.done).length+' tersimpan · '+rows.filter(row=>row.error).length+' perlu diperbaiki' : 'Pilih file untuk melihat pratinjau.';
+      $('importFile').disabled=busy || !!(importBatch?.started && remaining.length);
+      $('importSubmit').disabled=busy || !connected || !remaining.length;
+      $('importSubmit').textContent=importBatch?.started ? 'Lanjutkan '+remaining.length+' transaksi' : 'Impor '+remaining.length+' transaksi terpilih';
+      $('importClose').disabled=busy;$('importDiscard').hidden=!importBatch?.started || !remaining.length;$('importDiscard').disabled=busy;
+      $('importStop').hidden=!importSaving;$('importStop').disabled=importStopRequested;
+    }
+    function renderImport() {
+      $('importRows').replaceChildren();
+      (importBatch?.rows || []).forEach((row,index)=>{
+        const item=document.createElement('div'),check=document.createElement('input'),label=document.createElement('label'),title=document.createElement('strong'),detail=document.createElement('small'),status=document.createElement('small');
+        item.className='import-row';check.type='checkbox';check.id='import-row-'+index;check.checked=!!row.selected;check.disabled=busy || !row.input || !!importBatch.started;label.htmlFor=check.id;
+        title.textContent='Baris '+row.row+(row.input ? ' · '+row.input.description : '');
+        if(row.input){const tx=row.input;detail.textContent=displayDate(tx.date)+' · '+tx.fund+' · '+tx.code+' · '+(tx.type==='in'?'Pemasukan':'Pengeluaran')+' · '+rupiah(tx.amount);}
+        status.textContent=row.error || (row.done ? 'Tersimpan' : row.duplicate ? 'Mirip transaksi yang sudah ada atau baris lain di file.' : 'Siap diimpor');
+        if(row.error)status.className='import-error';
+        check.addEventListener('change',()=>{row.selected=check.checked;updateImportControls();});label.append(title,detail,status);item.append(check,label);$('importRows').append(item);
+      });updateImportControls();
+    }
+    $('openImport').addEventListener('click',()=>{
+      if(busy || voicePhase!=='idle' || pending || pendingChange || bulkPending() || !dashboard)return;
+      if(importBatch?.started && !importBatch.rows.some(row=>row.selected && !row.done))importBatch=null;
+      $('importNotice').textContent=importBatch?.started ? 'Impor sebelumnya belum selesai. Lanjutkan dengan kiriman yang sama, atau batalkan sisanya setelah pemeriksaan.' : '';
+      renderImport();$('importDialog').showModal();
+    });
+    $('importFile').addEventListener('change',async()=>{
+      if(busy || !connected || importBatch?.started)return;
+      importBatch=null;renderImport();
+      try{
+        const file=$('importFile').files[0];if(!file)return;
+        if(!/\.csv$/i.test(file.name) || file.size>65536)throw Error('Pilih CSV UTF-8, maksimal 64 KB. Untuk Excel, simpan sebagai CSV terlebih dahulu.');
+        setBusy(true);updateImportControls();$('importNotice').textContent='Membaca file dan memeriksa transaksi. Belum ada data yang disimpan…';
+        const result=await api('previewImport',{csv:await file.text()});
+        importBatch={name:file.name,started:false,rows:result.rows.map(row=>({...row,selected:!!row.input && !row.duplicate,done:false,attempted:false}))};
+        $('importNotice').textContent='Pratinjau siap. Periksa tanggal, jumlah, dana, dan baris yang dicentang.';
+      }catch(error){$('importNotice').textContent=error.message;}
+      finally{setBusy(false);renderImport();$('importFile').value='';}
+    });
+    $('importSubmit').addEventListener('click',async()=>{
+      if(busy || !importBatch || !connected)return;
+      let report;
+      try{
+        importBatch.rows=importBatch.rows.filter(row=>row.selected && row.input);if(!importBatch.rows.some(row=>!row.done))return;
+        importBatch.started=true;persistImport();importSaving=true;importStopRequested=false;setBusy(true);renderImport();
+        for(const row of importBatch.rows){
+          if(row.done)continue;if(importStopRequested)break;
+          row.attempted=true;persistImport();$('importNotice').textContent='Menyimpan baris '+row.row+'… '+importBatch.rows.filter(item=>item.done).length+' dari '+importBatch.rows.length+' sudah tersimpan. Jangan tutup aplikasi selama proses.';
+          const result=await api('saveTransaction',row.input);
+          if(!result.saved || result.id!==row.input.id)throw Error('Penyimpanan belum terkonfirmasi.');
+          row.done=true;report=result.report;persistImport();renderImport();
+        }
+        const done=importBatch.rows.filter(row=>row.done).length;
+        $('importNotice').textContent=done===importBatch.rows.length ? 'Impor selesai: '+done+' transaksi tersimpan. '+(report?.message || '') : 'Impor dijeda. '+done+' transaksi tersimpan. Tekan Lanjutkan untuk menyimpan sisanya.';
+      }catch(error){$('importNotice').textContent='Impor terhenti: '+error.message+' Transaksi yang terkonfirmasi tetap tersimpan. Tekan Lanjutkan untuk memeriksa dan mengirim ulang sisanya dengan identitas yang sama.';}
+      finally{importSaving=false;await loadDashboard();setBusy(false);renderImport();}
+    });
+    $('importStop').addEventListener('click',()=>{importStopRequested=true;updateImportControls();});
+    $('importDiscard').addEventListener('click',async()=>{
+      if(busy || !importBatch)return;
+      try{
+        setBusy(true);renderImport();$('importNotice').textContent='Memeriksa kiriman terakhir sebelum membatalkan sisa impor…';
+        for(const row of importBatch.rows.filter(row=>row.attempted && !row.done)){
+          const result=await api('resolvePendingRequest',row.input.id);if(result.id!==row.input.id)throw Error('Status kiriman belum dapat dipastikan.');row.done=result.saved;
+        }
+        const done=importBatch.rows.filter(row=>row.done).length;localStorage.removeItem(IMPORT_KEY);importBatch=null;$('importDialog').close();notice('Sisa impor dibatalkan. '+done+' transaksi yang sudah tersimpan tetap ada di Sheet.');await loadDashboard();
+      }catch(error){$('importNotice').textContent='Sisa impor belum dibatalkan: '+error.message;}
+      finally{setBusy(false);renderImport();}
+    });
+    $('importClose').addEventListener('click',()=>{if(!busy)$('importDialog').close();});
+    $('importDialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+
+    function filteredTransactions(){
+      const query=$('historySearch').value.trim().toLowerCase(),kind=$('historyType').value;
+      return (dashboard?.transactions || []).filter(tx=>(!kind || tx.type===kind) && [tx.description,tx.code,displayDate(tx.date)].join(' ').toLowerCase().includes(query));
+    }
+    function updateSelection(){
+      const blocked=busy || voicePhase!=='idle' || !connected || !dashboard || !!pending || !!pendingChange || !!(importBatch?.started && importBatch.rows.some(row=>row.selected && !row.done));
+      $('selectMode').disabled=blocked;$('selectMode').textContent=bulkPending() ? 'Lanjutkan penghapusan' : selecting ? 'Selesai memilih' : 'Pilih banyak';
+      $('selectionTools').hidden=!selecting || bulkPending();$('selectionCount').hidden=!selecting || bulkPending();$('selectionCount').textContent=selectedKeys.size+' dipilih';
+      const eligible=filteredTransactions().filter(tx=>tx.editable),chosen=eligible.filter(tx=>selectedKeys.has(tx.key)).length;
+      $('selectAll').checked=chosen>0 && chosen===Math.min(50,eligible.length);$('selectAll').indeterminate=chosen>0 && !$('selectAll').checked;$('selectAll').disabled=blocked || !eligible.length;
+      $('deleteSelected').disabled=blocked || !chosen;$('deleteSelected').textContent='Hapus '+chosen+' terpilih';
+      document.querySelectorAll('.select-transaction input').forEach(check=>{check.checked=selectedKeys.has(check.dataset.key);check.disabled=blocked || bulkPending() || !eligible.some(tx=>tx.key===check.dataset.key);});
+    }
+    function persistBulk(){
+      if(bulkPending())localStorage.setItem(BULK_KEY,JSON.stringify(bulkBatch));else localStorage.removeItem(BULK_KEY);
+    }
+    function renderBulk(){
+      const rows=bulkBatch?.rows || [],done=rows.filter(row=>row.done).length,remaining=rows.length-done;
+      $('bulkSummary').textContent=rows.length+' dipilih · '+done+' dihapus · '+remaining+' tersisa';$('bulkRows').replaceChildren();
+      rows.forEach(row=>{const item=document.createElement('div'),meta=document.createElement('small');item.className='bulk-item'+(row.done?' done':'');item.textContent=row.tx.description;meta.textContent=displayDate(row.tx.date)+' · '+row.tx.code+' · '+rupiah(row.tx.amount)+(row.done?' · Dihapus':'');item.append(meta);$('bulkRows').append(item);});
+      $('bulkReason').disabled=busy || !!bulkBatch?.started;$('bulkClose').disabled=busy;$('bulkClose').textContent=bulkBatch?.started?'Tutup':'Batal';
+      $('bulkSubmit').disabled=busy || !connected || !remaining;$('bulkSubmit').textContent=bulkBatch?.started?'Lanjutkan '+remaining+' transaksi':'Hapus '+remaining+' transaksi';
+      $('bulkDiscard').hidden=!bulkPending();$('bulkDiscard').disabled=busy;$('bulkStop').hidden=!bulkSaving;$('bulkStop').disabled=bulkStopRequested;
+    }
+    $('selectMode').addEventListener('click',()=>{
+      if(bulkPending()){$('bulkReason').value=bulkBatch.reason;renderBulk();$('bulkDialog').showModal();return;}
+      selecting=!selecting;selectedKeys.clear();renderHistory();
+    });
+    $('selectAll').addEventListener('change',()=>{selectedKeys.clear();if($('selectAll').checked)filteredTransactions().filter(tx=>tx.editable).slice(0,50).forEach(tx=>selectedKeys.add(tx.key));updateSelection();});
+    $('deleteSelected').addEventListener('click',()=>{
+      const rows=filteredTransactions().filter(tx=>tx.editable && selectedKeys.has(tx.key));if(busy || !rows.length || rows.length>50)return;
+      bulkBatch={fund:dashboard.fund,month:dashboard.month,started:false,reason:'',rows:rows.map(tx=>({tx,id:crypto.randomUUID(),done:false,attempted:false}))};
+      $('bulkReason').value='';$('bulkNotice').textContent='Periksa kembali pilihan. Penghapusan dilakukan satu per satu dan dapat dipulihkan.';renderBulk();$('bulkDialog').showModal();
+    });
+    $('bulkForm').addEventListener('submit',async event=>{
+      event.preventDefault();if(busy || !bulkBatch || !connected)return;
+      try{
+        if(!bulkBatch.started){const reason=$('bulkReason').value.trim();if(reason.length<3 || reason.length>300)throw Error('Isi alasan 3–300 karakter.');bulkBatch.reason=reason;bulkBatch.started=true;}
+        // Persist the original IDs and revisions before writing; a lost response must retry the same request.
+        persistBulk();bulkSaving=true;bulkStopRequested=false;setBusy(true);renderBulk();
+        for(const row of bulkBatch.rows){
+          if(row.done)continue;if(bulkStopRequested)break;row.attempted=true;persistBulk();$('bulkNotice').textContent='Menghapus… '+bulkBatch.rows.filter(item=>item.done).length+' dari '+bulkBatch.rows.length+' terkonfirmasi.';
+          const result=await api('changeTransaction',{id:row.id,key:row.tx.key,revision:row.tx.revision,action:'delete',reason:bulkBatch.reason});
+          if(!result.changed || result.id!==row.id)throw Error('Penghapusan belum terkonfirmasi.');row.done=true;persistBulk();renderBulk();
+        }
+        const done=bulkBatch.rows.filter(row=>row.done).length;
+        $('bulkNotice').textContent=bulkPending()?'Penghapusan dijeda. '+done+' transaksi dihapus. Lanjutkan atau batalkan sisanya.':'Selesai: '+done+' transaksi dihapus. Gunakan Transaksi dihapus untuk memulihkan.';
+        selectedKeys.clear();selecting=false;
+      }catch(error){$('bulkNotice').textContent='Penghapusan terhenti: '+error.message+' Hasil yang terkonfirmasi tetap tersimpan. Lanjutkan dengan identitas yang sama atau batalkan sisa setelah pemeriksaan.';}
+      finally{bulkSaving=false;await loadDashboard();setBusy(false);renderBulk();}
+    });
+    $('bulkStop').addEventListener('click',()=>{bulkStopRequested=true;renderBulk();});
+    $('bulkDiscard').addEventListener('click',async()=>{
+      if(busy || !bulkPending())return;
+      try{
+        setBusy(true);renderBulk();$('bulkNotice').textContent='Memeriksa status terakhir sebelum membatalkan sisa…';
+        for(const row of bulkBatch.rows.filter(row=>row.attempted && !row.done)){const result=await api('resolveChange',row.id);if(result.id!==row.id)throw Error('Status penghapusan belum dapat dipastikan.');row.done=result.changed;}
+        const done=bulkBatch.rows.filter(row=>row.done).length;localStorage.removeItem(BULK_KEY);bulkBatch=null;selecting=false;selectedKeys.clear();$('bulkDialog').close();notice('Sisa penghapusan dibatalkan. '+done+' transaksi yang sudah dihapus tetap dapat dipulihkan.');await loadDashboard();
+      }catch(error){$('bulkNotice').textContent='Sisa belum dibatalkan: '+error.message;}
+      finally{setBusy(false);renderBulk();}
+    });
+    $('bulkClose').addEventListener('click',()=>{if(!busy)$('bulkDialog').close();});
+    $('bulkDialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+
+    $('rememberDevice').addEventListener('change',()=>{
+      $('loginLink').href='/auth/login'+($('rememberDevice').checked ? '?remember=1' : '');
+    });
+    $('logout').addEventListener('click',async () => {
+      try {
+        const response=await fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin',signal:AbortSignal.timeout(10000)});
+        if (!response.ok) throw new Error('Logout failed');
+        location.reload();
+      } catch {notice('Keluar belum berhasil. Periksa koneksi, lalu coba kembali.',true);}
+    });
+    async function boot() {
+      setBusy(false);
+      try {
+        const response=await fetch('/api/session',{credentials:'same-origin'}), session=await response.json();
+        demo=session.demo;connected=session.authenticated;csrf=session.csrf || '';
+        if (demo) STORAGE_KEY='kas-masjid-demo-pending-v1';
+        $('demoBanner').hidden=!demo;
+        $('reconnectGoogle').hidden=demo;
+        $('loginPanel').hidden=connected;
+        $('accountRow').hidden=!connected;
+        $('loginLink').textContent=demo ? 'Buka demo aplikasi' : 'Masuk dengan Google';
+        $('loginText').textContent=demo ? 'Coba pencatatan, pemisahan PHBI, dan laporan PDF menggunakan data contoh.' : 'Masuk dengan akun pemilik untuk melihat pembukuan dan mencatat transaksi.';
+        if (connected) {
+          if (demo) CHANGE_KEY='kas-masjid-demo-change-pending-v1';
+          if (demo) IMPORT_KEY='kas-masjid-demo-import-pending-v1';
+          if (demo) BULK_KEY='kas-masjid-demo-bulk-delete-v1';
+          const saved=JSON.parse(localStorage.getItem(CHANGE_KEY) || 'null');
+          if (saved && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(saved.id)) {pendingChange=saved;$('fund').value=saved.fund;$('month').value=saved.month || '';}
+          const deleted=JSON.parse(localStorage.getItem(BULK_KEY) || 'null');
+          if(deleted?.started && Array.isArray(deleted.rows) && deleted.rows.length>0 && deleted.rows.length<=50 && deleted.rows.every(row=>row.tx?.key && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(row.id))){bulkBatch=deleted;$('fund').value=deleted.fund;$('month').value=deleted.month || '';}
+          restorePending();await loadDashboard();
+          const imported=JSON.parse(localStorage.getItem(IMPORT_KEY) || 'null');
+          if(imported?.started && Array.isArray(imported.rows) && imported.rows.length<=50 && imported.rows.every(row=>row.input && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(row.input.id))){
+            importBatch=imported;setBusy(false);renderImport();
+            if(!pending && !pendingChange && !bulkPending()){$('importNotice').textContent='Impor sebelumnya belum selesai. Lanjutkan memakai kiriman yang sama.';$('importDialog').showModal();}
+          }
+          if(bulkPending() && !pending && !pendingChange){$('bulkReason').value=bulkBatch.reason;$('bulkNotice').textContent='Penghapusan sebelumnya belum selesai. Lanjutkan memakai identitas yang sama atau batalkan sisanya.';renderBulk();$('bulkDialog').showModal();}
+        }
+        else {
+          $('connection').textContent='Belum masuk';$('conn-dot').className='conn-dot off';
+          $('reportMessage').textContent='Masuk untuk melihat status laporan.';
+          $('history').replaceChildren();setBusy(false);
+        }
+      } catch {notice('Server belum dapat dihubungi. Muat ulang aplikasi.',true);}
+    }
+    boot();
+  </script>
+</body>
+</html>
